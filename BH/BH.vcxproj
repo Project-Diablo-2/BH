@@ -111,7 +111,7 @@
       <DataExecutionPrevention>false</DataExecutionPrevention>
     </Link>
     <PreBuildEvent>
-      <Command>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "$(ProjectDir)../../scripts/CreateBHHeaders.ps1"</Command>
+      <Command></Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /Y /S /Q /F "$(OutDir)*.*" "$(DIABLO_DEBUG_FOLDER)\"</Command>
@@ -135,7 +135,7 @@
       <DataExecutionPrevention>false</DataExecutionPrevention>
     </Link>
     <PreBuildEvent>
-      <Command>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File $(ProjectDir)../../scripts/CreateBHHeaders.ps1</Command>
+      <Command></Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /Y /S /Q /F "$(OutDir)*.*" "$(DIABLO_DEBUG_FOLDER)\"</Command>
