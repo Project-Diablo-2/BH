@@ -1,0 +1,40 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+
+*.exe
+*.bin
+*.dll
+*.obj
+*.pdb
+*.ipch
+*.ilk
+*.idb
+*.tlog
+*.log
+*.lastbuildstate
+*.manifest
+*.user
+*.suo
+*.sdf
+*.opensdf
+
+*~
+*.swp
+Debug/
+Packaging/*
+BH/Release/*
+Release/*
+/.vs/BH/v15
+/BH.VC.db
+/.vs

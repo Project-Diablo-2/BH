@@ -1,0 +1,250 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Packaging|Win32">
+      <Configuration>Packaging</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E549AF63-EF8D-4054-A95B-9C4AE6F51029}</ProjectGuid>
+    <RootNamespace>BH</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Packaging|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Packaging|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetExt>.dll</TargetExt>
+    <IncludePath>$(INCLUDE);$(IncludePath)</IncludePath>
+    <LibraryPath>..\ThirdParty\;$(LIBPATH);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Packaging|Win32'">
+    <TargetExt>.dll</TargetExt>
+    <IncludePath>E:\Program Files (x86)\Diablo II\plugins\StormLib-master-8.20\src;$(IncludePath)</IncludePath>
+    <LibraryPath>..\ThirdParty\;$(LIBPATH);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(INCLUDE);$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LibraryPath>..\ThirdParty\;$(LIBPATH);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ThirdParty\cpp-lru-cache\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>kernel32.lib;shlwapi.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;StormLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /S /Q /F "$(OutDir)*.*" "$(DIABLO_DEBUG_FOLDER)\"</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>..\ThirdParty\cpp-lru-cache\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>kernel32.lib;shlwapi.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;StormLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+    </Link>
+    <PreBuildEvent>
+      <Command>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "$(ProjectDir)../../scripts/CreateBHHeaders.ps1"</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Y /S /Q /F "$(OutDir)*.*" "$(DIABLO_DEBUG_FOLDER)\"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Packaging|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>kernel32.lib;shlwapi.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+    </Link>
+    <PreBuildEvent>
+      <Command>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File $(ProjectDir)../../scripts/CreateBHHeaders.ps1</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Y /S /Q /F "$(OutDir)*.*" "$(DIABLO_DEBUG_FOLDER)\"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="AsyncDrawBuffer.cpp" />
+    <ClCompile Include="BH.cpp" />
+    <ClCompile Include="BitReader.cpp" />
+    <ClCompile Include="Common.cpp" />
+    <ClCompile Include="Config.cpp" />
+    <ClCompile Include="D2Handlers.cpp" />
+    <ClCompile Include="D2Helpers.cpp" />
+    <ClCompile Include="D2Intercepts.cpp" />
+    <ClCompile Include="D2Stubs.cpp" />
+    <ClCompile Include="D2Version.cpp" />
+    <ClCompile Include="DllMain.cpp" />
+    <ClCompile Include="Drawing\Advanced\Checkhook\Checkhook.cpp" />
+    <ClCompile Include="Drawing\Advanced\Colorhook\Colorhook.cpp" />
+    <ClCompile Include="Drawing\Advanced\Combohook\Combohook.cpp" />
+    <ClCompile Include="Drawing\Advanced\Inputhook\Inputhook.cpp" />
+    <ClCompile Include="Drawing\Advanced\Keyhook\Keyhook.cpp" />
+    <ClCompile Include="Drawing\Basic\Boxhook\Boxhook.cpp" />
+    <ClCompile Include="Drawing\Basic\Crosshook\Crosshook.cpp" />
+    <ClCompile Include="Drawing\Basic\Framehook\Framehook.cpp" />
+    <ClCompile Include="Drawing\Basic\Linehook\Linehook.cpp" />
+    <ClCompile Include="Drawing\Basic\Texthook\Texthook.cpp" />
+    <ClCompile Include="Drawing\Hook.cpp" />
+    <ClCompile Include="Drawing\Stats\StatsDisplay.cpp" />
+    <ClCompile Include="Drawing\UI\UI.cpp" />
+    <ClCompile Include="Drawing\UI\UITab.cpp" />
+    <ClCompile Include="JSONObject.cpp" />
+    <ClCompile Include="Modules\Bnet\Bnet.cpp" />
+    <ClCompile Include="Modules\ChatColor\ChatColor.cpp" />
+    <ClCompile Include="Modules\Gamefilter\Gamefilter.cpp" />
+    <ClCompile Include="Modules\Item\Item.cpp" />
+    <ClCompile Include="Modules\Item\ItemDisplay.cpp" />
+    <ClCompile Include="Modules\ItemMover\ItemMover.cpp" />
+    <ClCompile Include="Modules\MapNotify\MapNotify.cpp" />
+    <ClCompile Include="Modules\Module.cpp" />
+    <ClCompile Include="Modules\ModuleManager.cpp" />
+    <ClCompile Include="Modules\Party\Party.cpp" />
+    <ClCompile Include="Modules\ScreenInfo\ScreenInfo.cpp" />
+    <ClCompile Include="MPQInit.cpp" />
+    <ClCompile Include="MPQReader.cpp" />
+    <ClCompile Include="Mustache.cpp" />
+    <ClCompile Include="Patch.cpp" />
+    <ClCompile Include="Modules\StashExport\StashExport.cpp" />
+    <ClCompile Include="TableReader.cpp" />
+    <ClCompile Include="Task.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AsyncDrawBuffer.h" />
+    <ClInclude Include="BH.h" />
+    <ClInclude Include="BitReader.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="CommonStructs.h" />
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="Constants.h" />
+    <ClInclude Include="D2DataTables.h" />
+    <ClInclude Include="D2Handlers.h" />
+    <ClInclude Include="D2Helpers.h" />
+    <ClInclude Include="D2Intercepts.h" />
+    <ClInclude Include="D2Ptrs.h" />
+    <ClInclude Include="D2Strings.h" />
+    <ClInclude Include="D2Structs.h" />
+    <ClInclude Include="D2Stubs.h" />
+    <ClInclude Include="D2Version.h" />
+    <ClInclude Include="Drawing.h" />
+    <ClInclude Include="Drawing\Advanced\Checkhook\Checkhook.h" />
+    <ClInclude Include="Drawing\Advanced\Colorhook\Colorhook.h" />
+    <ClInclude Include="Drawing\Advanced\Combohook\Combohook.h" />
+    <ClInclude Include="Drawing\Advanced\Inputhook\Inputhook.h" />
+    <ClInclude Include="Drawing\Advanced\Keyhook\Keyhook.h" />
+    <ClInclude Include="Drawing\Basic\Boxhook\Boxhook.h" />
+    <ClInclude Include="Drawing\Basic\Crosshook\Crosshook.h" />
+    <ClInclude Include="Drawing\Basic\Framehook\Framehook.h" />
+    <ClInclude Include="Drawing\Basic\Linehook\Linehook.h" />
+    <ClInclude Include="Drawing\Basic\Texthook\Texthook.h" />
+    <ClInclude Include="Drawing\Hook.h" />
+    <ClInclude Include="Drawing\Stats\StatsDisplay.h" />
+    <ClInclude Include="Drawing\UI\UI.h" />
+    <ClInclude Include="Drawing\UI\UITab.h" />
+    <ClInclude Include="JSONObject.h" />
+    <ClInclude Include="lrucache.hpp" />
+    <ClInclude Include="Modules.h" />
+    <ClInclude Include="Modules\AutoTele\ATIncludes\Matrix.h" />
+    <ClInclude Include="Modules\AutoTele\ATIncludes\SyncObj.h" />
+    <ClInclude Include="Modules\AutoTele\ATIncludes\Vectors.h" />
+    <ClInclude Include="Modules\Bnet\Bnet.h" />
+    <ClInclude Include="Modules\ChatColor\ChatColor.h" />
+    <ClInclude Include="Modules\Gamefilter\Gamefilter.h" />
+    <ClInclude Include="Modules\Item\Item.h" />
+    <ClInclude Include="Modules\Item\ItemDisplay.h" />
+    <ClInclude Include="Modules\ItemMover\ItemMover.h" />
+    <ClInclude Include="Modules\MapNotify\MapNotify.h" />
+    <ClInclude Include="Modules\Module.h" />
+    <ClInclude Include="Modules\ModuleManager.h" />
+    <ClInclude Include="Modules\Party\Party.h" />
+    <ClInclude Include="Modules\ScreenInfo\ScreenInfo.h" />
+    <ClInclude Include="MPQInit.h" />
+    <ClInclude Include="MPQReader.h" />
+    <ClInclude Include="Mustache.h" />
+    <ClInclude Include="Patch.h" />
+    <ClInclude Include="Modules\StashExport\StashExport.h" />
+    <ClInclude Include="TableReader.h" />
+    <ClInclude Include="Task.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
