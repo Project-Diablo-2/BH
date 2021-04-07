@@ -111,7 +111,8 @@
       <DataExecutionPrevention>false</DataExecutionPrevention>
     </Link>
     <PreBuildEvent>
-      <Command></Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /Y /S /Q /F "$(OutDir)*.*" "$(DIABLO_DEBUG_FOLDER)\"</Command>
@@ -135,7 +136,8 @@
       <DataExecutionPrevention>false</DataExecutionPrevention>
     </Link>
     <PreBuildEvent>
-      <Command></Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /Y /S /Q /F "$(OutDir)*.*" "$(DIABLO_DEBUG_FOLDER)\"</Command>
@@ -222,9 +224,6 @@
     <ClInclude Include="JSONObject.h" />
     <ClInclude Include="lrucache.hpp" />
     <ClInclude Include="Modules.h" />
-    <ClInclude Include="Modules\AutoTele\ATIncludes\Matrix.h" />
-    <ClInclude Include="Modules\AutoTele\ATIncludes\SyncObj.h" />
-    <ClInclude Include="Modules\AutoTele\ATIncludes\Vectors.h" />
     <ClInclude Include="Modules\Bnet\Bnet.h" />
     <ClInclude Include="Modules\ChatColor\ChatColor.h" />
     <ClInclude Include="Modules\Gamefilter\Gamefilter.h" />
