@@ -80,9 +80,6 @@
     <ClInclude Include="Drawing\UI\UITab.h" />
     <ClInclude Include="JSONObject.h" />
     <ClInclude Include="Modules.h" />
-    <ClInclude Include="Modules\AutoTele\ATIncludes\Matrix.h" />
-    <ClInclude Include="Modules\AutoTele\ATIncludes\SyncObj.h" />
-    <ClInclude Include="Modules\AutoTele\ATIncludes\Vectors.h" />
     <ClInclude Include="Modules\Bnet\Bnet.h" />
     <ClInclude Include="Modules\ChatColor\ChatColor.h" />
     <ClInclude Include="Modules\Gamefilter\Gamefilter.h" />

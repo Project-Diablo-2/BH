@@ -38,3 +38,4 @@ Release/*
 /.vs/BH/v15
 /BH.VC.db
 /.vs
+out/
