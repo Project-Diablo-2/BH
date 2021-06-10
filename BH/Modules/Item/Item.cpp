@@ -613,11 +613,11 @@ void Item::OrigGetItemName(UnitAny* item, string& itemName, char* code)
 }
 
 static ItemsTxt* GetArmorText(UnitAny* pItem) {
-	ItemText* itemTxt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
+	ItemsTxt* itemTxt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
 	int armorTxtRecords = *p_D2COMMON_ArmorTxtRecords;
 	for (int i = 0; i < armorTxtRecords; i++) {
 		ItemsTxt* armorTxt = &(*p_D2COMMON_ArmorTxt)[i];
-		if (strcmp(armorTxt->szcode, itemTxt->szCode) == 0) {
+		if (strcmp(armorTxt->szCode, itemTxt->szCode) == 0) {
 			return armorTxt;
 		}
 	}

@@ -329,7 +329,7 @@ FUNCPTR(D2COMMON, LoadAct, Act* __stdcall, (DWORD ActNumber, DWORD MapId, DWORD 
 
 FUNCPTR(D2COMMON, GetLevelText, LevelText* __stdcall, (DWORD levelno), -10014, -10142)
 FUNCPTR(D2COMMON, GetObjectText, ObjectTxt* __stdcall, (DWORD objno), -10688, -10319)
-FUNCPTR(D2COMMON, GetItemText, ItemText* __stdcall, (DWORD dwItemNo), -10695, -10994)
+FUNCPTR(D2COMMON, GetItemText, ItemsTxt* __stdcall, (DWORD dwItemNo), -10695, -10994)
 
 FUNCPTR(D2COMMON, GetLayer, AutomapLayer2* __fastcall, (DWORD dwLevelNo), -10749, -10087)
 FUNCPTR(D2COMMON, GetLevel, Level* __fastcall, (ActMisc* pMisc, DWORD dwLevelNo), -10207, -10287)

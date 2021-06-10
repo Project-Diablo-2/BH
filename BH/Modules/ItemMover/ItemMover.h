@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "../../D2Structs.h"
 #include "../../Drawing.h"
 #include "../Module.h"
@@ -28,6 +28,7 @@ extern int CELL_SIZE;
 
 struct ItemPacketData {
 	unsigned int itemId;
+	unsigned int itemTargetId;
 	unsigned int x;
 	unsigned int y;
 	ULONGLONG startTicks;
@@ -37,9 +38,9 @@ struct ItemPacketData {
 class ItemMover : public Module {
 private:
 	bool FirstInit;
-	int *InventoryItemIds;
-	int *StashItemIds;
-	int *CubeItemIds;
+	UnitAny** InventoryItems;
+	UnitAny** StashItems;
+	UnitAny** CubeItems;
 	int tp_warn_quantity;
 	unsigned int TpKey;
 	unsigned int HealKey;
@@ -51,23 +52,23 @@ public:
 	ItemMover() : Module("Item Mover"),
 		ActivePacket(),
 		FirstInit(false),
-		InventoryItemIds(NULL),
-		StashItemIds(NULL),
-		CubeItemIds(NULL),
-	  tp_warn_quantity(3){
+		InventoryItems(NULL),
+		StashItems(NULL),
+		CubeItems(NULL),
+		tp_warn_quantity(3) {
 
 		InitializeCriticalSection(&crit);
 	};
 
 	~ItemMover() {
-		if (InventoryItemIds) {
-			delete [] InventoryItemIds;
+		if (InventoryItems) {
+			delete[] InventoryItems;
 		}
-		if (StashItemIds) {
-			delete [] StashItemIds;
+		if (StashItems) {
+			delete[] StashItems;
 		}
-		if (CubeItemIds) {
-			delete [] CubeItemIds;
+		if (CubeItems) {
+			delete[] CubeItems;
 		}
 		DeleteCriticalSection(&crit);
 	};
@@ -77,8 +78,9 @@ public:
 	void Lock() { EnterCriticalSection(&crit); };
 	void Unlock() { LeaveCriticalSection(&crit); };
 
-	bool LoadInventory(UnitAny *unit, int xpac, int source, int sourceX, int sourceY, bool shiftState, bool ctrlState, int stashUI, int invUI);
-	bool FindDestination(int xpac, int destination, unsigned int itemId, BYTE xSize, BYTE ySize);
+	bool LoadInventory(UnitAny* unit, int xpac, int source, int sourceX, int sourceY, bool shiftState, bool ctrlState, int stashUI, int invUI);
+	bool FindDestination(UnitAny* unit, UnitAny* pItem, int xpac, int destination, unsigned int itemId, BYTE xSize, BYTE ySize);
+	void StackItem();
 	void PickUpItem();
 	void PutItemInContainer();
 	void PutItemOnGround();
@@ -89,10 +91,10 @@ public:
 	void OnKey(bool up, BYTE key, LPARAM lParam, bool* block);
 	void OnLeftClick(bool up, int x, int y, bool* block);
 	void OnRightClick(bool up, int x, int y, bool* block);
-	void OnGamePacketRecv(BYTE* packet, bool *block);
+	void OnGamePacketRecv(BYTE* packet, bool* block);
 	void OnGameExit();
 };
 
 
-void ParseItem(const unsigned char *data, ItemInfo *ii, bool *success);
-bool ProcessStat(unsigned int statId, BitReader &reader, ItemProperty &itemProp);
+void ParseItem(const unsigned char* data, ItemInfo* ii, bool* success);
+bool ProcessStat(unsigned int statId, BitReader& reader, ItemProperty& itemProp);

@@ -91,14 +91,14 @@ void ItemMover::Init() {
 	CUBE_WIDTH = cubeLayout->SlotWidth;
 	CUBE_HEIGHT = cubeLayout->SlotHeight;
 
-	if (!InventoryItemIds) {
-		InventoryItemIds = new int[INVENTORY_WIDTH * INVENTORY_HEIGHT];
+	if (!InventoryItems) {
+		InventoryItems = new UnitAny * [INVENTORY_WIDTH * INVENTORY_HEIGHT];
 	}
-	if (!StashItemIds) {
-		StashItemIds = new int[STASH_WIDTH * LOD_STASH_HEIGHT];
+	if (!StashItems) {
+		StashItems = new UnitAny * [STASH_WIDTH * LOD_STASH_HEIGHT];
 	}
-	if (!CubeItemIds) {
-		CubeItemIds = new int[CUBE_WIDTH * CUBE_HEIGHT];
+	if (!CubeItems) {
+		CubeItems = new UnitAny * [CUBE_WIDTH * CUBE_HEIGHT];
 	}
 
 	//PrintText(1, "Got positions: %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d",
@@ -123,14 +123,14 @@ void ItemMover::Init() {
 bool ItemMover::LoadInventory(UnitAny* unit, int xpac, int source, int sourceX, int sourceY, bool shiftState, bool ctrlState, int stashUI, int invUI) {
 	bool returnValue = false;
 
-	memset(InventoryItemIds, 0, INVENTORY_WIDTH * INVENTORY_HEIGHT * sizeof(int));
-	memset(StashItemIds, 0, STASH_WIDTH * LOD_STASH_HEIGHT * sizeof(int));
-	memset(CubeItemIds, 0, CUBE_WIDTH * CUBE_HEIGHT * sizeof(int));
+	memset(InventoryItems, 0, INVENTORY_WIDTH * INVENTORY_HEIGHT * sizeof(int));
+	memset(StashItems, 0, STASH_WIDTH * LOD_STASH_HEIGHT * sizeof(int));
+	memset(CubeItems, 0, CUBE_WIDTH * CUBE_HEIGHT * sizeof(int));
 
 	if (!xpac) {
 		for (int x = 0; x < STASH_WIDTH; x++) {
 			for (int y = CLASSIC_STASH_HEIGHT; y < LOD_STASH_HEIGHT; y++) {
-				StashItemIds[y * STASH_WIDTH + x] = -1;
+				StashItems[y * STASH_WIDTH + x] = (UnitAny*)NULL;
 			}
 		}
 	}
@@ -138,18 +138,20 @@ bool ItemMover::LoadInventory(UnitAny* unit, int xpac, int source, int sourceX, 
 	unsigned int itemId = 0;
 	BYTE itemXSize, itemYSize;
 	bool cubeInInventory = false, cubeAnywhere = false;
+	UnitAny* pTargetItem = NULL;
 	for (UnitAny* pItem = unit->pInventory->pFirstItem; pItem; pItem = pItem->pItemData->pNextInvItem) {
-		int* p, width;
+		UnitAny** p;
+		int width;
 		if (pItem->pItemData->ItemLocation == STORAGE_INVENTORY) {
-			p = InventoryItemIds;
+			p = InventoryItems;
 			width = INVENTORY_WIDTH;
 		}
 		else if (pItem->pItemData->ItemLocation == STORAGE_STASH) {
-			p = StashItemIds;
+			p = StashItems;
 			width = STASH_WIDTH;
 		}
 		else if (pItem->pItemData->ItemLocation == STORAGE_CUBE) {
-			p = CubeItemIds;
+			p = CubeItems;
 			width = CUBE_WIDTH;
 		}
 		else {
@@ -171,11 +173,12 @@ bool ItemMover::LoadInventory(UnitAny* unit, int xpac, int source, int sourceX, 
 
 		int xStart = pItem->pObjectPath->dwPosX;
 		int yStart = pItem->pObjectPath->dwPosY;
-		BYTE xSize = D2COMMON_GetItemText(pItem->dwTxtFileNo)->xSize;
-		BYTE ySize = D2COMMON_GetItemText(pItem->dwTxtFileNo)->ySize;
+		ItemsTxt* pItemText = D2COMMON_GetItemText(pItem->dwTxtFileNo);
+		BYTE xSize = pItemText->binvwidth;
+		BYTE ySize = pItemText->binvheight;
 		for (int x = xStart; x < xStart + xSize; x++) {
 			for (int y = yStart; y < yStart + ySize; y++) {
-				p[y * width + x] = pItem->dwUnitId;
+				p[y * width + x] = pItem;
 
 				// If you click to move the cube into itself, your character ends up in
 				// the amusing (and apparently permanent) state where he has no visible
@@ -184,6 +187,7 @@ bool ItemMover::LoadInventory(UnitAny* unit, int xpac, int source, int sourceX, 
 				if (x == sourceX && y == sourceY && pItem->pItemData->ItemLocation == source && !box) {
 					// This is the item we want to move
 					itemId = pItem->dwUnitId;
+					pTargetItem = pItem;
 					itemXSize = xSize;
 					itemYSize = ySize;
 				}
@@ -213,84 +217,117 @@ bool ItemMover::LoadInventory(UnitAny* unit, int xpac, int source, int sourceX, 
 
 	// Find a spot for the item in the destination container
 	if (itemId > 0) {
-		returnValue = FindDestination(xpac, destination, itemId, itemXSize, itemYSize);
+		returnValue = FindDestination(unit, pTargetItem, xpac, destination, itemId, itemXSize, itemYSize);
 	}
 
 	FirstInit = true;
 	return returnValue;
 }
 
-bool ItemMover::FindDestination(int xpac, int destination, unsigned int itemId, BYTE xSize, BYTE ySize) {
-	int* p, width = 0, height = 0;
+bool ItemMover::FindDestination(UnitAny* unit, UnitAny* pItem, int xpac, int destination, unsigned int itemId, BYTE xSize, BYTE ySize) {
+	UnitAny** p;
+	int width = 0, height = 0;
 	if (destination == STORAGE_INVENTORY) {
-		p = InventoryItemIds;
+		p = InventoryItems;
 		width = INVENTORY_WIDTH;
 		height = INVENTORY_HEIGHT;
 	}
 	else if (destination == STORAGE_STASH) {
-		p = StashItemIds;
+		p = StashItems;
 		width = STASH_WIDTH;
 		height = xpac ? LOD_STASH_HEIGHT : CLASSIC_STASH_HEIGHT;
 	}
 	else if (destination == STORAGE_CUBE) {
-		p = CubeItemIds;
+		p = CubeItems;
 		width = CUBE_WIDTH;
 		height = CUBE_HEIGHT;
 	}
 
 	bool found = false;
-	int destX = 0, destY = 0;
+	int destX = 0, destY = 0, invItemId = 0;
 	if (width) {
 		bool first_y = true;
-		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
-				bool abort = false;
-				int vacancies = 0;
-				for (int testx = x; testx < x + xSize && testx < width; testx++) {
-					for (int testy = y; testy < y + ySize && testy < height; testy++) {
-						if (p[testy * width + testx]) {
-							abort = true;
+		// test once for stacked items
+		ItemsTxt* pItemsTxt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
+		if (destination != STORAGE_NULL && pItemsTxt->bstackable)
+		{
+			int nQuantity = D2COMMON_GetUnitStat(pItem, STAT_AMMOQUANTITY, 0);
+			for (UnitAny* pInvItem = unit->pInventory->pFirstItem; pInvItem; pInvItem = pInvItem->pItemData->pNextInvItem) {
+				if (pInvItem->dwTxtFileNo == pItem->dwTxtFileNo)
+				{
+					if (pInvItem->pItemData->ItemLocation == destination)
+					{
+						int nTargetQuantity = D2COMMON_GetUnitStat(pInvItem, STAT_AMMOQUANTITY, 0);
+						if (nQuantity + nTargetQuantity <= pItemsTxt->dwmaxstack)
+						{
+							destX = -1;
+							destY = -1;
+							invItemId = pInvItem->dwUnitId;
+							found = true;
 							break;
 						}
-						else {
-							vacancies++;
+						else if (nTargetQuantity != pItemsTxt->dwmaxstack)
+						{
+							invItemId = pInvItem->dwUnitId;
+							break;
 						}
 					}
-					if (abort) {
+				}
+			}
+		}
+
+		if (!found)
+		{
+			for (int x = 0; x < width; x++) {
+				for (int y = 0; y < height; y++) {
+					bool abort = false;
+					int vacancies = 0;
+					for (int testx = x; testx < x + xSize && testx < width; testx++) {
+						for (int testy = y; testy < y + ySize && testy < height; testy++) {
+							if (p[testy * width + testx]) {
+								abort = true;
+								break;
+							}
+							else {
+								vacancies++;
+							}
+						}
+						if (abort) {
+							break;
+						}
+					}
+					if (vacancies == xSize * ySize) {
+						// Found an empty spot that's big enough for the item
+						found = true;
+						destX = x;
+						destY = y;
 						break;
 					}
-				}
-				if (vacancies == xSize * ySize) {
-					// Found an empty spot that's big enough for the item
-					found = true;
-					destX = x;
-					destY = y;
-					break;
-				}
-				if (xSize == 1) {
-					if (first_y) {
-						if (x + 1 < width) {
-							x++;
-							y--;
-							first_y = false;
+					if (xSize == 1) {
+						if (first_y) {
+							if (x + 1 < width) {
+								x++;
+								y--;
+								first_y = false;
+							}
+						}
+						else {
+							first_y = true;
+							x--;
 						}
 					}
-					else {
-						first_y = true;
-						x--;
-					}
+				} // end y loop
+				if (found) {
+					break;
 				}
-			} // end y loop
-			if (found) {
-				break;
-			}
-			if (xSize == 2 && x % 2 == 0 && x + 2 >= width) {
-				x = 0;
-			}
-			else {
-				x++;
-			}
-		} // end x loop
+				if (xSize == 2 && x % 2 == 0 && x + 2 >= width) {
+					x = 0;
+				}
+				else {
+					x++;
+				}
+			} // end x loop
+		}
 	}
 	else {
 		found = true;
@@ -304,11 +341,19 @@ bool ItemMover::FindDestination(int xpac, int destination, unsigned int itemId, 
 			ActivePacket.y = destY;
 			ActivePacket.startTicks = BHGetTickCount();
 			ActivePacket.destination = destination;
+			ActivePacket.itemTargetId = invItemId;
 		}
 		Unlock();
 	}
 
 	return found;
+}
+
+void ItemMover::StackItem() {
+	BYTE PacketData[9] = { 0x21,0,0,0,0 };
+	*reinterpret_cast<int*>(PacketData + 1) = ActivePacket.itemId;
+	*reinterpret_cast<int*>(PacketData + 5) = ActivePacket.itemTargetId;
+	D2NET_SendPacket(9, 1, PacketData);
 }
 
 void ItemMover::PickUpItem() {
@@ -355,8 +400,8 @@ void ItemMover::OnLeftClick(bool up, int x, int y, bool* block) {
 		if ((pItem->pItemData->dwFlags & ITEM_IDENTIFIED) <= 0) {
 			int xStart = pItem->pObjectPath->dwPosX;
 			int yStart = pItem->pObjectPath->dwPosY;
-			BYTE xSize = D2COMMON_GetItemText(pItem->dwTxtFileNo)->xSize;
-			BYTE ySize = D2COMMON_GetItemText(pItem->dwTxtFileNo)->ySize;
+			BYTE xSize = D2COMMON_GetItemText(pItem->dwTxtFileNo)->binvwidth;
+			BYTE ySize = D2COMMON_GetItemText(pItem->dwTxtFileNo)->binvheight;
 			if (pItem->pItemData->ItemLocation == STORAGE_INVENTORY) {
 				mouseX = (*p_D2CLIENT_MouseX - INVENTORY_LEFT) / CELL_SIZE;
 				mouseY = (*p_D2CLIENT_MouseY - INVENTORY_TOP) / CELL_SIZE;
@@ -598,6 +643,7 @@ void ItemMover::OnGamePacketRecv(BYTE* packet, bool* block) {
 			if (itemId == ActivePacket.itemId) {
 				//PrintText(1, "Placed item id %d", itemId);
 				ActivePacket.itemId = 0;
+				ActivePacket.itemTargetId = 0;
 				ActivePacket.x = 0;
 				ActivePacket.y = 0;
 				ActivePacket.startTicks = 0;
@@ -673,7 +719,19 @@ void ItemMover::OnGamePacketRecv(BYTE* packet, bool* block) {
 			Lock();
 			if (itemId == ActivePacket.itemId) {
 				//PrintText(2, "Picked up item id %d", itemId);
-				if (ActivePacket.destination == STORAGE_NULL) {
+				if (ActivePacket.itemTargetId != 0) {
+					StackItem();
+					if (ActivePacket.x != -1 && ActivePacket.y != -1) {
+						PutItemInContainer();
+					}
+					ActivePacket.itemId = 0;
+					ActivePacket.itemTargetId = 0;
+					ActivePacket.x = 0;
+					ActivePacket.y = 0;
+					ActivePacket.startTicks = 0;
+					ActivePacket.destination = 0;
+				}
+				else if (ActivePacket.destination == STORAGE_NULL) {
 					PutItemOnGround();
 				}
 				else {
@@ -692,6 +750,7 @@ void ItemMover::OnGamePacketRecv(BYTE* packet, bool* block) {
 
 void ItemMover::OnGameExit() {
 	ActivePacket.itemId = 0;
+	ActivePacket.itemTargetId = 0;
 	ActivePacket.x = 0;
 	ActivePacket.y = 0;
 	ActivePacket.startTicks = 0;

@@ -291,7 +291,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo, string& name, const string& ac
 	char lvlreq[4], wpnspd[4], rangeadder[4];
 
 	UnitAny* item = uInfo->item;
-	ItemText* txt = D2COMMON_GetItemText(item->dwTxtFileNo);
+	ItemsTxt* txt = D2COMMON_GetItemText(item->dwTxtFileNo);
 	char* szCode = txt->szCode;
 	code[0] = szCode[0];
 	code[1] = szCode[1] != ' ' ? szCode[1] : 0;
@@ -304,12 +304,12 @@ void SubstituteNameVariables(UnitItemInfo* uInfo, string& name, const string& ac
 	sprintf_s(origName, "%s", name.c_str());
 
 	sprintf_s(lvlreq, "%d", GetRequiredLevel(uInfo->item));
-	sprintf_s(wpnspd, "%d", txt->speed); //Add these as matchable stats too, maybe?
-	sprintf_s(rangeadder, "%d", txt->rangeadder);
+	sprintf_s(wpnspd, "%d", txt->dwspeed); //Add these as matchable stats too, maybe?
+	sprintf_s(rangeadder, "%d", txt->brangeadder);
 	sprintf_s(qty, "%d", D2COMMON_GetUnitStat(item, STAT_AMMOQUANTITY, 0));
 
 	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
-	if (pUnit && txt->fQuest == 0) {
+	if (pUnit && txt->bquest == 0) {
 		sprintf_s(sellValue, "%d", D2COMMON_GetItemPrice(pUnit, item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1));
 	}
 

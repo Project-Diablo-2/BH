@@ -207,8 +207,8 @@ void StashExport::fillStats(JSONArray* statsArray, JSONObject* itemDef, UnitAny*
 }
 
 void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
-	ItemText* txt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
-	std::string type = UnicodeToAnsi(D2LANG_GetLocaleText(txt->nLocaleTxtNo));
+	ItemsTxt* txt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
+	std::string type = "";//UnicodeToAnsi(D2LANG_GetLocaleText(txt->nLocaleTxtNo));
 	// Remove hardcoded color
 	if (type.size() > 3 && type.substr(0, 2) == "ÿc") {
 		type = type.substr(3, type.size() - 3);

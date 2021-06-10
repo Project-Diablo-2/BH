@@ -1,4 +1,4 @@
-#include "D2Helpers.h"
+﻿#include "D2Helpers.h"
 #include "D2Ptrs.h"
 #include "D2Stubs.h"
 #include "Common.h"
@@ -38,46 +38,46 @@ int GetRelation(UnitAny* unit) {
 	if (!unit || !player)
 		return 2;
 
-	switch(unit->dwType) {
-		case UNIT_PLAYER://Player
+	switch (unit->dwType) {
+	case UNIT_PLAYER://Player
 
-			// Check if we are the unit.
-			if (unit->dwUnitId == player->dwUnitId)
-				return 1;//You
-			
-			// Check if we are in a party with unit.
-			roster = FindPlayerRoster(unit->dwUnitId);
-			if (playerRoster && roster && playerRoster->wPartyId == roster->wPartyId && roster->wPartyId != INVALID_PARTY_ID)
-				return 3;//Partied
-			
-			// Check if unit is hostile towards us
-			if (TestPvpFlag_STUB(unit->dwUnitId, player->dwUnitId, 8))
-				return 4;
+		// Check if we are the unit.
+		if (unit->dwUnitId == player->dwUnitId)
+			return 1;//You
 
-			return 2;
+		// Check if we are in a party with unit.
+		roster = FindPlayerRoster(unit->dwUnitId);
+		if (playerRoster && roster && playerRoster->wPartyId == roster->wPartyId && roster->wPartyId != INVALID_PARTY_ID)
+			return 3;//Partied
+
+		// Check if unit is hostile towards us
+		if (TestPvpFlag_STUB(unit->dwUnitId, player->dwUnitId, 8))
+			return 4;
+
+		return 2;
 		break;
-		case UNIT_MONSTER://Monster or NPC or Summon
-		case UNIT_MISSILE://Missile
+	case UNIT_MONSTER://Monster or NPC or Summon
+	case UNIT_MISSILE://Missile
 
-			if (unit->dwOwnerId < 0 || unit->dwOwnerType < 0 || unit->dwOwnerType > 5)
-				return 4;
+		if (unit->dwOwnerId < 0 || unit->dwOwnerType < 0 || unit->dwOwnerType > 5)
+			return 4;
 
-			if (unit->dwType == UNIT_MONSTER && unit->dwOwnerType == UNIT_MONSTER)
-				return 4;
-			
-			// Find the owner of the unit.
-			UnitAny* owner = D2CLIENT_FindServerSideUnit(unit->dwOwnerId, unit->dwOwnerType);
-			if (!owner || owner->dwType != unit->dwOwnerType || owner->dwUnitId != unit->dwOwnerId)
-				return 4;
+		if (unit->dwType == UNIT_MONSTER && unit->dwOwnerType == UNIT_MONSTER)
+			return 4;
 
-			return GetRelation(owner);
+		// Find the owner of the unit.
+		UnitAny* owner = D2CLIENT_FindServerSideUnit(unit->dwOwnerId, unit->dwOwnerType);
+		if (!owner || owner->dwType != unit->dwOwnerType || owner->dwUnitId != unit->dwOwnerId)
+			return 4;
+
+		return GetRelation(owner);
 		break;
 	}
 
 	return 2;//Neutral
 }
 
-bool IsValidMonster(UnitAny *pUnit)
+bool IsValidMonster(UnitAny* pUnit)
 {
 	//Have we even been given a unit?
 	if (!pUnit)
@@ -89,7 +89,7 @@ bool IsValidMonster(UnitAny *pUnit)
 
 	if ((pUnit->dwTxtFileNo == 608) && (pUnit->dwMode == 8))
 		return false;
-	
+
 	if ((pUnit->dwTxtFileNo == 68) && (pUnit->dwMode == 14))// Ignore burrowing maggots
 		return false;
 
@@ -97,8 +97,8 @@ bool IsValidMonster(UnitAny *pUnit)
 	if ((pUnit->dwTxtFileNo == 258 || (pUnit->dwTxtFileNo == 261)) && (pUnit->dwMode == 14))
 		return false;
 
-	DWORD badMonIds[] = {227, 283, 326, 327, 328, 329, 330, 410, 411, 412, 413, 414, 415, 416, 366, 406,
-						 351, 352, 353, 266, 408, 516, 517, 518, 519, 522, 523, 543, 543, 545};
+	DWORD badMonIds[] = { 227, 283, 326, 327, 328, 329, 330, 410, 411, 412, 413, 414, 415, 416, 366, 406,
+						 351, 352, 353, 266, 408, 516, 517, 518, 519, 522, 523, 543, 543, 545 };
 
 	for (DWORD n = 0; n < 30; n++)
 	{
@@ -106,13 +106,13 @@ bool IsValidMonster(UnitAny *pUnit)
 			return false;
 	}
 
-	if (D2COMMON_GetUnitStat(pUnit, 172, 0) == 2) 
+	if (D2COMMON_GetUnitStat(pUnit, 172, 0) == 2)
 		return false;
 
 	wchar_t* name = D2CLIENT_GetUnitName(pUnit);
 	char* tmp = UnicodeToAnsi(name);
 
-	if ((strcmp(tmp,"an evil force") == 0) || (strcmp(tmp, "dummy") == 0) || (strcmp(tmp, "Maggot") == 0)) {
+	if ((strcmp(tmp, "an evil force") == 0) || (strcmp(tmp, "dummy") == 0) || (strcmp(tmp, "Maggot") == 0)) {
 		delete[] tmp;
 		return false;
 	}
@@ -174,14 +174,14 @@ void PartyPrint(char* format, ...)
 	delete[] str;
 }
 
-CellFile *LoadBmpCellFile(BYTE *buf1, int width, int height)
+CellFile* LoadBmpCellFile(BYTE* buf1, int width, int height)
 {
-	BYTE *buf2 = new BYTE[(width*height * 2) + height], *dest = buf2;
+	BYTE* buf2 = new BYTE[(width * height * 2) + height], * dest = buf2;
 
 	for (int i = 0; i < height; i++) {
-		BYTE *src = buf1 + (i*((width + 3)&-4)), *limit = src + width;
+		BYTE* src = buf1 + (i * ((width + 3) & -4)), * limit = src + width;
 		while (src < limit) {
-			BYTE *start = src, *limit2 = min(limit, src + 0x7f), trans = !*src;
+			BYTE* start = src, * limit2 = min(limit, src + 0x7f), trans = !*src;
 			do src++; while ((trans == (BYTE)!*src) && (src < limit2));
 			if (!trans || (src < limit)) *dest++ = (trans ? 0x80 : 0) + (src - start);
 			if (!trans) while (start < src) *dest++ = *start++;
@@ -192,35 +192,35 @@ CellFile *LoadBmpCellFile(BYTE *buf1, int width, int height)
 	static DWORD dc6head[] = { 6, 1, 0, 0xeeeeeeee, 1, 1, 0x1c, 0, -1, -1, 0, 0, 0, -1, -1 };
 	dc6head[8] = width;
 	dc6head[9] = height;
-	BYTE *ret = new BYTE[dc6head[13] = sizeof(dc6head) + (dc6head[14] = dest - buf2) + 3];
+	BYTE* ret = new BYTE[dc6head[13] = sizeof(dc6head) + (dc6head[14] = dest - buf2) + 3];
 	memset(memcpy2(memcpy2(ret, dc6head, sizeof(dc6head)), buf2, dc6head[14]), 0xee, 3);
 	delete buf2;
 
-	return (CellFile *)ret;
+	return (CellFile*)ret;
 }
 
-CellFile *LoadBmpCellFile(char *filename)
+CellFile* LoadBmpCellFile(char* filename)
 {
-	BYTE *ret = 0;
+	BYTE* ret = 0;
 
-	BYTE *buf1 = AllocReadFile(filename);
-	BITMAPFILEHEADER *bmphead1 = (BITMAPFILEHEADER *)buf1;
-	BITMAPINFOHEADER *bmphead2 = (BITMAPINFOHEADER *)(buf1 + sizeof(BITMAPFILEHEADER));
+	BYTE* buf1 = AllocReadFile(filename);
+	BITMAPFILEHEADER* bmphead1 = (BITMAPFILEHEADER*)buf1;
+	BITMAPINFOHEADER* bmphead2 = (BITMAPINFOHEADER*)(buf1 + sizeof(BITMAPFILEHEADER));
 	if (buf1 && (bmphead1->bfType == 'MB') && (bmphead2->biBitCount == 8) && (bmphead2->biCompression == BI_RGB)) {
-		ret = (BYTE *)LoadBmpCellFile(buf1 + bmphead1->bfOffBits, bmphead2->biWidth, bmphead2->biHeight);
+		ret = (BYTE*)LoadBmpCellFile(buf1 + bmphead1->bfOffBits, bmphead2->biWidth, bmphead2->biHeight);
 	}
 	delete buf1;
 
-	return (CellFile *)ret;
+	return (CellFile*)ret;
 }
 
-CellFile *InitCellFile(CellFile *cf)
+CellFile* InitCellFile(CellFile* cf)
 {
 	if (cf) D2CMP_InitCellFile(cf, &cf, "?", 0, -1, "?");
 	return cf;
 }
 
-void DeleteCellFile(CellFile *cf)
+void DeleteCellFile(CellFile* cf)
 {
 	if (cf) {
 		D2CMP_DeleteCellFile(cf);
@@ -321,7 +321,7 @@ bool Interact(DWORD UnitId, DWORD UnitType) {
 }
 
 std::string GetItemCode(int dwTxtFileNo) {
-	ItemText* text = D2COMMON_GetItemText(dwTxtFileNo);
+	ItemsTxt* text = D2COMMON_GetItemText(dwTxtFileNo);
 	std::string code = text->szCode;
 	return code.substr(0, 3);
 }

@@ -1,4 +1,4 @@
-/**
+﻿/**
 *
 * D2DataTables.h
 * BH: Copyright 2011 (C) McGod
@@ -143,7 +143,7 @@ struct UniqueItemsTxt
 	union
 	{
 		DWORD dwCode;
-		char szCode[4];   
+		char szCode[4];
 	};							  //0x28
 	DWORD dwUniqueItemFlags;      //0x2C
 	DWORD dwRarity;               //0x30
@@ -207,12 +207,12 @@ struct PetTypesTxt
 {
 	WORD pet_type; // 0x0
 	struct {
-		BYTE warp:1; // 0x4
-		BYTE range:1; // 0x4
-		BYTE partysend:1; // 0x4
-		BYTE unsummon:1; // 0x4
-		BYTE automap:1; // 0x4
-		BYTE drawhp:1; // 0x4
+		BYTE warp : 1; // 0x4
+		BYTE range : 1; // 0x4
+		BYTE partysend : 1; // 0x4
+		BYTE unsummon : 1; // 0x4
+		BYTE automap : 1; // 0x4
+		BYTE drawhp : 1; // 0x4
 	} dwFlags;
 	BYTE _pad[5];
 	WORD group; // 0x8
@@ -256,9 +256,9 @@ struct InventoryLayout {
 	 DWORD dwRight;		//0x04
 	 DWORD dwTop;		//0x08
 	 DWORD dwBottom;		//0x0C
-	 union 
+	 union
 	 {
-	 struct 
+	 struct
 	 {
 	 BYTE nGridX;		//0x10
 	 BYTE nGridY;		//0x11
@@ -278,7 +278,7 @@ struct InventoryLayout {
 	 InventoryLayout Grid;			//0x14
 	 union
 	 {
-	 struct 
+	 struct
 	 {
 	 InventoryLayout RightArm;		//0x28
 	 InventoryLayout Torso;			//0x3C
@@ -422,7 +422,7 @@ struct ObjectTxt
 	BYTE nOperateFn;				//0x1B3
 	BYTE _5[8];						//0x1B4
 	DWORD nAutoMap;					//0x1BB
-}; 
+};
 
 struct LevelsTxt
 {
@@ -664,14 +664,14 @@ struct DifficultyLevelsTxt //size 0x58
 struct CubeInputItem		//size (0x08)
 {
 	struct {
-		BYTE	bCodeFlag:1;			//1
-		BYTE	bClassFlag:1;			//2
-		BYTE	bAnyFlag:1;				//3
-		BYTE	bSocketFlag:1;			//4
-		BYTE	bNoEtherealFlag:1;		//5
-		BYTE	bRepairFlag:1;			//6
-		BYTE	bUniqueItemNameFlag:1;	//7
-		BYTE	bUpgFlag:1;				//8
+		BYTE	bCodeFlag : 1;			//1
+		BYTE	bClassFlag : 1;			//2
+		BYTE	bAnyFlag : 1;				//3
+		BYTE	bSocketFlag : 1;			//4
+		BYTE	bNoEtherealFlag : 1;		//5
+		BYTE	bRepairFlag : 1;			//6
+		BYTE	bUniqueItemNameFlag : 1;	//7
+		BYTE	bUpgFlag : 1;				//8
 	} bInputFlags; 				//0x00
 	BYTE	ItemType;			//0x01
 	WORD	Item;				//0x02
@@ -696,7 +696,7 @@ struct CubeOutputItem //size 0x54
 		struct
 		{
 			BYTE nLevel;
-			BYTE nAct;				
+			BYTE nAct;
 		};						   //for CUBE_OUTPUT_PORTAL
 		WORD nParam;               //0x06
 	};
@@ -829,35 +829,35 @@ struct MonStatsTxt // size 0x1A8
 	WORD	wDescStr;					//0x08
 	WORD	_1a;						//0x0A
 	struct {
-		BYTE	bisSpawn:1;						//1
-		BYTE	bisMelee:1;						//2
-		BYTE	bnoRatio:1;						//3
-		BYTE	bOpenDoors:1;					//4
-		BYTE	bSetBoss:1;						//5
-		BYTE	bBossXfer:1;					//6
-		BYTE	bBossXfer2:1;					//7
-		BYTE	bPrimeEvil:1;					//8
-		BYTE	bNPC:1;							//9
-		BYTE	bInteract:1;					//10
-		BYTE	binTown:1;						//11
-		BYTE	blUndead:1;						//12
-		BYTE	bhUndead:1;						//13
-		BYTE	bDemon:1;						//14
-		BYTE	bFlying:1;						//15
-		BYTE	bKillable:1;					//16
-		BYTE	bSwitchAI:1;					//17
-		BYTE	bNoMultiShot:1;					//18
-		BYTE	bNeverCount:1;					//19
-		BYTE	bPetIgnore:1;					//20
-		BYTE	bDeathDmg:1;					//21
-		BYTE	bGenericSpawn:1;				//22
-		BYTE	bZoo:1;							//23
-		BYTE	bPlaceSpawn:1;					//24
-		BYTE	bInventory:1;					//25
-		BYTE	bEnabled:1;						//26
-		BYTE	bNoShldBlock:1;					//27
-		BYTE	bNoAura:1;						//28
-		BYTE	bRangedType:1;					//29
+		BYTE	bisSpawn : 1;						//1
+		BYTE	bisMelee : 1;						//2
+		BYTE	bnoRatio : 1;						//3
+		BYTE	bOpenDoors : 1;					//4
+		BYTE	bSetBoss : 1;						//5
+		BYTE	bBossXfer : 1;					//6
+		BYTE	bBossXfer2 : 1;					//7
+		BYTE	bPrimeEvil : 1;					//8
+		BYTE	bNPC : 1;							//9
+		BYTE	bInteract : 1;					//10
+		BYTE	binTown : 1;						//11
+		BYTE	blUndead : 1;						//12
+		BYTE	bhUndead : 1;						//13
+		BYTE	bDemon : 1;						//14
+		BYTE	bFlying : 1;						//15
+		BYTE	bKillable : 1;					//16
+		BYTE	bSwitchAI : 1;					//17
+		BYTE	bNoMultiShot : 1;					//18
+		BYTE	bNeverCount : 1;					//19
+		BYTE	bPetIgnore : 1;					//20
+		BYTE	bDeathDmg : 1;					//21
+		BYTE	bGenericSpawn : 1;				//22
+		BYTE	bZoo : 1;							//23
+		BYTE	bPlaceSpawn : 1;					//24
+		BYTE	bInventory : 1;					//25
+		BYTE	bEnabled : 1;						//26
+		BYTE	bNoShldBlock : 1;					//27
+		BYTE	bNoAura : 1;						//28
+		BYTE	bRangedType : 1;					//29
 	} dwFlags;							//0x0C
 	DWORD	dwCode;						//0x10
 	WORD	wMonSound;					//0x14
@@ -1081,47 +1081,47 @@ struct MonStatsTxt // size 0x1A8
 struct SkillsTxt //size 0x23C
 {
 	DWORD wSkillId; 			//0x00
-	struct 
+	struct
 	{
-		BYTE bDecquant:1;				//0
-		BYTE bLob:1;					//1
-		BYTE bProgressive:1;			//2
-		BYTE bFinishing:1;				//3
-		BYTE bPassive:1;				//4
-		BYTE bAura:1;					//5
-		BYTE bPeriodic:1;				//6
-		BYTE bPrgStack:1;				//7
-		BYTE bInTown:1;					//8
-		BYTE bKick:1;					//9
-		BYTE bInGame:1;					//10
-		BYTE bRepeat:1;					//11
-		BYTE bStSuccessOnly:1;			//12
-		BYTE bStSoundDelay:1;			//13
-		BYTE bWeaponSnd:1;				//14
-		BYTE bImmediate:1;				//15
-		BYTE bNoAmmo:1;					//16
-		BYTE bEnhanceable:1;			//17
-		BYTE bDurability:1;				//18
-		BYTE bUseAttackRating:1;		//19
-		BYTE bTargetableOnly:1;			//20
-		BYTE bSearchEnemyXY:1;			//21
-		BYTE bSearchEnemyNear:1;		//22
-		BYTE bSearchOpenXY:1;			//23
-		BYTE bTargetCorpse:1;			//24
-		BYTE bTargetPet:1;				//25
-		BYTE bTargetAlly:1;				//26
-		BYTE bTargetItem:1;				//27
-		BYTE bAttackNoMana:1;			//28
-		BYTE bItemTgtDo:1;				//29
-		BYTE bLeftSkill:1;				//30
-		BYTE bInterrupt:1;				//31
-		BYTE bTgtPlaceCheck:1;			//32
-		BYTE bItemCheckStart:1;			//33
-		BYTE bItemCltCheckStart:1;		//34
-		BYTE bGeneral:1;				//35
-		BYTE bScroll:1;					//36
-		BYTE bUseManaOnDo:1;			//37
-		BYTE bWarp:1;					//38
+		BYTE bDecquant : 1;				//0
+		BYTE bLob : 1;					//1
+		BYTE bProgressive : 1;			//2
+		BYTE bFinishing : 1;				//3
+		BYTE bPassive : 1;				//4
+		BYTE bAura : 1;					//5
+		BYTE bPeriodic : 1;				//6
+		BYTE bPrgStack : 1;				//7
+		BYTE bInTown : 1;					//8
+		BYTE bKick : 1;					//9
+		BYTE bInGame : 1;					//10
+		BYTE bRepeat : 1;					//11
+		BYTE bStSuccessOnly : 1;			//12
+		BYTE bStSoundDelay : 1;			//13
+		BYTE bWeaponSnd : 1;				//14
+		BYTE bImmediate : 1;				//15
+		BYTE bNoAmmo : 1;					//16
+		BYTE bEnhanceable : 1;			//17
+		BYTE bDurability : 1;				//18
+		BYTE bUseAttackRating : 1;		//19
+		BYTE bTargetableOnly : 1;			//20
+		BYTE bSearchEnemyXY : 1;			//21
+		BYTE bSearchEnemyNear : 1;		//22
+		BYTE bSearchOpenXY : 1;			//23
+		BYTE bTargetCorpse : 1;			//24
+		BYTE bTargetPet : 1;				//25
+		BYTE bTargetAlly : 1;				//26
+		BYTE bTargetItem : 1;				//27
+		BYTE bAttackNoMana : 1;			//28
+		BYTE bItemTgtDo : 1;				//29
+		BYTE bLeftSkill : 1;				//30
+		BYTE bInterrupt : 1;				//31
+		BYTE bTgtPlaceCheck : 1;			//32
+		BYTE bItemCheckStart : 1;			//33
+		BYTE bItemCltCheckStart : 1;		//34
+		BYTE bGeneral : 1;				//35
+		BYTE bScroll : 1;					//36
+		BYTE bUseManaOnDo : 1;			//37
+		BYTE bWarp : 1;					//38
 	} dwFlags;				//0x04 (5 bytes)
 	DWORD bClassId;			//0x0C
 	BYTE bAnim;				//0x10
@@ -1327,7 +1327,7 @@ struct SkillsTxt //size 0x23C
 	WORD wAiBonus;			//0x232
 	DWORD dwCostMult;		//0x234
 	DWORD dwCostAdd;		//0x238
-}; 
+};
 
 #pragma pack(push,1)
 struct SkillDescTxt
@@ -1367,9 +1367,9 @@ struct ItemsTxt //size = 0x1A8, Valid for Weapons, Armors, Misc.txts
 	char	szinvfile[32];			//0x20
 	char	szuniqueinvfile[32];	//0x40
 	char	szsetinvfile[32];		//0x60
-	union{
+	union {
 		DWORD	dwcode;					//0x80
-		char	szcode[4];				//0x80
+		char	szCode[4];				//0x80
 	};
 	DWORD	dwnormcode;				//0x84
 	DWORD	dwubercode;				//0x88
@@ -1436,7 +1436,7 @@ struct ItemsTxt //size = 0x1A8, Valid for Weapons, Armors, Misc.txts
 	BYTE	blspad;					//0x11B
 	BYTE	b2handed;				//0x11C
 	BYTE	buseable;				//0x11D
-	WORD	wtype;					//0x11E
+	WORD	nType;					//0x11E
 	WORD	wtype2;					//0x120
 	WORD	bsubtype;				//0x122
 	WORD	wdropsound;				//0x124
@@ -1564,199 +1564,199 @@ struct ItemsTxt //size = 0x1A8, Valid for Weapons, Armors, Misc.txts
 };
 
 struct sgptDataTable {
-	BYTE*	pPlayerClass;			//0x00
+	BYTE* pPlayerClass;			//0x00
 	DWORD	dwPlayerClassRecords;	//0x04
-	BodyLocsTxt*	pBodyLocs;		//0x08
+	BodyLocsTxt* pBodyLocs;		//0x08
 	DWORD	dwBodyLocsRecords;		//0x0C
-	BYTE*	pStorePage;				//0x10
+	BYTE* pStorePage;				//0x10
 	DWORD	dwStorePageRecords;		//0x14
-	BYTE*	pElemTypes;				//0x18
+	BYTE* pElemTypes;				//0x18
 	DWORD	dwElemTypesRecords;		//0x1C
-	BYTE*	pHitClass;				//0x20
+	BYTE* pHitClass;				//0x20
 	DWORD	dwHitClassRecords;		//0x24
-	BYTE*	pMonMode;				//0x28
+	BYTE* pMonMode;				//0x28
 	DWORD	dwMonModeTxt;			//0x2C
-	BYTE*	pPlrMode;				//0x30
+	BYTE* pPlrMode;				//0x30
 	DWORD	dwPlrModeRecords;		//0x34
-	BYTE*	pSkillCalc;				//0x38
+	BYTE* pSkillCalc;				//0x38
 	DWORD	dwSkillCalcRecords;		//0x3C
-	BYTE*	pSkillCalcCache;		//0x40
+	BYTE* pSkillCalcCache;		//0x40
 	DWORD	dwSkillCalcCacheRecs;	//0x44
 	DWORD	dwSkillCalcCacheDelta;	//0x48
-	BYTE*	pSkillDescCalcCache;	//0x4C
+	BYTE* pSkillDescCalcCache;	//0x4C
 	DWORD	dwSkillDescCalcCacheRecs;//0x50
 	DWORD	dwSkillDescCalcCacheDelta;//0x54
-	BYTE*	pMissCalc;				//0x58
+	BYTE* pMissCalc;				//0x58
 	DWORD	dwMissCalcRecords;		//0x5C
-	BYTE*	pMissCalcCache;			//0x60
+	BYTE* pMissCalcCache;			//0x60
 	DWORD	dwMissCalcCacheRecs;	//0x64
 	DWORD	dwMissCalcCacheDelta;	//0x68
-	BYTE*	pSkillCodes;			//0x6C
+	BYTE* pSkillCodes;			//0x6C
 	DWORD	dwSkillCodesRecs;		//0x70
-	BYTE*	pEvents;				//0x74
+	BYTE* pEvents;				//0x74
 	DWORD	dwEventsRecs;			//0x78
-	BYTE*	pCompCodes;				//0x7C
+	BYTE* pCompCodes;				//0x7C
 	DWORD	dwCompCodesRecs;		//0x80
 	DWORD	dwCompCodes;			//0x84
-	BYTE*	pMonAi;					//0x88
+	BYTE* pMonAi;					//0x88
 	DWORD	dwMonAiRecs;			//0x8C
 	DWORD	dwMonAi;				//0x90
-	BYTE*	pItem;					//0x94
-	BYTE*	pItemCalcCache;			//0x98
+	BYTE* pItem;					//0x94
+	BYTE* pItemCalcCache;			//0x98
 	DWORD	dwItemCalcCacheRecs;	//0x9C
 	DWORD	dwItemCalcCache;		//0xA0
-	PropertiesTxt*	pPropertiesTxt;	//0xA4
-	BYTE*	dwProperties;			//0xA8
+	PropertiesTxt* pPropertiesTxt;	//0xA4
+	BYTE* dwProperties;			//0xA8
 	DWORD	dwProportiesRecs;		//0xAC
-	BYTE*	pRunes;					//0xB0
-	BYTE*	pHireDescs;				//0xB4
+	BYTE* pRunes;					//0xB0
+	BYTE* pHireDescs;				//0xB4
 	DWORD	dwHireDescsRecs;		//0xB8
-	StatesTxt*	pStatesTxt;			//0xBC
+	StatesTxt* pStatesTxt;			//0xBC
 	DWORD	dwStatesTxtRecs;		//0xC0
 	DWORD	dwStates;				//0xC4
-	BYTE*	pStateMaskFirst;		//0xC8
-	BYTE*	pStateMaskArr[40];		//0xCC
-	BYTE*	pProgressiveStates;		//0x16C
+	BYTE* pStateMaskFirst;		//0xC8
+	BYTE* pStateMaskArr[40];		//0xCC
+	BYTE* pProgressiveStates;		//0x16C
 	DWORD	dwProgressiveStatesRecs;//0x170
-	BYTE*	pCurseStates;			//0x174
+	BYTE* pCurseStates;			//0x174
 	DWORD	dwCurseStatesRecs;		//0x178
-	BYTE*	pTransStates;			//0x17C
+	BYTE* pTransStates;			//0x17C
 	DWORD	dwTransStatesRecs;		//0x180
-	BYTE*	pActionStates;			//0x184
+	BYTE* pActionStates;			//0x184
 	DWORD	dwActionStatesRecs;		//0x188
-	BYTE*	pColorStates;			//0x18C
+	BYTE* pColorStates;			//0x18C
 	DWORD	dwColorStatesRecs;		//0x190
-	BYTE*	pSoundCodes;			//0x194
-	BYTE*	pSoundCodesTxt;			//0x198
+	BYTE* pSoundCodes;			//0x194
+	BYTE* pSoundCodesTxt;			//0x198
 	DWORD	dwSoundCodesRecs;		//0x19C
-	BYTE*	pHirelings;				//0x1A0
+	BYTE* pHirelings;				//0x1A0
 	DWORD	dwHirelingsRecs;		//0x1A4
 	DWORD	HireNameStart[256];		//0x1A8
 	DWORD	HireNameEnd[256];		//0x5A8
-	BYTE*	pNpcs;					//0x9A8
+	BYTE* pNpcs;					//0x9A8
 	DWORD	dwNpcsRecs;				//0x9AC
-	BYTE*	pColorsTxt;				//0x9B0
-	BYTE*	pColors;				//0x9B4
-	BYTE*	pTreasureClassEx;		//0x9B8
-	BYTE*	pTreasureClassExTxt;	//0x9BC
+	BYTE* pColorsTxt;				//0x9B0
+	BYTE* pColors;				//0x9B4
+	BYTE* pTreasureClassEx;		//0x9B8
+	BYTE* pTreasureClassExTxt;	//0x9BC
 	DWORD	dwTreasureClassExRecs;	//0x9C0
-	BYTE*	pChestTreasureClassLst[45];	//0x9C4
+	BYTE* pChestTreasureClassLst[45];	//0x9C4
 	MonStatsTxt* pMonStatsTxt;		//0xA78
-	BYTE*	pMonStats;				//0xA7C
+	BYTE* pMonStats;				//0xA7C
 	DWORD	dwMonStatsRecs;			//0xA80
-	BYTE*	pMonSoundsTxt;			//0xA84
-	BYTE*	pMonSounds;				//0xA88
+	BYTE* pMonSoundsTxt;			//0xA84
+	BYTE* pMonSounds;				//0xA88
 	DWORD	dwMonSoundsRecs;		//0xA8C
-	BYTE*	pMonStats2Txt;			//0xA90
-	BYTE*	pMonStats2;				//0xA94
+	BYTE* pMonStats2Txt;			//0xA90
+	BYTE* pMonStats2;				//0xA94
 	DWORD	dwMonStats2Recs;		//0xA98
-	BYTE*	pMonPlaceTxt;			//0xA9C
-	BYTE*	pMonPlace;				//0xAA0
+	BYTE* pMonPlaceTxt;			//0xA9C
+	BYTE* pMonPlace;				//0xAA0
 	DWORD	dwMonPlaceRecs;			//0xAA4
-	BYTE*	pMonPresetTxt;			//0xAA8
-	BYTE*	pMonPresetActLst[5];	//0xAAC
+	BYTE* pMonPresetTxt;			//0xAA8
+	BYTE* pMonPresetActLst[5];	//0xAAC
 	DWORD	dwMonPresetActRecs[5];	//0xAC0
-	BYTE*	pSuperUniquesTxt;		//0xAD4
-	BYTE*	pSuperUniques;			//0xAD8
+	BYTE* pSuperUniquesTxt;		//0xAD4
+	BYTE* pSuperUniques;			//0xAD8
 	DWORD	dwSuperUniquesRecs;		//0xADC
 	WORD	SuperUniqeIdxList[66];	//0xAE0
-	MissilesTxt*	pMissilesTxt;	//0xB64
-	BYTE*	pMissiles;				//0xB68
+	MissilesTxt* pMissilesTxt;	//0xB64
+	BYTE* pMissiles;				//0xB68
 	DWORD	dwMissilesRecs;			//0xB6C
-	BYTE*	pMonLvl;				//0xB70
+	BYTE* pMonLvl;				//0xB70
 	DWORD	dwMonLvlRecs;			//0xB74
-	BYTE*	pMonSeqTxt;				//0xB78
-	BYTE*	pMonSeq;				//0xB7C
+	BYTE* pMonSeqTxt;				//0xB78
+	BYTE* pMonSeq;				//0xB7C
 	DWORD	dwMonSeqRecs;			//0xB80
-	BYTE*	pMonSequences;			//0xB84
+	BYTE* pMonSequences;			//0xB84
 	DWORD	dwMonSequencesRecs;		//0xB88
-	SkillDescTxt*	pSkillDescTxt;	//0xB8C
-	BYTE*	pSkillDesc;				//0xB90
+	SkillDescTxt* pSkillDescTxt;	//0xB8C
+	BYTE* pSkillDesc;				//0xB90
 	DWORD	dwSkillDescRecs;		//0xB94
-	SkillsTxt*pSkillsTxt;			//0xB98
-	BYTE*	pSkills;				//0xB9C
+	SkillsTxt* pSkillsTxt;			//0xB98
+	BYTE* pSkills;				//0xB9C
 	DWORD	dwSkillsRecs;			//0xBA0
-	BYTE*	pPlayerSkillCount;		//0xBA4
+	BYTE* pPlayerSkillCount;		//0xBA4
 	DWORD	dwPlayerSkillCount;		//0xBA8
-	BYTE*	pPlayerSkillList;		//0xBAC
+	BYTE* pPlayerSkillList;		//0xBAC
 	DWORD	dwPassiveSkillCount;	//0xBB0
-	BYTE*	pPasssiveSkillList;		//0xBB4
-	BYTE*	pOverlayTxt;			//0xBB8
-	BYTE*	pOverlay;				//0xBBC
+	BYTE* pPasssiveSkillList;		//0xBB4
+	BYTE* pOverlayTxt;			//0xBB8
+	BYTE* pOverlay;				//0xBBC
 	DWORD	dwOverlayRecs;			//0xBC0
-	CharStatsTxt*	pCharStatsTxt;	//0xBC4
+	CharStatsTxt* pCharStatsTxt;	//0xBC4
 	DWORD	dwCharsStatsRecs;		//0xBC8
-	ItemStatCostTxt*pItemStatCostTxt;//0xBCC
-	BYTE*	pItemStatCost;			//0xBD0
+	ItemStatCostTxt* pItemStatCostTxt;//0xBCC
+	BYTE* pItemStatCost;			//0xBD0
 	DWORD	dwItemStatCostRecs;		//0xBD4
-	BYTE*	pOpStatNesting;			//0xBD8
+	BYTE* pOpStatNesting;			//0xBD8
 	DWORD	dwOpStatNestingRecs;	//0xBDC
-	BYTE*	pMonEquip;				//0xBE0
+	BYTE* pMonEquip;				//0xBE0
 	DWORD	dwMonEquipRecs;			//0xBE4
-	BYTE*	pPetTypesTxt;			//0xBE8
-	BYTE*	pPetTypes;				//0xBEC
+	BYTE* pPetTypesTxt;			//0xBE8
+	BYTE* pPetTypes;				//0xBEC
 	DWORD	dwPetTypesRecs;			//0xBF0
-	BYTE*	pItemsType;				//0xBF4
-	BYTE*	pItemsTypeTxt;			//0xBF8
+	BYTE* pItemsType;				//0xBF4
+	BYTE* pItemsTypeTxt;			//0xBF8
 	DWORD	dwItemsTypeRecs;		//0xBFC
 	DWORD	dwItemsTypeNesting;		//0xC00
-	BYTE*	pItemsTypeNesting;		//0xC04
-	BYTE*	pSets;					//0xC08
-	BYTE*	pSetsTxt;				//0xC0C
+	BYTE* pItemsTypeNesting;		//0xC04
+	BYTE* pSets;					//0xC08
+	BYTE* pSetsTxt;				//0xC0C
 	DWORD	dwSetsRecs;				//0xC10
-	BYTE*	pSetItems;				//0xC14
+	BYTE* pSetItems;				//0xC14
 	SetItemsTxt* pSetItemsTxt;		//0xC18
 	DWORD	dwSetItemsRecs;			//0xC1C
-	BYTE*	pUniqueItems;			//0xC20
-	UniqueItemsTxt*	pUniqueItemsTxt;//0xC24
+	BYTE* pUniqueItems;			//0xC20
+	UniqueItemsTxt* pUniqueItemsTxt;//0xC24
 	DWORD	dwUniqItemsRecs;		//0xC28
-	BYTE*	pMonProp;				//0xC2C
-	BYTE*	pMonPropTxt;			//0xC30
+	BYTE* pMonProp;				//0xC2C
+	BYTE* pMonPropTxt;			//0xC30
 	DWORD	dwMonPropRecs;			//0xC34
-	BYTE*	pMonType;				//0xC38
-	BYTE*	pMonTypeTxt;			//0xC3C
+	BYTE* pMonType;				//0xC38
+	BYTE* pMonTypeTxt;			//0xC3C
 	DWORD	dwMonTypeRecs;			//0xC40
-	BYTE*	pMonTypeNesting;		//0xC44
+	BYTE* pMonTypeNesting;		//0xC44
 	DWORD	dwMonTypeNestingRecs;	//0xC48
-	BYTE*	pMonUMod;				//0xC4C
-	BYTE*	pMonUModTxt;			//0xC50
+	BYTE* pMonUMod;				//0xC4C
+	BYTE* pMonUModTxt;			//0xC50
 	DWORD	dwMonUModRecs;			//0xC54
-	LevelsTxt*	pLevelsTxt;			//0xC58
+	LevelsTxt* pLevelsTxt;			//0xC58
 	DWORD	dwLevelsRecs;			//0xC5C
-	BYTE*	pLvlDefs;				//0xC60
-	BYTE*	pLvlPrest;				//0xC64
+	BYTE* pLvlDefs;				//0xC60
+	BYTE* pLvlPrest;				//0xC64
 	DWORD	dwLvlPrestRecs;			//0xC68
 	DWORD	ItemStatCostStuff[2];	//0xC6C
-	BYTE*	pAnimTables;			//0xC74
-	BYTE*	pExperience;			//0xC78
-	DifficultyLevelsTxt*pDiffLvlsTxt;//0xC7C
+	BYTE* pAnimTables;			//0xC74
+	BYTE* pExperience;			//0xC78
+	DifficultyLevelsTxt* pDiffLvlsTxt;//0xC7C
 	DWORD	dwDiffLvlsRecs;			//0xC80
 	DWORD	_1;						//0xC84
-	BYTE*	pCharTemp;				//0xC88
+	BYTE* pCharTemp;				//0xC88
 	DWORD	dwCharTempRecs;			//0xC8C
-	ArenaTxt*pArena;				//0xC90
-	CubeMainTxt*	pCubeMain;		//0xC94
+	ArenaTxt* pArena;				//0xC90
+	CubeMainTxt* pCubeMain;		//0xC94
 	DWORD	dwCubeMainRecs;			//0xC98
 	DWORD   _2;						//0xC9C
-	BYTE*	pLvlSubExtra;			//0xCA0
-	BYTE*	pExpFieldD2;			//0xCA4
+	BYTE* pLvlSubExtra;			//0xCA0
+	BYTE* pExpFieldD2;			//0xCA4
 	DWORD   ExpFieldData[5];		//0xCA8
-	BYTE*	pLvlTypes;				//0xCBC
-	BYTE*   pWaypoints;				//0xCC0
+	BYTE* pLvlTypes;				//0xCBC
+	BYTE* pWaypoints;				//0xCC0
 	DWORD	dwWaypointsRecs;		//0xCC4
 	DWORD	dwLvlTypes;				//0xCC8
-	BYTE*	pLvlWarp;				//0xCCC
+	BYTE* pLvlWarp;				//0xCCC
 	DWORD	dwLvlWarpRecs;			//0xCD0
-	LvlMazeTxt*	pLvlMaze;			//0xCD4
+	LvlMazeTxt* pLvlMaze;			//0xCD4
 	DWORD	dwLvlMazeRecs;			//0xCD8
-	BYTE*	pLvlSub;				//0xCDC
+	BYTE* pLvlSub;				//0xCDC
 	DWORD	dwLvlSubRecs;			//0xCE0
 	DWORD   pLvlSubCache;			//0xCE4 aka sgpnTileSubsTypeStart
 	DWORD	_5[5];					//0xCE8
-	BYTE*	pMapCache;				//0xCFC
+	BYTE* pMapCache;				//0xCFC
 	DWORD	dwMapCacheRecs;			//0xD00
 	DWORD	_6[2];					//0xD04
-	DWORD*  pIgnoreList;            //0xD0C
+	DWORD* pIgnoreList;            //0xD0C
 };
 
 #endif
