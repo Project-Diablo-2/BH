@@ -1,79 +1,91 @@
 #include "Task.h"
-#include <Windows.h>
+
 #include <concurrent_queue.h>
+#include <Windows.h>
+
 #include <vector>
 
-class TaskHolder {
-public:
-	std::function<void()> task;
 
-	TaskHolder(std::function<void()> _task){
-		task = _task;
-	}
+class TaskHolder
+{
+    public:
+        std::function<void()> task_;
+
+        explicit TaskHolder( const std::function<void()> task )
+        {
+            task_ = task;
+        }
 };
 
-class WorkerThread {
-public:
-	bool canceled;
-	HANDLE tHandle;
+class WorkerThread
+{
+    public:
+        bool   canceled_;
+        HANDLE t_handle_;
 
-	WorkerThread() :
-		canceled(false),
-		tHandle(NULL){
-	}
+        WorkerThread() = default;
 
-	~WorkerThread(){
-		canceled = true;
-		CloseHandle(tHandle);
-	}
+        ~WorkerThread()
+        {
+            canceled_ = true;
+            CloseHandle(t_handle_);
+        }
 };
 
-Concurrency::concurrent_queue<TaskHolder*> taskQueue;
-std::vector<std::unique_ptr<WorkerThread>> threadPool;
-HANDLE waitHandle = NULL;
 
-namespace Task {
-	DWORD WINAPI QueueThread(void* arg){
-		WorkerThread *token = (WorkerThread*)arg;
-		
-		TaskHolder *t;
-		while (!token->canceled){
-			WaitForSingleObject(waitHandle, 2000);
-			if (token->canceled) break;
+Concurrency::concurrent_queue<TaskHolder*> task_queue;
+std::vector<std::unique_ptr<WorkerThread>> thread_pool;
+HANDLE                                     wait_handle = nullptr;
 
-			if (taskQueue.try_pop(t)){
-				if (!taskQueue.empty()) {
-					// Let the next task start while this one is processing
-					SetEvent(waitHandle);
-				}
+namespace Task
+{
+    DWORD WINAPI QueueThread( void* arg )
+    {
+        TaskHolder* t;
 
-				t->task();
-				delete t;
-			}
-		}
-		return 0;
-	}
+        auto* const token = static_cast<WorkerThread*>(arg);
+        while ( !token->canceled_ )
+        {
+            WaitForSingleObject(wait_handle, 2000);
+            if ( token->canceled_ ) break;
 
-	void InitializeThreadPool(int size){
-		waitHandle = CreateEvent(NULL, false, false, NULL);
+            if ( task_queue.try_pop(t) )
+            {
+                if ( !task_queue.empty() )
+                {
+                    SetEvent(wait_handle); // Let the next task start while this one is processing
+                }
 
-		for (int i = 0; i < size; i++){
-			WorkerThread *t = new WorkerThread();
+                t->task_();
+                delete t;
+            }
+        }
 
-			HANDLE tHandle = CreateThread(0, 0, QueueThread, (void*)t, 0, 0);
-			t->tHandle = tHandle;
-			threadPool.push_back(std::unique_ptr<WorkerThread>(t));
+        return 0;
+    }
 
-		}
-	}
+    void InitializeThreadPool( const int size )
+    {
+        wait_handle = CreateEvent(nullptr, false, false, nullptr);
 
-	void StopThreadPool(){
-		CloseHandle(waitHandle);
-		threadPool.clear();
-	}
+        for ( auto i = 0; i < size; i++ )
+        {
+            auto* const t        = new WorkerThread();
+            auto* const t_handle = CreateThread(nullptr, 0, QueueThread, static_cast<void*>(t), 0, nullptr);
+            t->t_handle_         = t_handle;
+            thread_pool.push_back(std::unique_ptr<WorkerThread>(t));
+        }
+    }
 
-	void Enqueue(std::function<void()> task){
-		taskQueue.push(new TaskHolder(task));
-		SetEvent(waitHandle);
-	}
+    void StopThreadPool()
+    {
+        CloseHandle(wait_handle);
+        thread_pool.clear();
+    }
+
+    void Enqueue( const std::function<void()> task )
+    {
+        task_queue.push(new TaskHolder(task));
+        SetEvent(wait_handle);
+    }
 }
