@@ -858,81 +858,623 @@ WeaponType StatsDisplay::GetCurrentWeaponType( Inventory* inventory )
 
 WeaponType StatsDisplay::GetCurrentWeaponType( const int weapon_number )
 {
-    if ( weapon_number >= 306 ) return WeaponType::kUnknown;
-    if ( weapon_number <= 4 ||
-         weapon_number >= 93 && weapon_number <= 97 ||
-         weapon_number >= 196 && weapon_number <= 200 ) { return WeaponType::kAxe; }
-    if ( weapon_number >= 5 && weapon_number <= 9 ||
-         weapon_number >= 98 && weapon_number <= 102 ||
-         weapon_number >= 201 && weapon_number <= 205 ) { return WeaponType::kAxe2H; }
-    if ( weapon_number >= 10 && weapon_number <= 13 ||
-         weapon_number >= 103 && weapon_number <= 106 ||
-         weapon_number >= 206 && weapon_number <= 209 ) { return WeaponType::kWand; }
-    if ( weapon_number == 14 || weapon_number == 18 ||
-         weapon_number == 88 ||
-         weapon_number == 107 || weapon_number == 111 ||
-         weapon_number == 210 || weapon_number == 214 ) { return WeaponType::kClub; }
-    if ( weapon_number >= 15 && weapon_number <= 17 ||
-         weapon_number >= 108 && weapon_number <= 110 ||
-         weapon_number >= 211 && weapon_number <= 213 ) { return WeaponType::kScepter; }
-    if ( weapon_number >= 19 && weapon_number <= 21 ||
-         weapon_number >= 112 && weapon_number <= 114 ||
-         weapon_number >= 173 && weapon_number <= 174 ||
-         weapon_number >= 215 && weapon_number <= 217 ) { return WeaponType::kMace; }
-    if ( weapon_number == 22 ||
-         weapon_number >= 89 && weapon_number <= 90 ||
-         weapon_number == 115 ||
-         weapon_number == 218 ) { return WeaponType::kHammer; }
-    if ( weapon_number >= 23 && weapon_number <= 24 ||
-         weapon_number >= 116 && weapon_number <= 117 ||
-         weapon_number >= 219 && weapon_number <= 220 ) { return WeaponType::kHammer2H; }
-    if ( weapon_number >= 25 && weapon_number <= 32 ||
-         weapon_number >= 118 && weapon_number <= 125 ||
-         weapon_number >= 211 && weapon_number <= 228 ) { return WeaponType::kSword; }
-    if ( weapon_number >= 33 && weapon_number <= 38 ||
-         weapon_number >= 126 && weapon_number <= 131 ||
-         weapon_number >= 229 && weapon_number <= 234 ) { return WeaponType::kSword2H; }
-    if ( weapon_number >= 39 && weapon_number <= 42 ||
-         weapon_number >= 86 && weapon_number <= 87 ||
-         weapon_number >= 132 && weapon_number <= 135 ||
-         weapon_number >= 235 && weapon_number <= 238 ) { return WeaponType::kKnife; }
-    if ( weapon_number >= 43 && weapon_number <= 46 ||
-         weapon_number >= 136 && weapon_number <= 139 ||
-         weapon_number >= 239 && weapon_number <= 242 ) { return WeaponType::kThrowing; }
-    if ( weapon_number >= 47 && weapon_number <= 51 ||
-         weapon_number >= 140 && weapon_number <= 144 ||
-         weapon_number >= 243 && weapon_number <= 247 ) { return WeaponType::kJavelin; }
-    if ( weapon_number >= 52 && weapon_number <= 56 ||
-         weapon_number >= 145 && weapon_number <= 149 ||
-         weapon_number >= 248 && weapon_number <= 252 ) { return WeaponType::kSpear; }
-    if ( weapon_number >= 57 && weapon_number <= 62 ||
-         weapon_number >= 150 && weapon_number <= 155 ||
-         weapon_number >= 253 && weapon_number <= 258 ) { return WeaponType::kPole; }
-    if ( weapon_number >= 63 && weapon_number <= 67 ||
-         weapon_number >= 91 && weapon_number <= 92 ||
-         weapon_number >= 156 && weapon_number <= 160 ||
-         weapon_number >= 259 && weapon_number <= 263 ) { return WeaponType::kStaff; }
-    if ( weapon_number >= 68 && weapon_number <= 75 ||
-         weapon_number >= 161 && weapon_number <= 168 ||
-         weapon_number >= 264 && weapon_number <= 271 ) { return WeaponType::kBow; }
-    if ( weapon_number >= 76 && weapon_number <= 79 ||
-         weapon_number >= 169 && weapon_number <= 172 ||
-         weapon_number >= 272 && weapon_number <= 275 ) { return WeaponType::kBow; }
-    if ( weapon_number >= 80 && weapon_number <= 85 ) { return WeaponType::kThrowingPot; }
-    if ( weapon_number >= 175 && weapon_number <= 184 ) { return WeaponType::kClaw1; }
-    if ( weapon_number >= 185 && weapon_number <= 195 ) { return WeaponType::kClaw2; }
-    if ( weapon_number >= 276 && weapon_number <= 280 ||
-         weapon_number >= 286 && weapon_number <= 290 ||
-         weapon_number >= 296 && weapon_number <= 300 ) { return WeaponType::kOrb; }
-    if ( weapon_number >= 281 && weapon_number <= 282 ||
-         weapon_number >= 291 && weapon_number <= 292 ||
-         weapon_number >= 301 && weapon_number <= 302 ) { return WeaponType::kAmaBow; }
-    if ( weapon_number >= 283 && weapon_number <= 284 ||
-         weapon_number >= 293 && weapon_number <= 294 ||
-         weapon_number >= 303 && weapon_number <= 304 ) { return WeaponType::kAmaSpear; }
-    if ( weapon_number == 285 ||
-         weapon_number == 295 ||
-         weapon_number == 305 ) { return WeaponType::kAmaJav; }
-
-    return WeaponType::kUnknown;
+    switch ( weapon_number )
+    {
+        case 1: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAxe;
+        case 2:
+            return WeaponType::kAxe;
+        case 3:
+            return WeaponType::kAxe;
+        case 4:
+            return WeaponType::kAxe;
+        case 5:
+            return WeaponType::kAxe;
+        case 6: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAxe2H;
+        case 7:
+            return WeaponType::kAxe2H;
+        case 8:
+            return WeaponType::kAxe2H;
+        case 9:
+            return WeaponType::kAxe2H;
+        case 10:
+            return WeaponType::kAxe2H;
+        case 11: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kWand;
+        case 12:
+            return WeaponType::kWand;
+        case 13:
+            return WeaponType::kWand;
+        case 14:
+            return WeaponType::kWand;
+        case 15:
+            return WeaponType::kClub;
+        case 16: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kScepter;
+        case 17:
+            return WeaponType::kScepter;
+        case 18:
+            return WeaponType::kScepter;
+        case 19:
+            return WeaponType::kClub;
+        case 20: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kMace;
+        case 21:
+            return WeaponType::kMace;
+        case 22:
+            return WeaponType::kMace;
+        case 23:
+            return WeaponType::kHammer;
+        case 24: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kHammer2H;
+        case 25:
+            return WeaponType::kHammer2H;
+        case 26: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kSword;
+        case 27:
+            return WeaponType::kSword;
+        case 28:
+            return WeaponType::kSword;
+        case 29:
+            return WeaponType::kSword;
+        case 30:
+            return WeaponType::kSword;
+        case 31:
+            return WeaponType::kSword;
+        case 32:
+            return WeaponType::kSword;
+        case 33:
+            return WeaponType::kSword;
+        case 34: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kSword2H;
+        case 35:
+            return WeaponType::kSword2H;
+        case 36:
+            return WeaponType::kSword2H;
+        case 37:
+            return WeaponType::kSword2H;
+        case 38:
+            return WeaponType::kSword2H;
+        case 39:
+            return WeaponType::kSword2H;
+        case 40: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kKnife;
+        case 41:
+            return WeaponType::kKnife;
+        case 42:
+            return WeaponType::kKnife;
+        case 43:
+            return WeaponType::kKnife;
+        case 44: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kThrowing;
+        case 45:
+            return WeaponType::kThrowing;
+        case 46:
+            return WeaponType::kThrowing;
+        case 47:
+            return WeaponType::kThrowing;
+        case 48: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kJavelin;
+        case 49:
+            return WeaponType::kJavelin;
+        case 50:
+            return WeaponType::kJavelin;
+        case 51:
+            return WeaponType::kJavelin;
+        case 52:
+            return WeaponType::kJavelin;
+        case 53: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kSpear;
+        case 54:
+            return WeaponType::kSpear;
+        case 55:
+            return WeaponType::kSpear;
+        case 56:
+            return WeaponType::kSpear;
+        case 57:
+            return WeaponType::kSpear;
+        case 58: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kPole;
+        case 59:
+            return WeaponType::kPole;
+        case 60:
+            return WeaponType::kPole;
+        case 61:
+            return WeaponType::kPole;
+        case 62:
+            return WeaponType::kPole;
+        case 63:
+            return WeaponType::kPole;
+        case 64: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kStaff;
+        case 65:
+            return WeaponType::kStaff;
+        case 66:
+            return WeaponType::kStaff;
+        case 67:
+            return WeaponType::kStaff;
+        case 68:
+            return WeaponType::kStaff;
+        case 69: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kBow;
+        case 70:
+            return WeaponType::kBow;
+        case 71:
+            return WeaponType::kBow;
+        case 72:
+            return WeaponType::kBow;
+        case 73:
+            return WeaponType::kBow;
+        case 74:
+            return WeaponType::kBow;
+        case 75:
+            return WeaponType::kBow;
+        case 76:
+            return WeaponType::kBow;
+        case 77: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kCrossbow;
+        case 78:
+            return WeaponType::kCrossbow;
+        case 79:
+            return WeaponType::kCrossbow;
+        case 80:
+            return WeaponType::kCrossbow;
+        case 81: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kThrowingPot;
+        case 82:
+            return WeaponType::kThrowingPot;
+        case 83:
+            return WeaponType::kThrowingPot;
+        case 84:
+            return WeaponType::kThrowingPot;
+        case 85:
+            return WeaponType::kThrowingPot;
+        case 86:
+            return WeaponType::kThrowingPot;
+        case 87: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kKnife;
+        case 88:
+            return WeaponType::kKnife;
+        case 89:
+            return WeaponType::kClub;
+        case 90: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kHammer;
+        case 91:
+            return WeaponType::kHammer;
+        case 92: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kStaff;
+        case 93:
+            return WeaponType::kStaff;
+        case 94: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAxe;
+        case 95:
+            return WeaponType::kAxe;
+        case 96:
+            return WeaponType::kAxe;
+        case 97:
+            return WeaponType::kAxe;
+        case 98:
+            return WeaponType::kAxe;
+        case 99: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAxe2H;
+        case 100:
+            return WeaponType::kAxe2H;
+        case 101:
+            return WeaponType::kAxe2H;
+        case 102:
+            return WeaponType::kAxe2H;
+        case 103:
+            return WeaponType::kAxe2H;
+        case 104: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kWand;
+        case 105:
+            return WeaponType::kWand;
+        case 106:
+            return WeaponType::kWand;
+        case 107:
+            return WeaponType::kWand;
+        case 108:
+            return WeaponType::kClub;
+        case 109: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kScepter;
+        case 110:
+            return WeaponType::kScepter;
+        case 111:
+            return WeaponType::kScepter;
+        case 112:
+            return WeaponType::kClub;
+        case 113: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kMace;
+        case 114:
+            return WeaponType::kMace;
+        case 115:
+            return WeaponType::kMace;
+        case 116:
+            return WeaponType::kHammer;
+        case 117: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kHammer2H;
+        case 118:
+            return WeaponType::kHammer2H;
+        case 119: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kSword;
+        case 120:
+            return WeaponType::kSword;
+        case 121:
+            return WeaponType::kSword;
+        case 122:
+            return WeaponType::kSword;
+        case 123:
+            return WeaponType::kSword;
+        case 124:
+            return WeaponType::kSword;
+        case 125:
+            return WeaponType::kSword;
+        case 126:
+            return WeaponType::kSword;
+        case 127: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kSword2H;
+        case 128:
+            return WeaponType::kSword2H;
+        case 129:
+            return WeaponType::kSword2H;
+        case 130:
+            return WeaponType::kSword2H;
+        case 131:
+            return WeaponType::kSword2H;
+        case 132:
+            return WeaponType::kSword2H;
+        case 133: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kKnife;
+        case 134:
+            return WeaponType::kKnife;
+        case 135:
+            return WeaponType::kKnife;
+        case 136:
+            return WeaponType::kKnife;
+        case 137: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kThrowing;
+        case 138:
+            return WeaponType::kThrowing;
+        case 139:
+            return WeaponType::kThrowing;
+        case 140:
+            return WeaponType::kThrowing;
+        case 141: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kJavelin;
+        case 142:
+            return WeaponType::kJavelin;
+        case 143:
+            return WeaponType::kJavelin;
+        case 144:
+            return WeaponType::kJavelin;
+        case 145:
+            return WeaponType::kJavelin;
+        case 146: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kSpear;
+        case 147:
+            return WeaponType::kSpear;
+        case 148:
+            return WeaponType::kSpear;
+        case 149:
+            return WeaponType::kSpear;
+        case 150:
+            return WeaponType::kSpear;
+        case 151: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kPole;
+        case 152:
+            return WeaponType::kPole;
+        case 153:
+            return WeaponType::kPole;
+        case 154:
+            return WeaponType::kPole;
+        case 155:
+            return WeaponType::kPole;
+        case 156:
+            return WeaponType::kPole;
+        case 157: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kStaff;
+        case 158:
+            return WeaponType::kStaff;
+        case 159:
+            return WeaponType::kStaff;
+        case 160:
+            return WeaponType::kStaff;
+        case 161:
+            return WeaponType::kStaff;
+        case 162: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kBow;
+        case 163:
+            return WeaponType::kBow;
+        case 164:
+            return WeaponType::kBow;
+        case 165:
+            return WeaponType::kBow;
+        case 166:
+            return WeaponType::kBow;
+        case 167:
+            return WeaponType::kBow;
+        case 168:
+            return WeaponType::kBow;
+        case 169:
+            return WeaponType::kBow;
+        case 170: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kCrossbow;
+        case 171:
+            return WeaponType::kCrossbow;
+        case 172:
+            return WeaponType::kCrossbow;
+        case 173:
+            return WeaponType::kCrossbow;
+        case 174: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kMace;
+        case 175:
+            return WeaponType::kMace;
+        case 176:
+            return WeaponType::kUnknown;
+        case 177: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kClaw1;
+        case 178:
+            return WeaponType::kClaw1;
+        case 179:
+            return WeaponType::kClaw1;
+        case 180:
+            return WeaponType::kClaw1;
+        case 181:
+            return WeaponType::kClaw1;
+        case 182:
+            return WeaponType::kClaw1;
+        case 183:
+            return WeaponType::kClaw1;
+        case 184:
+            return WeaponType::kClaw1;
+        case 185:
+            return WeaponType::kClaw1;
+        case 186:
+            return WeaponType::kClaw1;
+        case 187: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kClaw2;
+        case 188:
+            return WeaponType::kClaw2;
+        case 189:
+            return WeaponType::kClaw2;
+        case 190:
+            return WeaponType::kClaw2;
+        case 191:
+            return WeaponType::kClaw2;
+        case 192:
+            return WeaponType::kClaw2;
+        case 193:
+            return WeaponType::kClaw2;
+        case 194:
+            return WeaponType::kClaw2;
+        case 195:
+            return WeaponType::kClaw2;
+        case 196:
+            return WeaponType::kClaw2;
+        case 197:
+            return WeaponType::kClaw2;
+        case 198: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAxe;
+        case 199:
+            return WeaponType::kAxe;
+        case 200:
+            return WeaponType::kAxe;
+        case 201:
+            return WeaponType::kAxe;
+        case 202:
+            return WeaponType::kAxe;
+        case 203: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAxe2H;
+        case 204:
+            return WeaponType::kAxe2H;
+        case 205:
+            return WeaponType::kAxe2H;
+        case 206:
+            return WeaponType::kAxe2H;
+        case 207:
+            return WeaponType::kAxe2H;
+        case 208: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kWand;
+        case 209:
+            return WeaponType::kWand;
+        case 210:
+            return WeaponType::kWand;
+        case 211:
+            return WeaponType::kWand;
+        case 212:
+            return WeaponType::kClub;
+        case 213: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kScepter;
+        case 214:
+            return WeaponType::kScepter;
+        case 215:
+            return WeaponType::kScepter;
+        case 216:
+            return WeaponType::kClub;
+        case 217: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kMace;
+        case 218:
+            return WeaponType::kMace;
+        case 219:
+            return WeaponType::kMace;
+        case 220:
+            return WeaponType::kHammer;
+        case 221: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kHammer2H;
+        case 222:
+            return WeaponType::kHammer2H;
+        case 223: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kSword;
+        case 224:
+            return WeaponType::kSword;
+        case 225:
+            return WeaponType::kSword;
+        case 226:
+            return WeaponType::kSword;
+        case 227:
+            return WeaponType::kSword;
+        case 228:
+            return WeaponType::kSword;
+        case 229:
+            return WeaponType::kSword;
+        case 230:
+            return WeaponType::kSword;
+        case 231: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kSword2H;
+        case 232:
+            return WeaponType::kSword2H;
+        case 233:
+            return WeaponType::kSword2H;
+        case 234:
+            return WeaponType::kSword2H;
+        case 235:
+            return WeaponType::kSword2H;
+        case 236:
+            return WeaponType::kSword2H;
+        case 237: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kKnife;
+        case 238:
+            return WeaponType::kKnife;
+        case 239:
+            return WeaponType::kKnife;
+        case 240:
+            return WeaponType::kKnife;
+        case 241: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kThrowing;
+        case 242:
+            return WeaponType::kThrowing;
+        case 243:
+            return WeaponType::kThrowing;
+        case 244:
+            return WeaponType::kThrowing;
+        case 245: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kJavelin;
+        case 246:
+            return WeaponType::kJavelin;
+        case 247:
+            return WeaponType::kJavelin;
+        case 248:
+            return WeaponType::kJavelin;
+        case 249:
+            return WeaponType::kJavelin;
+        case 250: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kSpear;
+        case 251:
+            return WeaponType::kSpear;
+        case 252:
+            return WeaponType::kSpear;
+        case 253:
+            return WeaponType::kSpear;
+        case 254:
+            return WeaponType::kSpear;
+        case 255: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kPole;
+        case 256:
+            return WeaponType::kPole;
+        case 257:
+            return WeaponType::kPole;
+        case 258:
+            return WeaponType::kPole;
+        case 259:
+            return WeaponType::kPole;
+        case 260:
+            return WeaponType::kPole;
+        case 261: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kStaff;
+        case 262:
+            return WeaponType::kStaff;
+        case 263:
+            return WeaponType::kStaff;
+        case 264:
+            return WeaponType::kStaff;
+        case 265:
+            return WeaponType::kStaff;
+        case 266: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kBow;
+        case 267:
+            return WeaponType::kBow;
+        case 268:
+            return WeaponType::kBow;
+        case 269:
+            return WeaponType::kBow;
+        case 270:
+            return WeaponType::kBow;
+        case 271:
+            return WeaponType::kBow;
+        case 272:
+            return WeaponType::kBow;
+        case 273:
+            return WeaponType::kBow;
+        case 274: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kCrossbow;
+        case 275:
+            return WeaponType::kCrossbow;
+        case 276:
+            return WeaponType::kCrossbow;
+        case 277:
+            return WeaponType::kCrossbow;
+        case 278: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kOrb;
+        case 279:
+            return WeaponType::kOrb;
+        case 280:
+            return WeaponType::kOrb;
+        case 281:
+            return WeaponType::kOrb;
+        case 282:
+            return WeaponType::kOrb;
+        case 283: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAmaBow;
+        case 284:
+            return WeaponType::kAmaBow;
+        case 285: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAmaSpear;
+        case 286:
+            return WeaponType::kAmaSpear;
+        case 287:
+            return WeaponType::kAmaJav;
+        case 288: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kOrb;
+        case 289:
+            return WeaponType::kOrb;
+        case 290:
+            return WeaponType::kOrb;
+        case 291:
+            return WeaponType::kOrb;
+        case 292:
+            return WeaponType::kOrb;
+        case 293: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAmaBow;
+        case 294:
+            return WeaponType::kAmaBow;
+        case 295: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAmaSpear;
+        case 296:
+            return WeaponType::kAmaSpear;
+        case 297:
+            return WeaponType::kAmaJav;
+        case 298: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kOrb;
+        case 299:
+            return WeaponType::kOrb;
+        case 300:
+            return WeaponType::kOrb;
+        case 301:
+            return WeaponType::kOrb;
+        case 302:
+            return WeaponType::kOrb;
+        case 303: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAmaBow;
+        case 304:
+            return WeaponType::kAmaBow;
+        case 305: // NOLINT(bugprone-branch-clone)
+            return WeaponType::kAmaSpear;
+        case 306:
+            return WeaponType::kAmaSpear;
+        case 307:
+            return WeaponType::kAmaJav;
+        default:
+            return WeaponType::kUnknown;
+    }
 }
