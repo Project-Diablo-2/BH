@@ -335,7 +335,6 @@ void SubstituteNameVariables( UnitItemInfo* uInfo,
         { "ILVL", ilvl },
         { "ALVL", alvl },
         { "CRAFTALVL", craftalvl },
-
         { "LVLREQ", lvlreq },
         { "WPNSPD", wpnspd },
         { "RANGE", rangeadder },
@@ -778,6 +777,7 @@ void Condition::BuildConditions( vector<Condition*>& conditions,
     else if ( key.compare(0, 3, "MAG") == 0 ) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_MAGIC)); }
     else if ( key.compare(0, 4, "RARE") == 0 ) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_RARE)); }
     else if ( key.compare(0, 3, "UNI") == 0 ) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_UNIQUE)); }
+    else if ( key.compare(0, 9, "CRAFTALVL") == 0 ) { Condition::AddOperand(conditions, new CraftLevelCondition(operation, value)); }
     else if ( key.compare(0, 5, "CRAFT") == 0 ) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_CRAFT)); }
     else if ( key.compare(0, 2, "RW") == 0 ) { Condition::AddOperand(conditions, new FlagsCondition(ITEM_RUNEWORD)); }
     else if ( key.compare(0, 4, "NMAG") == 0 ) { Condition::AddOperand(conditions, new NonMagicalCondition()); }
