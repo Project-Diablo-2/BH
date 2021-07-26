@@ -131,7 +131,8 @@ namespace Drawing
                                                     int              nStat,
                                                     std::vector<int> bps,
                                                     char*            bpCharString );
-            static WeaponType GetCurrentWeaponType( Inventory* inventory );
+            static WeaponType  GetCurrentWeaponType( Inventory* inventory );
+            static int GetActIndex( int map_number, int difficulty );
             static WeaponType GetCurrentWeaponType( int dw_text_file_number );
     };
 };
