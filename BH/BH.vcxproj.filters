@@ -12,39 +12,91 @@
     <ClCompile Include="D2Stubs.cpp" />
     <ClCompile Include="D2Version.cpp" />
     <ClCompile Include="DllMain.cpp" />
-    <ClCompile Include="Drawing\Advanced\Checkhook\Checkhook.cpp" />
-    <ClCompile Include="Drawing\Advanced\Colorhook\Colorhook.cpp" />
-    <ClCompile Include="Drawing\Advanced\Combohook\Combohook.cpp" />
-    <ClCompile Include="Drawing\Advanced\Inputhook\Inputhook.cpp" />
-    <ClCompile Include="Drawing\Advanced\Keyhook\Keyhook.cpp" />
-    <ClCompile Include="Drawing\Basic\Boxhook\Boxhook.cpp" />
-    <ClCompile Include="Drawing\Basic\Crosshook\Crosshook.cpp" />
-    <ClCompile Include="Drawing\Basic\Framehook\Framehook.cpp" />
-    <ClCompile Include="Drawing\Basic\Linehook\Linehook.cpp" />
-    <ClCompile Include="Drawing\Basic\Texthook\Texthook.cpp" />
-    <ClCompile Include="Drawing\Hook.cpp" />
-    <ClCompile Include="Drawing\Stats\StatsDisplay.cpp" />
-    <ClCompile Include="Drawing\UI\UI.cpp" />
-    <ClCompile Include="Drawing\UI\UITab.cpp" />
     <ClCompile Include="JSONObject.cpp" />
-    <ClCompile Include="Modules\Bnet\Bnet.cpp" />
-    <ClCompile Include="Modules\ChatColor\ChatColor.cpp" />
-    <ClCompile Include="Modules\Gamefilter\Gamefilter.cpp" />
-    <ClCompile Include="Modules\Item\Item.cpp" />
-    <ClCompile Include="Modules\Item\ItemDisplay.cpp" />
-    <ClCompile Include="Modules\ItemMover\ItemMover.cpp" />
-    <ClCompile Include="Modules\Module.cpp" />
-    <ClCompile Include="Modules\ModuleManager.cpp" />
-    <ClCompile Include="Modules\Party\Party.cpp" />
-    <ClCompile Include="Modules\ScreenInfo\ScreenInfo.cpp" />
     <ClCompile Include="MPQInit.cpp" />
     <ClCompile Include="MPQReader.cpp" />
     <ClCompile Include="Mustache.cpp" />
     <ClCompile Include="Patch.cpp" />
-    <ClCompile Include="Modules\StashExport\StashExport.cpp" />
     <ClCompile Include="TableReader.cpp" />
-    <ClCompile Include="Task.cpp" />
-    <ClCompile Include="Modules\MapNotify\MapNotify.cpp" />
+    <ClCompile Include="task.cpp" />
+    <ClCompile Include="Drawing\Hook.cpp">
+      <Filter>Drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\UI\UI.cpp">
+      <Filter>Drawing\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\UI\UITab.cpp">
+      <Filter>Drawing\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\Stats\StatsDisplay.cpp">
+      <Filter>Drawing\Stats</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\Basic\Boxhook\Boxhook.cpp">
+      <Filter>Drawing\Basic\Boxhook</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\Basic\Crosshook\Crosshook.cpp">
+      <Filter>Drawing\Basic\Crosshook</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\Basic\Framehook\Framehook.cpp">
+      <Filter>Drawing\Basic\Framehook</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\Basic\Linehook\Linehook.cpp">
+      <Filter>Drawing\Basic\Linehook</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\Basic\Texthook\Texthook.cpp">
+      <Filter>Drawing\Basic\Texthook</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\Advanced\Checkhook\Checkhook.cpp">
+      <Filter>Drawing\Advanced\Checkhook</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\Advanced\Colorhook\Colorhook.cpp">
+      <Filter>Drawing\Advanced\Colorhook</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\Advanced\Combohook\Combohook.cpp">
+      <Filter>Drawing\Advanced\Combohook</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\Advanced\Inputhook\Inputhook.cpp">
+      <Filter>Drawing\Advanced\Inputhook</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing\Advanced\Keyhook\Keyhook.cpp">
+      <Filter>Drawing\Advanced\Keyhook</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Module.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\ModuleManager.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Bnet\Bnet.cpp">
+      <Filter>Modules\Bnet</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\ChatColor\ChatColor.cpp">
+      <Filter>Modules\ChatColor</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Gamefilter\Gamefilter.cpp">
+      <Filter>Modules\Gamefilter</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Item\Item.cpp">
+      <Filter>Modules\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Item\ItemDisplay.cpp">
+      <Filter>Modules\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\ItemMover\ItemMover.cpp">
+      <Filter>Modules\ItemMover</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\MapNotify\MapNotify.cpp">
+      <Filter>Modules\MapNotify</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Party\Party.cpp">
+      <Filter>Modules\Party</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\ScreenInfo\ScreenInfo.cpp">
+      <Filter>Modules\ScreenInfo</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\StashExport\StashExport.cpp">
+      <Filter>Modules\StashExport</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AsyncDrawBuffer.h" />
@@ -64,40 +116,169 @@
     <ClInclude Include="D2Stubs.h" />
     <ClInclude Include="D2Version.h" />
     <ClInclude Include="Drawing.h" />
-    <ClInclude Include="Drawing\Advanced\Checkhook\Checkhook.h" />
-    <ClInclude Include="Drawing\Advanced\Colorhook\Colorhook.h" />
-    <ClInclude Include="Drawing\Advanced\Combohook\Combohook.h" />
-    <ClInclude Include="Drawing\Advanced\Inputhook\Inputhook.h" />
-    <ClInclude Include="Drawing\Advanced\Keyhook\Keyhook.h" />
-    <ClInclude Include="Drawing\Basic\Boxhook\Boxhook.h" />
-    <ClInclude Include="Drawing\Basic\Crosshook\Crosshook.h" />
-    <ClInclude Include="Drawing\Basic\Framehook\Framehook.h" />
-    <ClInclude Include="Drawing\Basic\Linehook\Linehook.h" />
-    <ClInclude Include="Drawing\Basic\Texthook\Texthook.h" />
-    <ClInclude Include="Drawing\Hook.h" />
-    <ClInclude Include="Drawing\Stats\StatsDisplay.h" />
-    <ClInclude Include="Drawing\UI\UI.h" />
-    <ClInclude Include="Drawing\UI\UITab.h" />
     <ClInclude Include="JSONObject.h" />
     <ClInclude Include="Modules.h" />
-    <ClInclude Include="Modules\Bnet\Bnet.h" />
-    <ClInclude Include="Modules\ChatColor\ChatColor.h" />
-    <ClInclude Include="Modules\Gamefilter\Gamefilter.h" />
-    <ClInclude Include="Modules\Item\Item.h" />
-    <ClInclude Include="Modules\Item\ItemDisplay.h" />
-    <ClInclude Include="Modules\ItemMover\ItemMover.h" />
-    <ClInclude Include="Modules\Module.h" />
-    <ClInclude Include="Modules\ModuleManager.h" />
-    <ClInclude Include="Modules\Party\Party.h" />
-    <ClInclude Include="Modules\ScreenInfo\ScreenInfo.h" />
     <ClInclude Include="MPQInit.h" />
     <ClInclude Include="MPQReader.h" />
     <ClInclude Include="Mustache.h" />
     <ClInclude Include="Patch.h" />
-    <ClInclude Include="Modules\StashExport\StashExport.h" />
     <ClInclude Include="TableReader.h" />
-    <ClInclude Include="Task.h" />
+    <ClInclude Include="task.h" />
     <ClInclude Include="lrucache.hpp" />
-    <ClInclude Include="Modules\MapNotify\MapNotify.h" />
+    <ClInclude Include="Drawing\Hook.h">
+      <Filter>Drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\UI\UI.h">
+      <Filter>Drawing\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\UI\UITab.h">
+      <Filter>Drawing\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\Stats\StatsDisplay.h">
+      <Filter>Drawing\Stats</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\Basic\Boxhook\Boxhook.h">
+      <Filter>Drawing\Basic\Boxhook</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\Basic\Crosshook\Crosshook.h">
+      <Filter>Drawing\Basic\Crosshook</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\Basic\Framehook\Framehook.h">
+      <Filter>Drawing\Basic\Framehook</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\Basic\Linehook\Linehook.h">
+      <Filter>Drawing\Basic\Linehook</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\Basic\Texthook\Texthook.h">
+      <Filter>Drawing\Basic\Texthook</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\Advanced\Checkhook\Checkhook.h">
+      <Filter>Drawing\Advanced\Checkhook</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\Advanced\Colorhook\Colorhook.h">
+      <Filter>Drawing\Advanced\Colorhook</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\Advanced\Combohook\Combohook.h">
+      <Filter>Drawing\Advanced\Combohook</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\Advanced\Inputhook\Inputhook.h">
+      <Filter>Drawing\Advanced\Inputhook</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing\Advanced\Keyhook\Keyhook.h">
+      <Filter>Drawing\Advanced\Keyhook</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Module.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\ModuleManager.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Bnet\Bnet.h">
+      <Filter>Modules\Bnet</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\ChatColor\ChatColor.h">
+      <Filter>Modules\ChatColor</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Gamefilter\Gamefilter.h">
+      <Filter>Modules\Gamefilter</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Item\Item.h">
+      <Filter>Modules\Item</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Item\ItemDisplay.h">
+      <Filter>Modules\Item</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\ItemMover\ItemMover.h">
+      <Filter>Modules\ItemMover</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\MapNotify\MapNotify.h">
+      <Filter>Modules\MapNotify</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Party\Party.h">
+      <Filter>Modules\Party</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\ScreenInfo\ScreenInfo.h">
+      <Filter>Modules\ScreenInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\StashExport\StashExport.h">
+      <Filter>Modules\StashExport</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Modules">
+      <UniqueIdentifier>{97a22aae-cf58-4b41-84fa-eac6d559bbf4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing">
+      <UniqueIdentifier>{2db1bcf6-fdd9-4a0a-a647-363e8b2c6f87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Advanced">
+      <UniqueIdentifier>{7417c5f8-b001-4a76-9ae5-f9d538f30a7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Basic">
+      <UniqueIdentifier>{f1f591cf-fc4c-4381-9403-51128ef2dcde}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Stats">
+      <UniqueIdentifier>{c0f11ac2-3c55-4b54-a543-2cf121102417}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\UI">
+      <UniqueIdentifier>{6d52cd6f-ee09-4aff-92f1-33a82040f8e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Basic\Boxhook">
+      <UniqueIdentifier>{4e33e5af-e52b-44ad-8b0d-628c7c16d1e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Basic\Crosshook">
+      <UniqueIdentifier>{a3c76a69-7129-4df1-bc92-bfcc8ec40806}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Basic\Framehook">
+      <UniqueIdentifier>{f77d4a1d-a0cb-4b84-bc36-76b538f36150}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Basic\Linehook">
+      <UniqueIdentifier>{54fd87b4-a719-4905-8746-31fd11750f0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Basic\Texthook">
+      <UniqueIdentifier>{b3ab3b11-df2e-4392-8907-11da4385f780}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Advanced\Checkhook">
+      <UniqueIdentifier>{618d210f-eeb3-4cb6-8339-67d3d29bad41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Advanced\Colorhook">
+      <UniqueIdentifier>{28e50e51-258d-4f28-9585-976ec0a4e46d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Advanced\Combohook">
+      <UniqueIdentifier>{ec897f5f-c817-456d-ba50-77a70dcb9845}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Advanced\Inputhook">
+      <UniqueIdentifier>{6dbf1dc8-bcf6-4c67-a649-cf3127ed35ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing\Advanced\Keyhook">
+      <UniqueIdentifier>{5c277792-6f16-4dfa-8902-37738ced4842}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\Bnet">
+      <UniqueIdentifier>{c427ac97-c6fc-4cda-b26e-2036c2947050}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\ChatColor">
+      <UniqueIdentifier>{f652bd02-2b0b-46a4-843c-20a0a9ea472d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\Gamefilter">
+      <UniqueIdentifier>{b2342ae5-3b17-4a7e-bd84-a5173ecce46d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\Item">
+      <UniqueIdentifier>{de8abd5b-94a3-4d88-91b7-1268edf58162}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\ItemMover">
+      <UniqueIdentifier>{d2fcab11-38df-4c6e-b59a-17b33c4a4263}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\MapNotify">
+      <UniqueIdentifier>{3b0284b1-bcc2-4c0d-af04-8ef4d70f238d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\StashExport">
+      <UniqueIdentifier>{8bdb8e8b-5c2a-4adb-87a7-7db57222a116}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\Party">
+      <UniqueIdentifier>{1ddb6298-babe-4b12-817b-af6a521ddd36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\ScreenInfo">
+      <UniqueIdentifier>{355f39b5-6796-485b-b296-f6a70dbb43df}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
