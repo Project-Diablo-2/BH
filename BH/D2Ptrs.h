@@ -248,16 +248,12 @@ VARPTR(D2CLIENT, ExpCharFlag, DWORD, 0x119854, 0x1087B4)
 VARPTR(D2CLIENT, AlwaysRun, DWORD, 0x11C3EC, 0x11D234)
 VARPTR(D2CLIENT, NoPickUp, DWORD, 0x11C2F0, 0x11D574) // unused but I want to add it
 
-//VARPTR(D2CLIENT, ScreenCovered, DWORD, 0x1E8F9) // unused, appears to be an int specifying which screens (if any) are opened...
-
 VARPTR(D2CLIENT, ChatMsg, wchar_t*, 0x11EC80, 0x11D650)
 
 VARPTR(D2CLIENT, HoverItem, UnitAny*, 0x11BC38);
 
-
-
-
 VARPTR(D2CLIENT, MapId, DWORD, 0x11C310)
+VARPTR(D2CLIENT, ScreenCovered, DWORD, 0x11C414) // 1 = Right Side Covered 2 = Left Side Covered 3 = Both Sides Covered
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
