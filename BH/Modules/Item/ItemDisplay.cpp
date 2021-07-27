@@ -269,7 +269,7 @@ void SubstituteNameVariables( UnitItemInfo* uInfo,
                               const string& action_name,
                               BOOL          bLimit )
 {
-    char origName[128], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4]   = "0";
+    char origName[256], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4]   = "0";
     char gemtype[16]                                                                      = "", gemlevel[16] = "", sellValue[16] = "", statVal[16] = "", qty[4] = "";
     char lvlreq[4],                                                                             wpnspd[4],         rangeadder[4];
 
