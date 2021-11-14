@@ -787,6 +787,8 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 5, "DRUID") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 5)); }
 	else if (key.compare(0, 8, "ASSASSIN") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 6)); }
 	else if (key.compare(0, 9, "CRAFTALVL") == 0) { Condition::AddOperand(conditions, new CraftLevelCondition(operation, value)); }
+	else if (key.compare(0, 6, "PREFIX") == 0) { Condition::AddOperand(conditions, new MagicPrefixCondition(operation, value)); }
+	else if (key.compare(0, 6, "SUFFIX") == 0) { Condition::AddOperand(conditions, new MagicSuffixCondition(operation, value)); }
 	else if (key.compare(0, 5, "CRAFT") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_CRAFT)); }
 	else if (key.compare(0, 2, "RW") == 0) { Condition::AddOperand(conditions, new FlagsCondition(ITEM_RUNEWORD)); }
 	else if (key.compare(0, 4, "NMAG") == 0) { Condition::AddOperand(conditions, new NonMagicalCondition()); }
@@ -1330,6 +1332,84 @@ bool CraftLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 
 	return IntegerCompare(craft_alvl, operation, craftLevel);
 }
+
+
+bool MagicPrefixCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		auto itemData = uInfo->item->pItemData;
+
+		if (itemData->dwQuality == ITEM_QUALITY_RARE && !(itemData->dwFlags & ITEM_IDENTIFIED))
+		{
+				return false;
+		}
+		if (itemData->wPrefix[0] == prefixID)
+		{
+				return IntegerCompare(itemData->wPrefix[0], operation, prefixID);
+		}
+		if (itemData->wPrefix[1] == prefixID)
+		{
+				return IntegerCompare(itemData->wPrefix[1], operation, prefixID);
+		}
+		if (itemData->wPrefix[2] == prefixID)
+		{
+				return IntegerCompare(itemData->wPrefix[2], operation, prefixID);
+		}
+
+		return IntegerCompare(-1, operation, prefixID);
+}
+
+bool MagicPrefixCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		if (info->quality == ITEM_QUALITY_RARE && !(info->identified))
+		{
+				return false;
+		}
+
+		return IntegerCompare(-1, operation, prefixID);
+}
+
+bool MagicSuffixCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		auto itemData = uInfo->item->pItemData;
+
+		if (itemData->dwQuality == ITEM_QUALITY_RARE && !(itemData->dwFlags & ITEM_IDENTIFIED))
+		{
+				return false;
+		}
+		if (itemData->wSuffix[0] == suffixID)
+		{
+				return IntegerCompare(itemData->wSuffix[0], operation, suffixID);
+		}
+		if (itemData->wSuffix[1] == suffixID)
+		{
+				return IntegerCompare(itemData->wSuffix[1], operation, suffixID);
+		}
+		if (itemData->wSuffix[2] == suffixID)
+		{
+				return IntegerCompare(itemData->wSuffix[2], operation, suffixID);
+		}
+
+		return IntegerCompare(-1, operation, suffixID);
+}
+
+bool MagicSuffixCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		if (info->quality == ITEM_QUALITY_RARE && !(info->identified))
+		{
+				return false;
+		}
+
+		return IntegerCompare(-1, operation, suffixID);
+}
+
 
 bool CharacterClassCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,

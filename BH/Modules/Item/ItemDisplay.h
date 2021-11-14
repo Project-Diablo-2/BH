@@ -461,6 +461,40 @@ class CraftLevelCondition : public Condition
                                          Condition* arg2 );
 };
 
+class MagicPrefixCondition : public Condition
+{
+    public:
+        MagicPrefixCondition( BYTE op,
+                              unsigned int prefix ) : prefixID(prefix),
+                                                      operation(op) { conditionType = CT_Operand; };
+    private:
+        BYTE operation;
+        unsigned int prefixID;
+        bool EvaluateInternal( UnitItemInfo* uInfo,
+                               Condition*    arg1,
+                               Condition*    arg2 );
+        bool EvaluateInternalFromPacket( ItemInfo*  info,
+                                         Condition* arg1,
+                                         Condition* arg2 );
+};
+
+class MagicSuffixCondition : public Condition
+{
+    public:
+        MagicSuffixCondition( BYTE op,
+                              unsigned int suffix) : suffixID(suffix),
+                                                     operation(op) { conditionType = CT_Operand; };
+    private:
+        BYTE operation;
+        unsigned int suffixID;
+        bool EvaluateInternal( UnitItemInfo* uInfo,
+                               Condition*    arg1,
+                               Condition*    arg2 );
+        bool EvaluateInternalFromPacket( ItemInfo*  info,
+                                         Condition* arg1,
+                                         Condition* arg2 );
+};
+
 class CharacterClassCondition : public Condition
 {
     public:
