@@ -779,6 +779,13 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 3, "MAG") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_MAGIC)); }
 	else if (key.compare(0, 4, "RARE") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_RARE)); }
 	else if (key.compare(0, 3, "UNI") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_UNIQUE)); }
+	else if (key.compare(0, 6, "AMAZON") == 0) {Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 0)); }
+	else if (key.compare(0, 9, "SORCERESS") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 1)); }
+	else if (key.compare(0, 11, "NECROMANCER") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 2)); }
+	else if (key.compare(0, 7, "PALADIN") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 3)); }
+	else if (key.compare(0, 9, "BARBARIAN") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 4)); }
+	else if (key.compare(0, 5, "DRUID") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 5)); }
+	else if (key.compare(0, 8, "ASSASSIN") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 6)); }
 	else if (key.compare(0, 9, "CRAFTALVL") == 0) { Condition::AddOperand(conditions, new CraftLevelCondition(operation, value)); }
 	else if (key.compare(0, 5, "CRAFT") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_CRAFT)); }
 	else if (key.compare(0, 2, "RW") == 0) { Condition::AddOperand(conditions, new FlagsCondition(ITEM_RUNEWORD)); }
@@ -1322,6 +1329,20 @@ bool CraftLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	auto craft_alvl = craft_ilvl < (99 - qlvl_int / 2) ? craft_ilvl - qlvl_int / 2 : craft_ilvl * 2 - 99;
 
 	return IntegerCompare(craft_alvl, operation, craftLevel);
+}
+
+bool CharacterClassCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		return IntegerCompare(D2CLIENT_GetPlayerUnit()->dwTxtFileNo, operation, characterClass);
+}
+
+bool CharacterClassCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		return IntegerCompare(D2CLIENT_GetPlayerUnit()->dwTxtFileNo, operation, characterClass);
 }
 
 bool RequiredLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,

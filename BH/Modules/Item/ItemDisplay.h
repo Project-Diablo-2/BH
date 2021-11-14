@@ -461,6 +461,23 @@ class CraftLevelCondition : public Condition
                                          Condition* arg2 );
 };
 
+class CharacterClassCondition : public Condition
+{
+    public:
+        CharacterClassCondition( BYTE op,
+                                 BYTE calvl ) : characterClass(calvl),
+                                                operation(op) { conditionType = CT_Operand; };
+    private:
+        BYTE operation;
+        BYTE characterClass;
+        bool EvaluateInternal( UnitItemInfo* uInfo,
+                               Condition*    arg1,
+                               Condition*    arg2 );
+        bool EvaluateInternalFromPacket( ItemInfo*  info,
+                                         Condition* arg1,
+                                         Condition* arg2 );
+};
+
 class RequiredLevelCondition : public Condition
 {
     public:
