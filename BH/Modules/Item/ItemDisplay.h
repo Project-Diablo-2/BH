@@ -444,6 +444,23 @@ class AffixLevelCondition : public Condition
                                          Condition* arg2 );
 };
 
+class MapIdCondition : public Condition
+{
+    public:
+        MapIdCondition( BYTE op,
+                        BYTE mid ) : mapId(mid),
+                                     operation(op) { conditionType = CT_Operand; };
+    private:
+        BYTE operation;
+        BYTE mapId;
+        bool EvaluateInternal( UnitItemInfo* uInfo,
+                               Condition*    arg1,
+                               Condition*    arg2 );
+        bool EvaluateInternalFromPacket( ItemInfo*  info,
+                                         Condition* arg1,
+                                         Condition* arg2 );
+};
+
 class CraftLevelCondition : public Condition
 {
     public:

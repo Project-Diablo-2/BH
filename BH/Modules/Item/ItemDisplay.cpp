@@ -789,6 +789,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 9, "CRAFTALVL") == 0) { Condition::AddOperand(conditions, new CraftLevelCondition(operation, value)); }
 	else if (key.compare(0, 6, "PREFIX") == 0) { Condition::AddOperand(conditions, new MagicPrefixCondition(operation, value)); }
 	else if (key.compare(0, 6, "SUFFIX") == 0) { Condition::AddOperand(conditions, new MagicSuffixCondition(operation, value)); }
+	else if (key.compare(0, 5, "MAPID") == 0) { Condition::AddOperand(conditions, new MapIdCondition(operation, value)); }
 	else if (key.compare(0, 5, "CRAFT") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_CRAFT)); }
 	else if (key.compare(0, 2, "RW") == 0) { Condition::AddOperand(conditions, new FlagsCondition(ITEM_RUNEWORD)); }
 	else if (key.compare(0, 4, "NMAG") == 0) { Condition::AddOperand(conditions, new NonMagicalCondition()); }
@@ -1291,6 +1292,24 @@ bool AffixLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	int  qlvl = info->attrs->qualityLevel;
 	BYTE alvl = GetAffixLevel(info->level, info->attrs->qualityLevel, info->attrs->magicLevel);
 	return IntegerCompare(alvl, operation, affixLevel);
+}
+
+bool MapIdCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		auto map_id = **Var_D2CLIENT_MapId();
+
+		return IntegerCompare(map_id, operation, mapId);
+}
+
+bool MapIdCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		auto map_id = **Var_D2CLIENT_MapId();
+
+		return IntegerCompare(map_id, operation, mapId);
 }
 
 bool CraftLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
