@@ -1157,7 +1157,7 @@ enum UNITFLAGEX
 
 #define ITEM_TYPE_ALLARMOR 50
 
-const int NUM_CORRUPTIONS = 72;
+const int NUM_CORRUPTIONS = 75;
 
 const int CorruptionMods[][2] = {
 	{STAT_ENHANCEDMINIMUMDAMAGE, -1},
