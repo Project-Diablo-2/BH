@@ -16,7 +16,7 @@
 	{"PRES", STAT_POISONRESIST},	\
 	{"MINDMG", STAT_MINIMUMDAMAGE},	\
 	{"MAXDMG", STAT_MAXIMUMDAMAGE},
-#define MAX_NAME_SIZE 53
+#define MAX_NAME_SIZE 56
 // For ignoring size
 std::vector<std::string> colorreps =
 {
