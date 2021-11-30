@@ -621,8 +621,6 @@ void StatsDisplay::OnDraw()
 			? kSorceressLightningFCRAlias
 			: skillId == 53
 			? kSorceressLightningFCRAlias
-			: skillId == 49
-			? kSorceressLightningFCRAlias
 			: skillId == 64
 			? kSorceressLightningFCRAlias
 			: fcr_key;
