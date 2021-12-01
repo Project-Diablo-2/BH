@@ -269,7 +269,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	const string& action_name,
 	BOOL          bLimit)
 {
-	char origName[175], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4] = "0";
+	char origName[512], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4] = "0";
 	char gemtype[16] = "", gemlevel[16] = "", sellValue[16] = "", statVal[16] = "", qty[4] = "";
 	char lvlreq[4], wpnspd[4], rangeadder[4];
 
@@ -560,21 +560,28 @@ void BuildAction(string* str,
 {
 	act->name = string(str->c_str());
 
-	// upcase all text in a %replacement_string%
-	// for some reason \w wasn't catching _, so I added it to the groups
-	std::regex replace_reg(
-		R"(^(?:(?:%[^%]*%)|[^%])*%((?:\w|_|-)*?[a-z]+?(?:\w|_|-)*?)%)",
-		std::regex_constants::ECMAScript);
-	std::smatch replace_match;
-	while (std::regex_search(act->name, replace_match, replace_reg))
+	//// upcase all text in a %replacement_string%
+	//// for some reason \w wasn't catching _, so I added it to the groups
+	try
 	{
-		auto offset = replace_match[1].first - act->name.begin();
-		std::transform(
-			replace_match[1].first,
-			replace_match[1].second,
-			act->name.begin() + offset,
-			toupper
-		);
+			std::regex replace_reg(
+					R"(^(?:(?:%[^%]*%)|[^%])*%((?:\w|_|-)*?[a-z]+?(?:\w|_|-)*?)%)",
+					std::regex_constants::ECMAScript);
+			std::smatch replace_match;
+			while (std::regex_search(act->name, replace_match, replace_reg))
+			{
+					auto offset = replace_match[1].first - act->name.begin();
+					std::transform(
+							replace_match[1].first,
+							replace_match[1].second,
+							act->name.begin() + offset,
+							toupper
+					);
+			}
+	}
+	catch (std::exception e)
+	{
+			act->name = "\377c1FILTER REGEX ERROR";
 	}
 
 	// new stuff:
