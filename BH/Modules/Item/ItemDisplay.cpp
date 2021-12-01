@@ -1957,7 +1957,7 @@ bool OneHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2)
 {
-		int weapon_number = uInfo->item->dwTxtFileNo;
+		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
 		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
 		bool is_onehanded = false;
 
@@ -2021,7 +2021,7 @@ bool TwoHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2)
 {
-		int weapon_number = uInfo->item->dwTxtFileNo;
+		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
 		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
 		bool is_twohanded = false;
 
