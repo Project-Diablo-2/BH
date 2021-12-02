@@ -1958,7 +1958,9 @@ bool OneHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg2)
 {
 		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
-		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		WeaponType weapon_type = (weapon_number == 0)
+				? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
 		bool is_onehanded = false;
 
 		if (weapon_type == WeaponType::kAxe ||
@@ -1990,7 +1992,9 @@ bool OneHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg2)
 {
 		int weapon_number = code_to_dwtxtfileno[info->code];
-		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		WeaponType weapon_type = (weapon_number == 0)
+				? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
 		bool is_onehanded = false;
 
 		if (weapon_type == WeaponType::kAxe ||
@@ -2022,7 +2026,9 @@ bool TwoHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg2)
 {
 		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
-		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		WeaponType weapon_type = (weapon_number == 0)
+				? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
 		bool is_twohanded = false;
 
 		if (weapon_type == WeaponType::kAxe2H ||
@@ -2049,7 +2055,9 @@ bool TwoHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg2)
 {
 		int weapon_number = code_to_dwtxtfileno[info->code];
-		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		WeaponType weapon_type = (weapon_number == 0)
+				? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
 		bool is_twohanded = false;
 
 		if (weapon_type == WeaponType::kAxe2H ||
