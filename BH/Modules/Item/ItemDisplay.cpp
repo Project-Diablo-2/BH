@@ -1181,6 +1181,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 3, "SIN") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ASSASSIN_KATAR)); }
 	else if (key.compare(0, 3, "SOR") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SORCERESS_ORB)); }
 	else if (key.compare(0, 3, "ZON") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AMAZON_WEAPON)); }
+	else if (key.compare(0, 4, "SHOP") == 0) { Condition::AddOperand(conditions, new ShopCondition()); }
 	else if (key.compare(0, 2, "1H") == 0) { Condition::AddOperand(conditions, new OneHandedCondition()); }
 	else if (key.compare(0, 2, "2H") == 0) { Condition::AddOperand(conditions, new TwoHandedCondition()); }
 	else if (key.compare(0, 3, "AXE") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AXE)); }
@@ -1952,6 +1953,28 @@ bool FoolsCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	return IntegerCompare(value, (BYTE)EQUAL, 3);
 }
 
+bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		bool is_shop = false;
+		if (uInfo->item->pItemData->pOwnerInventory)
+		{
+				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId > 1)
+				{
+						is_shop = true;
+				}
+		}
+
+		return IntegerCompare(is_shop, (BYTE)EQUAL, 1);
+}
+
+bool ShopCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		return IntegerCompare(info->inStore, (BYTE)EQUAL, true);
+}
 
 bool OneHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
