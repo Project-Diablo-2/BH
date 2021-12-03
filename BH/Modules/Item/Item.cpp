@@ -627,7 +627,7 @@ static ItemsTxt* GetArmorText(UnitAny* pItem) {
 void __stdcall Item::OnProperties(wchar_t* wTxt)
 {
 	const int MAXLEN = 1024;
-	static wchar_t wDesc[175];// a buffer for converting the description
+	const int MAXDESCRIPTION = 512;
 	UnitAny* pItem = *p_D2CLIENT_SelectedInvItem;
 	UnitItemInfo uInfo;
 	if (!pItem || pItem->dwType != UNIT_ITEM || CreateUnitItemInfo(&uInfo, pItem)) {
@@ -636,20 +636,18 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 
 	if (Toggles["Advanced Item Display"].state)
 	{
-		int aLen = wcslen(wTxt);
-		string desc = item_desc_cache.Get(&uInfo);
-		if (desc != "") {
-			unsigned int nMaxSize = 128;
-			if (desc.find('\n') != std::string::npos)
-			{
-				nMaxSize = 175;
+			string desc = item_desc_cache.Get(&uInfo);
+			if (desc != "") {
+					static wchar_t wDesc[MAXDESCRIPTION];
+					auto chars_written = MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, desc.c_str(), -1, wDesc, MAXDESCRIPTION);
+
+					int aLen = wcslen(wTxt);
+					swprintf_s(wTxt + aLen, MAXLEN - aLen, 
+							L"%s%s\n",
+							(chars_written > 0) ? wDesc : L"\377c1Item Description is too long.",
+							GetColorCode(TextColor::White).c_str()
+					);
 			}
-			auto chars_written = MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, desc.c_str(), -1, wDesc, nMaxSize);
-			swprintf_s(wTxt + aLen, MAXLEN - aLen,
-				L"%s%s\n",
-				(chars_written > 0) ? wDesc : L"\377c1 Description string too long!",
-				GetColorCode(TextColor::White).c_str());
-		}
 	}
 
 	if (!(Toggles["Always Show Item Stat Ranges"].state ||

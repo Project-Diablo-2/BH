@@ -1,5 +1,6 @@
 ﻿#include "ItemDisplay.h"
 #include "Item.h"
+#include "../../Drawing/Stats/StatsDisplay.h"
 #include <cctype>
 #include <vector>
 #include <string>
@@ -16,7 +17,7 @@
 	{"PRES", STAT_POISONRESIST},	\
 	{"MINDMG", STAT_MINIMUMDAMAGE},	\
 	{"MAXDMG", STAT_MAXIMUMDAMAGE},
-#define MAX_NAME_SIZE 53
+#define MAX_NAME_SIZE 56
 // For ignoring size
 std::vector<std::string> colorreps =
 {
@@ -76,6 +77,315 @@ std::vector<std::string> colorreps =
 	{"SAGE", 0x82}, \
 	{"TEAL", 0xCB}, \
 	{"LIGHT_GRAY", 0xD6}
+
+std::map<std::string, int> code_to_dwtxtfileno = {
+		{"hax", 0},
+		{"axe", 1},
+		{"2ax", 2},
+		{"mpi", 3},
+		{"wax", 4},
+		{"lax", 5},
+		{"bax", 6},
+		{"btx", 7},
+		{"gax", 8},
+		{"gix", 9},
+		{"wnd", 10},
+		{"ywn", 11},
+		{"bwn", 12},
+		{"gwn", 13},
+		{"clb", 14},
+		{"scp", 15},
+		{"gsc", 16},
+		{"wsp", 17},
+		{"spc", 18},
+		{"mac", 19},
+		{"mst", 20},
+		{"fla", 21},
+		{"whm", 22},
+		{"mau", 23},
+		{"gma", 24},
+		{"ssd", 25},
+		{"scm", 26},
+		{"sbr", 27},
+		{"flc", 28},
+		{"crs", 29},
+		{"bsd", 30},
+		{"lsd", 31},
+		{"wsd", 32},
+		{"2hs", 33},
+		{"clm", 34},
+		{"gis", 35},
+		{"bsw", 36},
+		{"flb", 37},
+		{"gsd", 38},
+		{"dgr", 39},
+		{"dir", 40},
+		{"kri", 41},
+		{"bld", 42},
+		{"tkf", 43},
+		{"tax", 44},
+		{"bkf", 45},
+		{"bal", 46},
+		{"jav", 47},
+		{"pil", 48},
+		{"ssp", 49},
+		{"glv", 50},
+		{"tsp", 51},
+		{"spr", 52},
+		{"tri", 53},
+		{"brn", 54},
+		{"spt", 55},
+		{"pik", 56},
+		{"bar", 57},
+		{"vou", 58},
+		{"scy", 59},
+		{"pax", 60},
+		{"hal", 61},
+		{"wsc", 62},
+		{"sst", 63},
+		{"lst", 64},
+		{"cst", 65},
+		{"bst", 66},
+		{"wst", 67},
+		{"sbw", 68},
+		{"hbw", 69},
+		{"lbw", 70},
+		{"cbw", 71},
+		{"sbb", 72},
+		{"lbb", 73},
+		{"swb", 74},
+		{"lwb", 75},
+		{"lxb", 76},
+		{"mxb", 77},
+		{"hxb", 78},
+		{"rxb", 79},
+		{"gps", 80},
+		{"ops", 81},
+		{"gpm", 82},
+		{"opm", 83},
+		{"gpl", 84},
+		{"opl", 85},
+		{"d33", 86},
+		{"g33", 87},
+		{"leg", 88},
+		{"hdm", 89},
+		{"hfh", 90},
+		{"hst", 91},
+		{"msf", 92},
+		{"9ha", 93},
+		{"9ax", 94},
+		{"92a", 95},
+		{"9mp", 96},
+		{"9wa", 97},
+		{"9la", 98},
+		{"9ba", 99},
+		{"9bt", 100},
+		{"9ga", 101},
+		{"9gi", 102},
+		{"9wn", 103},
+		{"9yw", 104},
+		{"9bw", 105},
+		{"9gw", 106},
+		{"9cl", 107},
+		{"9sc", 108},
+		{"9qs", 109},
+		{"9ws", 110},
+		{"9sp", 111},
+		{"9ma", 112},
+		{"9mt", 113},
+		{"9fl", 114},
+		{"9wh", 115},
+		{"9m9", 116},
+		{"9gm", 117},
+		{"9ss", 118},
+		{"9sm", 119},
+		{"9sb", 120},
+		{"9fc", 121},
+		{"9cr", 122},
+		{"9bs", 123},
+		{"9ls", 124},
+		{"9wd", 125},
+		{"92h", 126},
+		{"9cm", 127},
+		{"9gs", 128},
+		{"9b9", 129},
+		{"9fb", 130},
+		{"9gd", 131},
+		{"9dg", 132},
+		{"9di", 133},
+		{"9kr", 134},
+		{"9bl", 135},
+		{"9tk", 136},
+		{"9ta", 137},
+		{"9bk", 138},
+		{"9b8", 139},
+		{"9ja", 140},
+		{"9pi", 141},
+		{"9s9", 142},
+		{"9gl", 143},
+		{"9ts", 144},
+		{"9sr", 145},
+		{"9tr", 146},
+		{"9br", 147},
+		{"9st", 148},
+		{"9p9", 149},
+		{"9b7", 150},
+		{"9vo", 151},
+		{"9s8", 152},
+		{"9pa", 153},
+		{"9h9", 154},
+		{"9wc", 155},
+		{"8ss", 156},
+		{"8ls", 157},
+		{"8cs", 158},
+		{"8bs", 159},
+		{"8ws", 160},
+		{"8sb", 161},
+		{"8hb", 162},
+		{"8lb", 163},
+		{"8cb", 164},
+		{"8s8", 165},
+		{"8l8", 166},
+		{"8sw", 167},
+		{"8lw", 168},
+		{"8lx", 169},
+		{"8mx", 170},
+		{"8hx", 171},
+		{"8rx", 172},
+		{"qf1", 173},
+		{"qf2", 174},
+		{"ktr", 175},
+		{"wrb", 176},
+		{"axf", 177},
+		{"ces", 178},
+		{"clw", 179},
+		{"btl", 180},
+		{"skr", 181},
+		{"9ar", 182},
+		{"9wb", 183},
+		{"9xf", 184},
+		{"9cs", 185},
+		{"9lw", 186},
+		{"9tw", 187},
+		{"9qr", 188},
+		{"7ar", 189},
+		{"7wb", 190},
+		{"7xf", 191},
+		{"7cs", 192},
+		{"7lw", 193},
+		{"7tw", 194},
+		{"7qr", 195},
+		{"7ha", 196},
+		{"7ax", 197},
+		{"72a", 198},
+		{"7mp", 199},
+		{"7wa", 200},
+		{"7la", 201},
+		{"7ba", 202},
+		{"7bt", 203},
+		{"7ga", 204},
+		{"7gi", 205},
+		{"7wn", 206},
+		{"7yw", 207},
+		{"7bw", 208},
+		{"7gw", 209},
+		{"7cl", 210},
+		{"7sc", 211},
+		{"7qs", 212},
+		{"7ws", 213},
+		{"7sp", 214},
+		{"7ma", 215},
+		{"7mt", 216},
+		{"7fl", 217},
+		{"7wh", 218},
+		{"7m7", 219},
+		{"7gm", 220},
+		{"7ss", 221},
+		{"7sm", 222},
+		{"7sb", 223},
+		{"7fc", 224},
+		{"7cr", 225},
+		{"7bs", 226},
+		{"7ls", 227},
+		{"7wd", 228},
+		{"72h", 229},
+		{"7cm", 230},
+		{"7gs", 231},
+		{"7b7", 232},
+		{"7fb", 233},
+		{"7gd", 234},
+		{"7dg", 235},
+		{"7di", 236},
+		{"7kr", 237},
+		{"7bl", 238},
+		{"7tk", 239},
+		{"7ta", 240},
+		{"7bk", 241},
+		{"7b8", 242},
+		{"7ja", 243},
+		{"7pi", 244},
+		{"7s7", 245},
+		{"7gl", 246},
+		{"7ts", 247},
+		{"7sr", 248},
+		{"7tr", 249},
+		{"7br", 250},
+		{"7st", 251},
+		{"7p7", 252},
+		{"7o7", 253},
+		{"7vo", 254},
+		{"7s8", 255},
+		{"7pa", 256},
+		{"7h7", 257},
+		{"7wc", 258},
+		{"6ss", 259},
+		{"6ls", 260},
+		{"6cs", 261},
+		{"6bs", 262},
+		{"6ws", 263},
+		{"6sb", 264},
+		{"6hb", 265},
+		{"6lb", 266},
+		{"6cb", 267},
+		{"6s7", 268},
+		{"6l7", 269},
+		{"6sw", 270},
+		{"6lw", 271},
+		{"6lx", 272},
+		{"6mx", 273},
+		{"6hx", 274},
+		{"6rx", 275},
+		{"ob1", 276},
+		{"ob2", 277},
+		{"ob3", 278},
+		{"ob4", 279},
+		{"ob5", 280},
+		{"am1", 281},
+		{"am2", 282},
+		{"am3", 283},
+		{"am4", 284},
+		{"am5", 285},
+		{"ob6", 286},
+		{"ob7", 287},
+		{"ob8", 288},
+		{"ob9", 289},
+		{"oba", 290},
+		{"am6", 291},
+		{"am7", 292},
+		{"am8", 293},
+		{"am9", 294},
+		{"ama", 295},
+		{"obb", 296},
+		{"obc", 297},
+		{"obd", 298},
+		{"obe", 299},
+		{"obf", 300},
+		{"amb", 301},
+		{"amc", 302},
+		{"amd", 303},
+		{"ame", 304},
+		{"amf", 305},
+};
 
 enum Operation
 {
@@ -269,7 +579,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	const string& action_name,
 	BOOL          bLimit)
 {
-	char origName[175], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4] = "0";
+	char origName[512], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4] = "0";
 	char gemtype[16] = "", gemlevel[16] = "", sellValue[16] = "", statVal[16] = "", qty[4] = "";
 	char lvlreq[4], wpnspd[4], rangeadder[4];
 
@@ -560,21 +870,28 @@ void BuildAction(string* str,
 {
 	act->name = string(str->c_str());
 
-	// upcase all text in a %replacement_string%
-	// for some reason \w wasn't catching _, so I added it to the groups
-	std::regex replace_reg(
-		R"(^(?:(?:%[^%]*%)|[^%])*%((?:\w|_|-)*?[a-z]+?(?:\w|_|-)*?)%)",
-		std::regex_constants::ECMAScript);
-	std::smatch replace_match;
-	while (std::regex_search(act->name, replace_match, replace_reg))
+	//// upcase all text in a %replacement_string%
+	//// for some reason \w wasn't catching _, so I added it to the groups
+	try
 	{
-		auto offset = replace_match[1].first - act->name.begin();
-		std::transform(
-			replace_match[1].first,
-			replace_match[1].second,
-			act->name.begin() + offset,
-			toupper
-		);
+			std::regex replace_reg(
+					R"(^(?:(?:%[^%]*%)|[^%])*%((?:\w|_|-)*?[a-z]+?(?:\w|_|-)*?)%)",
+					std::regex_constants::ECMAScript);
+			std::smatch replace_match;
+			while (std::regex_search(act->name, replace_match, replace_reg))
+			{
+					auto offset = replace_match[1].first - act->name.begin();
+					std::transform(
+							replace_match[1].first,
+							replace_match[1].second,
+							act->name.begin() + offset,
+							toupper
+					);
+			}
+	}
+	catch (std::exception e)
+	{
+			act->name = "\377c1FILTER REGEX ERROR";
 	}
 
 	// new stuff:
@@ -864,6 +1181,9 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 3, "SIN") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ASSASSIN_KATAR)); }
 	else if (key.compare(0, 3, "SOR") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SORCERESS_ORB)); }
 	else if (key.compare(0, 3, "ZON") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AMAZON_WEAPON)); }
+	else if (key.compare(0, 4, "SHOP") == 0) { Condition::AddOperand(conditions, new ShopCondition()); }
+	else if (key.compare(0, 2, "1H") == 0) { Condition::AddOperand(conditions, new OneHandedCondition()); }
+	else if (key.compare(0, 2, "2H") == 0) { Condition::AddOperand(conditions, new TwoHandedCondition()); }
 	else if (key.compare(0, 3, "AXE") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AXE)); }
 	else if (key.compare(0, 4, "MACE") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_MACE)); }
 	else if (key.compare(0, 5, "SWORD") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SWORD)); }
@@ -1631,6 +1951,155 @@ bool FoolsCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	// to just write FOOLS in the mh file instead of FOOLS=3 this could be changed to accept 1-3 for the different
 	// types it can produce
 	return IntegerCompare(value, (BYTE)EQUAL, 3);
+}
+
+bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		bool is_shop = false;
+		if (uInfo->item->pItemData->pOwnerInventory)
+		{
+				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId > 1)
+				{
+						is_shop = true;
+				}
+		}
+
+		return IntegerCompare(is_shop, (BYTE)EQUAL, 1);
+}
+
+bool ShopCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		return IntegerCompare(info->inStore, (BYTE)EQUAL, true);
+}
+
+bool OneHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+		WeaponType weapon_type = (weapon_number == 0)
+				? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_onehanded = false;
+
+		if (weapon_type == WeaponType::kAxe ||
+				weapon_type == WeaponType::kWand ||
+				weapon_type == WeaponType::kClub || 
+				weapon_type == WeaponType::kScepter ||
+				weapon_type == WeaponType::kMace ||
+				weapon_type == WeaponType::kHammer ||
+				weapon_type == WeaponType::kSword ||
+				weapon_type == WeaponType::kKnife ||
+				weapon_type == WeaponType::kThrowing ||
+				weapon_type == WeaponType::kJavelin ||
+				weapon_type == WeaponType::kThrowingPot ||
+				weapon_type == WeaponType::kClaw1 ||
+				weapon_type == WeaponType::kClaw2 ||
+				weapon_type == WeaponType::kOrb ||
+				weapon_type == WeaponType::kAmaJav
+
+				)
+		{
+				is_onehanded = true;
+		}
+
+		return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+}
+
+bool OneHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		int weapon_number = code_to_dwtxtfileno[info->code];
+		WeaponType weapon_type = (weapon_number == 0)
+				? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_onehanded = false;
+
+		if (weapon_type == WeaponType::kAxe ||
+				weapon_type == WeaponType::kWand ||
+				weapon_type == WeaponType::kClub ||
+				weapon_type == WeaponType::kScepter ||
+				weapon_type == WeaponType::kMace ||
+				weapon_type == WeaponType::kHammer ||
+				weapon_type == WeaponType::kSword ||
+				weapon_type == WeaponType::kKnife ||
+				weapon_type == WeaponType::kThrowing ||
+				weapon_type == WeaponType::kJavelin ||
+				weapon_type == WeaponType::kThrowingPot ||
+				weapon_type == WeaponType::kClaw1 ||
+				weapon_type == WeaponType::kClaw2 ||
+				weapon_type == WeaponType::kOrb ||
+				weapon_type == WeaponType::kAmaJav
+
+				)
+		{
+				is_onehanded = true;
+		}
+
+		return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+}
+
+bool TwoHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+		WeaponType weapon_type = (weapon_number == 0)
+				? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_twohanded = false;
+
+		if (weapon_type == WeaponType::kAxe2H ||
+				weapon_type == WeaponType::kHammer2H ||
+				weapon_type == WeaponType::kSword2H ||
+				weapon_type == WeaponType::kSpear ||
+				weapon_type == WeaponType::kPole ||
+				weapon_type == WeaponType::kStaff ||
+				weapon_type == WeaponType::kBow ||
+				weapon_type == WeaponType::kCrossbow ||
+				weapon_type == WeaponType::kAmaBow ||
+				weapon_type == WeaponType::kAmaSpear
+
+				)
+		{
+				is_twohanded = true;
+		}
+
+		return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+}
+
+bool TwoHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		int weapon_number = code_to_dwtxtfileno[info->code];
+		WeaponType weapon_type = (weapon_number == 0)
+				? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_twohanded = false;
+
+		if (weapon_type == WeaponType::kAxe2H ||
+				weapon_type == WeaponType::kHammer2H ||
+				weapon_type == WeaponType::kSword2H ||
+				weapon_type == WeaponType::kSpear ||
+				weapon_type == WeaponType::kPole ||
+				weapon_type == WeaponType::kStaff ||
+				weapon_type == WeaponType::kBow ||
+				weapon_type == WeaponType::kCrossbow ||
+				weapon_type == WeaponType::kAmaBow ||
+				weapon_type == WeaponType::kAmaSpear
+
+				)
+		{
+				is_twohanded = true;
+		}
+
+		return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
 }
 
 void SkillListCondition::Init()

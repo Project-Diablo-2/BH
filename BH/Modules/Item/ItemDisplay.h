@@ -628,6 +628,45 @@ class FoolsCondition : public Condition
                                          Condition* arg2 );
 };
 
+class ShopCondition : public Condition
+{
+    public:
+        ShopCondition() { conditionType = CT_Operand; };
+    private:
+        bool EvaluateInternal( UnitItemInfo* uInfo,
+                               Condition* arg1,
+                               Condition* arg2);
+        bool EvaluateInternalFromPacket(ItemInfo* info,
+                                        Condition* arg1,
+                                        Condition* arg2);
+};
+
+class OneHandedCondition : public Condition
+{
+    public:
+        OneHandedCondition() { conditionType = CT_Operand; };
+    private:
+        bool EvaluateInternal( UnitItemInfo* uInfo,
+                               Condition* arg1,
+                               Condition* arg2);
+        bool EvaluateInternalFromPacket(ItemInfo* info,
+                                        Condition* arg1,
+                                        Condition* arg2);
+};
+
+class TwoHandedCondition : public Condition
+{
+public:
+    TwoHandedCondition() { conditionType = CT_Operand; };
+private:
+    bool EvaluateInternal(UnitItemInfo* uInfo,
+        Condition* arg1,
+        Condition* arg2);
+    bool EvaluateInternalFromPacket(ItemInfo* info,
+        Condition* arg1,
+        Condition* arg2);
+};
+
 class SkillListCondition : public Condition
 {
     public:
