@@ -1182,6 +1182,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 3, "SOR") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SORCERESS_ORB)); }
 	else if (key.compare(0, 3, "ZON") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AMAZON_WEAPON)); }
 	else if (key.compare(0, 4, "SHOP") == 0) { Condition::AddOperand(conditions, new ShopCondition()); }
+	else if (key.compare(0, 8, "EQUIPPED") == 0) { Condition::AddOperand(conditions, new EquippedCondition()); }
 	else if (key.compare(0, 2, "1H") == 0) { Condition::AddOperand(conditions, new OneHandedCondition()); }
 	else if (key.compare(0, 2, "2H") == 0) { Condition::AddOperand(conditions, new TwoHandedCondition()); }
 	else if (key.compare(0, 3, "AXE") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AXE)); }
@@ -1951,6 +1952,32 @@ bool FoolsCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	// to just write FOOLS in the mh file instead of FOOLS=3 this could be changed to accept 1-3 for the different
 	// types it can produce
 	return IntegerCompare(value, (BYTE)EQUAL, 3);
+}
+
+bool EquippedCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		bool is_equipped = false;
+		if (uInfo->item->pItemData->pOwnerInventory)
+		{
+				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId == 1)
+				{
+						if (uInfo->item->pItemData->BodyLocation > 0)
+						{
+								is_equipped = true;
+						}
+				}
+		}
+
+		return IntegerCompare(is_equipped, (BYTE)EQUAL, 1);
+}
+
+bool EquippedCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		return IntegerCompare(info->equipped, (BYTE)EQUAL, true);
 }
 
 bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
