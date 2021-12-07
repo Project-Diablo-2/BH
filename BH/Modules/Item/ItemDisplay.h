@@ -680,6 +680,19 @@ private:
         Condition* arg2);
 };
 
+class GemmedCondition : public Condition
+{
+    public:
+        GemmedCondition() { conditionType = CT_Operand; };
+    private:
+        bool EvaluateInternal( UnitItemInfo* uInfo,
+                               Condition* arg1,
+                               Condition* arg2);
+        bool EvaluateInternalFromPacket(ItemInfo* info,
+                                        Condition* arg1,
+                                        Condition* arg2);
+};
+
 class SkillListCondition : public Condition
 {
     public:

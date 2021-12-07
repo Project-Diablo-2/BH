@@ -1123,6 +1123,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 4, "DIFF") == 0) { Condition::AddOperand(conditions, new DifficultyCondition(operation, value)); }
 	else if (key.compare(0, 4, "RUNE") == 0) { Condition::AddOperand(conditions, new RuneCondition(operation, value)); }
 	else if (key.compare(0, 4, "GOLD") == 0) { Condition::AddOperand(conditions, new GoldCondition(operation, value)); }
+	else if (key.compare(0, 6, "GEMMED") == 0) { Condition::AddOperand(conditions, new GemmedCondition()); }
 	else if (key.compare(0, 7, "GEMTYPE") == 0) { Condition::AddOperand(conditions, new GemTypeCondition(operation, value)); }
 	else if (key.compare(0, 3, "GEM") == 0) { Condition::AddOperand(conditions, new GemLevelCondition(operation, value)); }
 	else if (key.compare(0, 2, "ED") == 0) { Condition::AddOperand(conditions, new EDCondition(operation, value)); }
@@ -2127,6 +2128,26 @@ bool TwoHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		}
 
 		return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+}
+
+bool GemmedCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		bool is_gemmed = false;
+		if (uInfo->item->pInventory)
+		{
+				is_gemmed = uInfo->item->pInventory->dwItemCount > 0;
+		}
+
+		return IntegerCompare(is_gemmed, (BYTE)EQUAL, true);
+}
+
+bool GemmedCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		return IntegerCompare(info->usedSockets, (BYTE)EQUAL, true);
 }
 
 void SkillListCondition::Init()
