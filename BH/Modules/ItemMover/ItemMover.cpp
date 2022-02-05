@@ -430,7 +430,11 @@ void ItemMover::OnLeftClick(bool up, int x, int y, bool* block) {
 				}
 			}
 		}
-		if (code[0] == 'i' && code[1] == 'b' && code[2] == 'k' && pItem->pItemData->ItemLocation == STORAGE_INVENTORY && D2COMMON_GetUnitStat(pItem, STAT_AMMOQUANTITY, 0) > 0) {
+
+		BOOL bIsIdBook = code[0] == 'i' && code[1] == 'b' && code[2] == 'k';
+		BOOL bIsUnlimitedIdBook = code[0] == 'r' && code[1] == 'i' && code[2] == 'd';
+		BOOL bItemIsInInventory = pItem->pItemData->ItemLocation == STORAGE_INVENTORY;
+		if (bItemIsInInventory && (bIsUnlimitedIdBook || (bIsIdBook && D2COMMON_GetUnitStat(pItem, STAT_AMMOQUANTITY, 0) > 0))) {
 			idBookId = pItem->dwUnitId;
 		}
 		if (unidItemId > 0 && idBookId > 0) {
