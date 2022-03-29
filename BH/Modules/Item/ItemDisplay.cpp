@@ -1123,6 +1123,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 4, "DIFF") == 0) { Condition::AddOperand(conditions, new DifficultyCondition(operation, value)); }
 	else if (key.compare(0, 4, "RUNE") == 0) { Condition::AddOperand(conditions, new RuneCondition(operation, value)); }
 	else if (key.compare(0, 4, "GOLD") == 0) { Condition::AddOperand(conditions, new GoldCondition(operation, value)); }
+	else if (key.compare(0, 6, "GEMMED") == 0) { Condition::AddOperand(conditions, new GemmedCondition()); }
 	else if (key.compare(0, 7, "GEMTYPE") == 0) { Condition::AddOperand(conditions, new GemTypeCondition(operation, value)); }
 	else if (key.compare(0, 3, "GEM") == 0) { Condition::AddOperand(conditions, new GemLevelCondition(operation, value)); }
 	else if (key.compare(0, 2, "ED") == 0) { Condition::AddOperand(conditions, new EDCondition(operation, value)); }
@@ -1182,6 +1183,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 3, "SOR") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SORCERESS_ORB)); }
 	else if (key.compare(0, 3, "ZON") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AMAZON_WEAPON)); }
 	else if (key.compare(0, 4, "SHOP") == 0) { Condition::AddOperand(conditions, new ShopCondition()); }
+	else if (key.compare(0, 8, "EQUIPPED") == 0) { Condition::AddOperand(conditions, new EquippedCondition()); }
 	else if (key.compare(0, 2, "1H") == 0) { Condition::AddOperand(conditions, new OneHandedCondition()); }
 	else if (key.compare(0, 2, "2H") == 0) { Condition::AddOperand(conditions, new TwoHandedCondition()); }
 	else if (key.compare(0, 3, "AXE") == 0) { Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AXE)); }
@@ -1953,6 +1955,32 @@ bool FoolsCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	return IntegerCompare(value, (BYTE)EQUAL, 3);
 }
 
+bool EquippedCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		bool is_equipped = false;
+		if (uInfo->item->pItemData->pOwnerInventory)
+		{
+				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId == D2CLIENT_GetPlayerUnit()->dwUnitId)
+				{
+						if (uInfo->item->pItemData->BodyLocation > 0)
+						{
+								is_equipped = true;
+						}
+				}
+		}
+
+		return IntegerCompare(is_equipped, (BYTE)EQUAL, 1);
+}
+
+bool EquippedCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		return IntegerCompare(info->equipped, (BYTE)EQUAL, true);
+}
+
 bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2)
@@ -1960,7 +1988,7 @@ bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		bool is_shop = false;
 		if (uInfo->item->pItemData->pOwnerInventory)
 		{
-				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId > 1)
+				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId > 1 && uInfo->item->pItemData->pOwnerInventory->dwOwnerId != D2CLIENT_GetPlayerUnit()->dwUnitId)
 				{
 						is_shop = true;
 				}
@@ -2100,6 +2128,26 @@ bool TwoHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		}
 
 		return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+}
+
+bool GemmedCondition::EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2)
+{
+		bool is_gemmed = false;
+		if (uInfo->item->pInventory)
+		{
+				is_gemmed = uInfo->item->pInventory->dwItemCount > 0;
+		}
+
+		return IntegerCompare(is_gemmed, (BYTE)EQUAL, true);
+}
+
+bool GemmedCondition::EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2)
+{
+		return IntegerCompare(info->usedSockets, (BYTE)EQUAL, true);
 }
 
 void SkillListCondition::Init()

@@ -628,6 +628,19 @@ class FoolsCondition : public Condition
                                          Condition* arg2 );
 };
 
+class EquippedCondition : public Condition
+{
+    public:
+        EquippedCondition() { conditionType = CT_Operand; };
+    private:
+        bool EvaluateInternal( UnitItemInfo* uInfo,
+                               Condition* arg1,
+                               Condition* arg2);
+        bool EvaluateInternalFromPacket(ItemInfo* info,
+                                        Condition* arg1,
+                                        Condition* arg2);
+};
+
 class ShopCondition : public Condition
 {
     public:
@@ -665,6 +678,19 @@ private:
     bool EvaluateInternalFromPacket(ItemInfo* info,
         Condition* arg1,
         Condition* arg2);
+};
+
+class GemmedCondition : public Condition
+{
+    public:
+        GemmedCondition() { conditionType = CT_Operand; };
+    private:
+        bool EvaluateInternal( UnitItemInfo* uInfo,
+                               Condition* arg1,
+                               Condition* arg2);
+        bool EvaluateInternalFromPacket(ItemInfo* info,
+                                        Condition* arg1,
+                                        Condition* arg2);
 };
 
 class SkillListCondition : public Condition
