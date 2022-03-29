@@ -1402,7 +1402,7 @@ void InitializeMPQData() {
 	}
 
 	// TODO: Read skills.txt to find this value
-	SKILL_MAX = 430;
+	SKILL_MAX = 510;
 
 	initialized = true;
 }
