@@ -1962,7 +1962,7 @@ bool EquippedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		bool is_equipped = false;
 		if (uInfo->item->pItemData->pOwnerInventory)
 		{
-				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId == 1)
+				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId == D2CLIENT_GetPlayerUnit()->dwUnitId)
 				{
 						if (uInfo->item->pItemData->BodyLocation > 0)
 						{
@@ -1988,7 +1988,7 @@ bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		bool is_shop = false;
 		if (uInfo->item->pItemData->pOwnerInventory)
 		{
-				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId > 1)
+				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId > 1 && uInfo->item->pItemData->pOwnerInventory->dwOwnerId != D2CLIENT_GetPlayerUnit()->dwUnitId)
 				{
 						is_shop = true;
 				}
