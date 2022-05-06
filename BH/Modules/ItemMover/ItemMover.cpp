@@ -3,6 +3,7 @@
 #include "../../D2Ptrs.h"
 #include "../../D2Stubs.h"
 #include "../../D2Helpers.h"
+#include "../Item/Item.h"
 
 // This module was inspired by the RedVex plugin "Item Mover", written by kaiks.
 // Thanks to kaiks for sharing his code.
@@ -666,6 +667,9 @@ void ItemMover::OnGamePacketRecv(BYTE* packet, bool* block) {
 				auto color = UNDEFINED_COLOR;
 
 				for (vector<Rule*>::iterator it = MapRuleList.begin(); it != MapRuleList.end(); it++) {
+					// skip map and notification if ping level requirement is not met
+					if ((*it)->action.pingLevel > Item::GetPingLevel()) continue;
+
 					if ((*it)->Evaluate(NULL, &item)) {
 						auto action_color = (*it)->action.notifyColor;
 						// never overwrite color with an undefined color. never overwrite a defined color with dead color.

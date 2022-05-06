@@ -57,6 +57,8 @@ private:
 	unsigned int showPlayer;
 	static UnitAny* viewingUnit;
 	Drawing::UITab* settingsTab;
+	static unsigned int filterLevelSetting;
+	static unsigned int pingLevelSetting;
 public:
 	unsigned int resyncKey;
 	unsigned int advStatMenuKey;
@@ -88,6 +90,9 @@ public:
 
 	static UnitAny* GetViewUnit();
 	static UnitAny* GetViewUnitAndDrawBox();
+
+	static unsigned int GetFilterLevel() { return filterLevelSetting; }
+	static unsigned int GetPingLevel() { return pingLevelSetting; }
 };
 
 void ItemName_Interception();
@@ -105,3 +110,6 @@ struct UnitItemInfo;
 int CreateUnitItemInfo(UnitItemInfo* uInfo, UnitAny* item);
 int ItemGetCorruptor(UnitAny* pItem);
 BOOL StatIsCorrupted(int nStat, int nCorruptor);
+
+// reset all rule lookup caches
+void ResetCaches();

@@ -807,9 +807,7 @@ namespace ItemDisplay
 
 		item_display_initialized = true;
 		rules.clear();
-		item_desc_cache.ResetCache();
-		item_name_cache.ResetCache();
-		map_action_cache.ResetCache();
+		ResetCaches();
 		BH::lootFilter->ReadMapList("ItemDisplay", rules);
 		for (unsigned int i = 0; i < rules.size(); i++)
 		{
@@ -848,9 +846,7 @@ namespace ItemDisplay
 			}
 		}
 		item_display_initialized = false;
-		item_desc_cache.ResetCache();
-		item_name_cache.ResetCache();
-		map_action_cache.ResetCache();
+		ResetCaches();
 		RuleList.clear();
 		MapRuleList.clear();
 		IgnoreRuleList.clear();
@@ -901,6 +897,7 @@ void BuildAction(string* str,
 	act->pxColor = ParseMapColor(act, "PX");
 	act->lineColor = ParseMapColor(act, "LINE");
 	act->notifyColor = ParseMapColor(act, "NOTIFY");
+	act->pingLevel = ParsePingLevel(act, "TIER");
 	act->description = ParseDescription(act);
 
 	// legacy support:
@@ -934,6 +931,21 @@ void BuildAction(string* str,
 		act->name.replace(done, 10, "");
 		act->stopProcessing = false;
 	}
+}
+
+int ParsePingLevel(Action* act, const string& key_string) {
+	std::regex pattern("%" + key_string + "-([0-9])%",
+		std::regex_constants::ECMAScript | std::regex_constants::icase);
+	int ping_level = 0;
+	std::smatch the_match;
+
+	if (std::regex_search(act->name, the_match, pattern)) {
+		ping_level = stoi(the_match[1].str());
+		act->name.replace(
+			the_match.prefix().length(),
+			the_match[0].length(), "");
+	}
+	return ping_level;
 }
 
 string ParseDescription(Action* act)
@@ -1120,6 +1132,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 4, "QLVL") == 0) { Condition::AddOperand(conditions, new QualityLevelCondition(operation, value)); }
 	else if (key.compare(0, 4, "ALVL") == 0) { Condition::AddOperand(conditions, new AffixLevelCondition(operation, value)); }
 	else if (key.compare(0, 4, "CLVL") == 0) { Condition::AddOperand(conditions, new CharStatCondition(STAT_LEVEL, 0, operation, value)); }
+	else if (key.compare(0, 7, "FILTLVL") == 0) { Condition::AddOperand(conditions, new FilterLevelCondition(operation, value)); }
 	else if (key.compare(0, 4, "DIFF") == 0) { Condition::AddOperand(conditions, new DifficultyCondition(operation, value)); }
 	else if (key.compare(0, 4, "RUNE") == 0) { Condition::AddOperand(conditions, new RuneCondition(operation, value)); }
 	else if (key.compare(0, 4, "GOLD") == 0) { Condition::AddOperand(conditions, new GoldCondition(operation, value)); }
@@ -1355,6 +1368,13 @@ bool Condition::Evaluate(UnitItemInfo* uInfo,
 	// the normal item structures won't have been set up yet), or *uInfo otherwise.
 	if (info) { return EvaluateInternalFromPacket(info, arg1, arg2); }
 	return EvaluateInternal(uInfo, arg1, arg2);
+}
+
+bool FilterLevelCondition::EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2) {
+	return IntegerCompare(Item::GetFilterLevel(), operation, filterLevel);
+}
+bool FilterLevelCondition::EvaluateInternalFromPacket(ItemInfo* info, Condition* arg1, Condition* arg2) {
+	return IntegerCompare(Item::GetFilterLevel(), operation, filterLevel);
 }
 
 bool TrueCondition::EvaluateInternal(UnitItemInfo* uInfo,

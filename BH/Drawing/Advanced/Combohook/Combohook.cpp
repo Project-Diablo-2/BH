@@ -58,7 +58,7 @@ void Combohook::OnDraw() {
 	Texthook::Draw(GetX() + GetXSize() - 8, GetY() + 3, 0, GetFont(), InHook((*p_D2CLIENT_MouseX), (*p_D2CLIENT_MouseY))||active?Tan:Gold, "v");
 
 	if (active) {
-		Framehook::Draw(GetX(), GetY() + GetYSize() + 4, GetXSize(), (options.size() + 1) * GetYSize() + 4, 0, BTNormal);
+		Framehook::Draw(GetX(), GetY() + GetYSize() + 4, GetXSize(), options.size() * (GetYSize() + 4), 0, BTNormal);
 		unsigned int mouseX = (*p_D2CLIENT_MouseX);
 		unsigned int mouseY = (*p_D2CLIENT_MouseY);
 		unsigned int n = 0;

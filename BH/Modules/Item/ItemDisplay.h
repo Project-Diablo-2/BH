@@ -764,6 +764,20 @@ class DifficultyCondition : public Condition
                                          Condition* arg2 );
 };
 
+class FilterLevelCondition : public Condition
+{
+public:
+    FilterLevelCondition(BYTE op, unsigned int target)
+        : operation(op), filterLevel(target) {
+        conditionType = CT_Operand;
+    };
+private:
+    BYTE operation;
+    unsigned int filterLevel;
+    bool EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2);
+    bool EvaluateInternalFromPacket(ItemInfo* info, Condition* arg1, Condition* arg2);
+};
+
 class ItemStatCondition : public Condition
 {
     public:
@@ -882,6 +896,7 @@ struct Action
     int    pxColor;
     int    lineColor;
     int    notifyColor;
+    unsigned int pingLevel;
 
     Action() :
         colorOnMap(UNDEFINED_COLOR),
@@ -890,6 +905,7 @@ struct Action
         pxColor(UNDEFINED_COLOR),
         lineColor(UNDEFINED_COLOR),
         notifyColor(UNDEFINED_COLOR),
+        pingLevel(0),
         stopProcessing(true),
         name(""),
         description("")
@@ -1007,6 +1023,7 @@ namespace ItemDisplay
 StatProperties* GetStatProperties( unsigned int stat );
 void            BuildAction( string* str,
                              Action* act );
+int ParsePingLevel(Action* act, const string& reg_string);
 string ParseDescription( Action* act );
 int    ParseMapColor( Action*       act,
                       const string& reg_string );
