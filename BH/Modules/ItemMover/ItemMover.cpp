@@ -668,7 +668,7 @@ void ItemMover::OnGamePacketRecv(BYTE* packet, bool* block) {
 
 				for (vector<Rule*>::iterator it = MapRuleList.begin(); it != MapRuleList.end(); it++) {
 					// skip map and notification if ping level requirement is not met
-					if ((*it)->action.pingLevel > Item::GetPingLevel()) continue;
+					if (Item::GetFilterLevel() != 0 && (*it)->action.pingLevel < Item::GetFilterLevel()) continue;
 
 					if ((*it)->Evaluate(NULL, &item)) {
 						auto action_color = (*it)->action.notifyColor;

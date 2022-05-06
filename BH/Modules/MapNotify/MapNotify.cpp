@@ -7,6 +7,7 @@
 #include "../../Drawing.h"
 #include "../Item/ItemDisplay.h"
 #include "../../AsyncDrawBuffer.h"
+#include "../Item/Item.h"
 
 #pragma optimize( "", off)
 
@@ -74,6 +75,9 @@ void MapNotify::OnDraw() {
 				if (ItemAttributeMap.find(uInfo.itemCode) != ItemAttributeMap.end()) {
 					uInfo.attrs = ItemAttributeMap[uInfo.itemCode];
 					for (vector<Rule*>::iterator it = MapRuleList.begin(); it != MapRuleList.end(); it++) {
+
+					if (Item::GetFilterLevel() != 0 && (*it)->action.pingLevel < Item::GetFilterLevel()) continue;
+
 						if ((*it)->Evaluate(&uInfo, NULL)) {
 							if ((unit->dwFlags & UNITFLAG_REVEALED) == 0x0
 								&& (*BH::MiscToggles2)["Item Detailed Notifications"].state) {

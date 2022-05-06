@@ -61,7 +61,6 @@ void FixDecimalString(wchar_t* s, int n);
 
 map<std::string, Toggle> Item::Toggles;
 unsigned int Item::filterLevelSetting = 0;
-unsigned int Item::pingLevelSetting = 0;
 UnitAny* Item::viewingUnit;
 
 Patch* itemNamePatch = new Patch(Call, D2CLIENT, { 0x92366, 0x96736 }, (int)ItemName_Interception, 6);
@@ -143,7 +142,6 @@ void Item::LoadConfig() {
 	BH::config->ReadKey("Character Stats", "VK_8", advStatMenuKey);
 
 	BH::config->ReadInt("Filter Level", filterLevelSetting);
-	BH::config->ReadInt("Ping Level", pingLevelSetting);
 }
 
 void Item::DrawSettings() {
@@ -219,22 +217,12 @@ void Item::DrawSettings() {
 
 	vector<string> options;
 	options.push_back("0 - None");
-	options.push_back("1 - Minimal");
+	options.push_back("1 - Soft");
 	options.push_back("2 - Moderate");
-	options.push_back("3 - Aggressive");
+	options.push_back("3 - Strict");
+	options.push_back("4 - Very Strict");
+	options.push_back("5 - Uber Strict");
 	new Combohook(settingsTab, 85, y, 120, &filterLevelSetting, options);
-
-	new Texthook(settingsTab, 234, y, "Ping Tiers <=:");
-
-	vector<string> ping_options;
-	ping_options.push_back("0");
-	ping_options.push_back("1");
-	ping_options.push_back("2");
-	ping_options.push_back("3");
-	ping_options.push_back("4");
-	ping_options.push_back("5");
-	ping_options.push_back("6");
-	new Combohook(settingsTab, 330, y, 40, &pingLevelSetting, ping_options);
 }
 
 void Item::OnUnload() {
@@ -255,17 +243,11 @@ void Item::OnUnload() {
 
 void Item::OnLoop() {
 	static unsigned int localFilterLevel = 0;
-	static unsigned int localPingLevel = 0;
 
 	// This is a bit of a hack to reset the cache when the user changes the item filter level
 	if (localFilterLevel != filterLevelSetting) {
 		ResetCaches();
 		localFilterLevel = filterLevelSetting;
-	}
-
-	if (localPingLevel != pingLevelSetting) {
-		ResetCaches();
-		localPingLevel = pingLevelSetting;
 	}
 
 	if (!D2CLIENT_GetUIState(0x01))

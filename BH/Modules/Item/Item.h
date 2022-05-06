@@ -58,7 +58,6 @@ private:
 	static UnitAny* viewingUnit;
 	Drawing::UITab* settingsTab;
 	static unsigned int filterLevelSetting;
-	static unsigned int pingLevelSetting;
 public:
 	unsigned int resyncKey;
 	unsigned int advStatMenuKey;
@@ -92,7 +91,6 @@ public:
 	static UnitAny* GetViewUnitAndDrawBox();
 
 	static unsigned int GetFilterLevel() { return filterLevelSetting; }
-	static unsigned int GetPingLevel() { return pingLevelSetting; }
 };
 
 void ItemName_Interception();
