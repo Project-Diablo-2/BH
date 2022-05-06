@@ -571,6 +571,9 @@ void GetItemName(UnitItemInfo* uInfo,
 	string& name)
 {
 	string new_name = item_name_cache.Get(uInfo, name);
+	if (new_name == "" && Item::GetFilterLevel() == 0) {
+		return;
+	}
 	name.assign(new_name);
 }
 

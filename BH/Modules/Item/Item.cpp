@@ -216,12 +216,12 @@ void Item::DrawSettings() {
 	new Texthook(settingsTab, 4, y + 2, "Filter Strictness:");
 
 	vector<string> options;
-	options.push_back("0 - None");
-	options.push_back("1 - Soft");
-	options.push_back("2 - Moderate");
-	options.push_back("3 - Strict");
-	options.push_back("4 - Very Strict");
-	options.push_back("5 - Uber Strict");
+	options.push_back("0 - No Filtering");
+	options.push_back("1 - Minimal");
+	options.push_back("2 - Low");
+	options.push_back("3 - Moderate");
+	options.push_back("4 - High");
+	options.push_back("5 - Maximal");
 	new Combohook(settingsTab, 120, y, 120, &filterLevelSetting, options);
 }
 
