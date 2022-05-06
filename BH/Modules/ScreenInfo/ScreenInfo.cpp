@@ -280,11 +280,30 @@ void ScreenInfo::OnAutomapDraw() {
 	// again after calling this function. It may be a good idea in general not to store the return value of
 	// GetPlayerUnit.
 	char *level = UnicodeToAnsi(D2CLIENT_GetLevelName(pUnit->pPath->pRoom1->pRoom2->pLevel->dwLevelNo));
+	std::string szLevel = std::string(level);
+
 	pUnit = D2CLIENT_GetPlayerUnit();
 	if (!pUnit) return;
 
 	CHAR szPing[10] = "";
 	sprintf_s(szPing, sizeof(szPing), "%d", *p_D2CLIENT_Ping);
+
+	DWORD levelId = pUnit->pPath->pRoom1->pRoom2->pLevel->dwLevelNo;
+	LevelsTxt* levelTxt = &(*p_D2COMMON_sgptDataTable)->pLevelsTxt[levelId];
+	WORD areaLevel = 0;
+
+	std::string szAreaLevel = "";
+
+	if (pData->nCharFlags & PLAYER_TYPE_EXPANSION) {
+		areaLevel = levelTxt->wMonLvlEx[D2CLIENT_GetDifficulty()];
+	}
+	else {
+		areaLevel = levelTxt->wMonLvl[D2CLIENT_GetDifficulty()];
+	}
+	if (areaLevel > 0) {
+		szAreaLevel = to_string(areaLevel);
+		szLevel = szLevel + " (" + to_string(szAreaLevel) + ")";
+	}
 
 	AutomapReplace automap[] = {
 		{"GAMENAME", pData->szGameName},
@@ -293,10 +312,11 @@ void ScreenInfo::OnAutomapDraw() {
 		{"GAMEDIFF", szDiff[D2CLIENT_GetDifficulty()]},
 		{"ACCOUNTNAME", pData->szAccountName},
 		{"CHARNAME", pUnit->pPlayerData->szName},
-		{"LEVEL", level},
+		{"LEVEL", szLevel},
 		{"PING", szPing},
 		{"GAMETIME", gameTime},
-		{"REALTIME", szTime}
+		{"REALTIME", szTime},
+		{"AREALEVEL", szAreaLevel}
 	};
 
 	for (vector<string>::iterator it = automapInfo.begin(); it < automapInfo.end(); it++) {
