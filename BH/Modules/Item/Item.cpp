@@ -60,7 +60,7 @@ RunesTxt* GetRunewordTxtById(int rwId);
 void FixDecimalString(wchar_t* s, int n);
 
 map<std::string, Toggle> Item::Toggles;
-unsigned int Item::filterLevelSetting = 0;
+unsigned int Item::filterLevelSetting = 1;
 UnitAny* Item::viewingUnit;
 
 Patch* itemNamePatch = new Patch(Call, D2CLIENT, { 0x92366, 0x96736 }, (int)ItemName_Interception, 6);
