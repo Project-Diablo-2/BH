@@ -78,6 +78,14 @@ class RuleLookupCache {
 		}
 			return cached_T;
 		}
+
+	void Clear(UnitItemInfo* uInfo)
+	{
+		DWORD guid = uInfo->item->dwUnitId;
+		if (cache && cache->exists(guid)) {
+			cache->remove(guid);
+		}
+	}
 };
 
 #endif // RULE_LOOKUP_CACHE_H_

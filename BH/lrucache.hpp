@@ -51,7 +51,14 @@ public:
 			return it->second->second;
 		}
 	}
-	
+
+	const void remove(const key_t& key)
+	{
+		auto entry = get(key);
+		_cache_items_map.erase(key);
+		_cache_items_list.pop_front();
+	}
+
 	bool exists(const key_t& key) const {
 		return _cache_items_map.find(key) != _cache_items_map.end();
 	}
