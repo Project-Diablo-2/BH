@@ -652,9 +652,6 @@ static ItemsTxt* GetArmorText(UnitAny* pItem) {
 	return NULL;
 }
 
-
-static UnitAny* lastItem;
-static DWORD previousFlags;
 void __stdcall Item::OnProperties(wchar_t* wTxt)
 {
 	const int MAXLEN = 1024;
@@ -667,30 +664,6 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 
 	if (Toggles["Advanced Item Display"].state)
 	{
-			if (lastItem == nullptr)
-			{
-					lastItem = pItem;
-					previousFlags = uInfo.item->pItemData->dwFlags;
-			}
-
-			if (lastItem != pItem)
-			{
-					lastItem = pItem;
-					previousFlags = uInfo.item->pItemData->dwFlags;
-					item_desc_cache.Clear(&uInfo);
-					item_name_cache.Clear(&uInfo);
-			}
-			else
-			{
-				if (previousFlags != pItem->dwFlags)
-				{
-					previousFlags = uInfo.item->pItemData->dwFlags;
-					item_desc_cache.Clear(&uInfo);
-					item_name_cache.Clear(&uInfo);
-				}
-			}
-			
-
 			string desc = item_desc_cache.Get(&uInfo);
 			if (desc != "") {
 					static wchar_t wDesc[MAXDESCRIPTION];
