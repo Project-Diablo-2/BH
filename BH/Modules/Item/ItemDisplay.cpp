@@ -834,6 +834,32 @@ namespace ItemDisplay
 			}
 			else if (r->action.name.length() == 0) { IgnoreRuleList.push_back(r); }
 		}
+
+		// Setup filter level names based on config file
+		Item* item = static_cast<Item*>(BH::moduleManager->Get("item"));
+
+		// Clear and add 0 to the list
+		item->ItemFilterNames.clear();
+		item->ItemFilterNames.push_back("0 - No Filtering");
+
+		vector<pair<string, string>> filterDefinitions;
+		BH::lootFilter->ReadMapList("ItemDisplayFilterName", filterDefinitions);
+		for (unsigned int i = 0; i < filterDefinitions.size(); i++) {
+			item->ItemFilterNames.push_back(to_string(i+1) + " - " + filterDefinitions[i].second);
+
+			// Max 9 entries
+			if (i >= 8) {
+				break;
+			}
+		}
+
+		// If there is only 1 entry, it means no definitons were made, add standard
+		if (item->ItemFilterNames.size() == 1) {
+			item->ItemFilterNames.push_back("1 - Standard");
+		}
+
+		item->RemoveSettingsTab();
+		item->DrawSettings(true);
 	}
 
 	void UninitializeItemRules()
@@ -873,24 +899,24 @@ void BuildAction(string* str,
 	//// for some reason \w wasn't catching _, so I added it to the groups
 	try
 	{
-			std::regex replace_reg(
-					R"(^(?:(?:%[^%]*%)|[^%])*%((?:\w|_|-)*?[a-z]+?(?:\w|_|-)*?)%)",
-					std::regex_constants::ECMAScript);
-			std::smatch replace_match;
-			while (std::regex_search(act->name, replace_match, replace_reg))
-			{
-					auto offset = replace_match[1].first - act->name.begin();
-					std::transform(
-							replace_match[1].first,
-							replace_match[1].second,
-							act->name.begin() + offset,
-							toupper
-					);
-			}
+		std::regex replace_reg(
+			R"(^(?:(?:%[^%]*%)|[^%])*%((?:\w|_|-)*?[a-z]+?(?:\w|_|-)*?)%)",
+			std::regex_constants::ECMAScript);
+		std::smatch replace_match;
+		while (std::regex_search(act->name, replace_match, replace_reg))
+		{
+			auto offset = replace_match[1].first - act->name.begin();
+			std::transform(
+				replace_match[1].first,
+				replace_match[1].second,
+				act->name.begin() + offset,
+				toupper
+			);
+		}
 	}
 	catch (std::exception e)
 	{
-			act->name = "\377c1FILTER REGEX ERROR";
+		act->name = "\377c1FILTER REGEX ERROR";
 	}
 
 	// new stuff:
@@ -1111,7 +1137,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 3, "MAG") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_MAGIC)); }
 	else if (key.compare(0, 4, "RARE") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_RARE)); }
 	else if (key.compare(0, 3, "UNI") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_UNIQUE)); }
-	else if (key.compare(0, 6, "AMAZON") == 0) {Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 0)); }
+	else if (key.compare(0, 6, "AMAZON") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 0)); }
 	else if (key.compare(0, 9, "SORCERESS") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 1)); }
 	else if (key.compare(0, 11, "NECROMANCER") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 2)); }
 	else if (key.compare(0, 7, "PALADIN") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 3)); }
@@ -1640,21 +1666,21 @@ bool AffixLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 }
 
 bool MapIdCondition::EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		auto map_id = **Var_D2CLIENT_MapId();
+	auto map_id = **Var_D2CLIENT_MapId();
 
-		return IntegerCompare(map_id, operation, mapId);
+	return IntegerCompare(map_id, operation, mapId);
 }
 
 bool MapIdCondition::EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		auto map_id = **Var_D2CLIENT_MapId();
+	auto map_id = **Var_D2CLIENT_MapId();
 
-		return IntegerCompare(map_id, operation, mapId);
+	return IntegerCompare(map_id, operation, mapId);
 }
 
 bool CraftLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -1699,94 +1725,94 @@ bool CraftLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 
 
 bool MagicPrefixCondition::EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		auto itemData = uInfo->item->pItemData;
+	auto itemData = uInfo->item->pItemData;
 
-		if (itemData->dwQuality == ITEM_QUALITY_RARE && !(itemData->dwFlags & ITEM_IDENTIFIED))
-		{
-				return false;
-		}
-		if (itemData->wPrefix[0] == prefixID)
-		{
-				return IntegerCompare(itemData->wPrefix[0], operation, prefixID);
-		}
-		if (itemData->wPrefix[1] == prefixID)
-		{
-				return IntegerCompare(itemData->wPrefix[1], operation, prefixID);
-		}
-		if (itemData->wPrefix[2] == prefixID)
-		{
-				return IntegerCompare(itemData->wPrefix[2], operation, prefixID);
-		}
+	if (itemData->dwQuality == ITEM_QUALITY_RARE && !(itemData->dwFlags & ITEM_IDENTIFIED))
+	{
+		return false;
+	}
+	if (itemData->wPrefix[0] == prefixID)
+	{
+		return IntegerCompare(itemData->wPrefix[0], operation, prefixID);
+	}
+	if (itemData->wPrefix[1] == prefixID)
+	{
+		return IntegerCompare(itemData->wPrefix[1], operation, prefixID);
+	}
+	if (itemData->wPrefix[2] == prefixID)
+	{
+		return IntegerCompare(itemData->wPrefix[2], operation, prefixID);
+	}
 
-		return IntegerCompare(-1, operation, prefixID);
+	return IntegerCompare(-1, operation, prefixID);
 }
 
 bool MagicPrefixCondition::EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		if (info->quality == ITEM_QUALITY_RARE && !(info->identified))
-		{
-				return false;
-		}
+	if (info->quality == ITEM_QUALITY_RARE && !(info->identified))
+	{
+		return false;
+	}
 
-		return IntegerCompare(-1, operation, prefixID);
+	return IntegerCompare(-1, operation, prefixID);
 }
 
 bool MagicSuffixCondition::EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		auto itemData = uInfo->item->pItemData;
+	auto itemData = uInfo->item->pItemData;
 
-		if (itemData->dwQuality == ITEM_QUALITY_RARE && !(itemData->dwFlags & ITEM_IDENTIFIED))
-		{
-				return false;
-		}
-		if (itemData->wSuffix[0] == suffixID)
-		{
-				return IntegerCompare(itemData->wSuffix[0], operation, suffixID);
-		}
-		if (itemData->wSuffix[1] == suffixID)
-		{
-				return IntegerCompare(itemData->wSuffix[1], operation, suffixID);
-		}
-		if (itemData->wSuffix[2] == suffixID)
-		{
-				return IntegerCompare(itemData->wSuffix[2], operation, suffixID);
-		}
+	if (itemData->dwQuality == ITEM_QUALITY_RARE && !(itemData->dwFlags & ITEM_IDENTIFIED))
+	{
+		return false;
+	}
+	if (itemData->wSuffix[0] == suffixID)
+	{
+		return IntegerCompare(itemData->wSuffix[0], operation, suffixID);
+	}
+	if (itemData->wSuffix[1] == suffixID)
+	{
+		return IntegerCompare(itemData->wSuffix[1], operation, suffixID);
+	}
+	if (itemData->wSuffix[2] == suffixID)
+	{
+		return IntegerCompare(itemData->wSuffix[2], operation, suffixID);
+	}
 
-		return IntegerCompare(-1, operation, suffixID);
+	return IntegerCompare(-1, operation, suffixID);
 }
 
 bool MagicSuffixCondition::EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		if (info->quality == ITEM_QUALITY_RARE && !(info->identified))
-		{
-				return false;
-		}
+	if (info->quality == ITEM_QUALITY_RARE && !(info->identified))
+	{
+		return false;
+	}
 
-		return IntegerCompare(-1, operation, suffixID);
+	return IntegerCompare(-1, operation, suffixID);
 }
 
 
 bool CharacterClassCondition::EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		return IntegerCompare(D2CLIENT_GetPlayerUnit()->dwTxtFileNo, operation, characterClass);
+	return IntegerCompare(D2CLIENT_GetPlayerUnit()->dwTxtFileNo, operation, characterClass);
 }
 
 bool CharacterClassCondition::EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		return IntegerCompare(D2CLIENT_GetPlayerUnit()->dwTxtFileNo, operation, characterClass);
+	return IntegerCompare(D2CLIENT_GetPlayerUnit()->dwTxtFileNo, operation, characterClass);
 }
 
 bool RequiredLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -1979,198 +2005,198 @@ bool FoolsCondition::EvaluateInternalFromPacket(ItemInfo* info,
 }
 
 bool EquippedCondition::EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		bool is_equipped = false;
-		if (uInfo->item->pItemData->pOwnerInventory)
+	bool is_equipped = false;
+	if (uInfo->item->pItemData->pOwnerInventory)
+	{
+		if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId == D2CLIENT_GetPlayerUnit()->dwUnitId)
 		{
-				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId == D2CLIENT_GetPlayerUnit()->dwUnitId)
-				{
-						if (uInfo->item->pItemData->BodyLocation > 0)
-						{
-								is_equipped = true;
-						}
-				}
+			if (uInfo->item->pItemData->BodyLocation > 0)
+			{
+				is_equipped = true;
+			}
 		}
+	}
 
-		return IntegerCompare(is_equipped, (BYTE)EQUAL, 1);
+	return IntegerCompare(is_equipped, (BYTE)EQUAL, 1);
 }
 
 bool EquippedCondition::EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		return IntegerCompare(info->equipped, (BYTE)EQUAL, true);
+	return IntegerCompare(info->equipped, (BYTE)EQUAL, true);
 }
 
 bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		bool is_shop = false;
-		if (uInfo->item->pItemData->pOwnerInventory)
+	bool is_shop = false;
+	if (uInfo->item->pItemData->pOwnerInventory)
+	{
+		if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId > 1 && uInfo->item->pItemData->pOwnerInventory->dwOwnerId != D2CLIENT_GetPlayerUnit()->dwUnitId)
 		{
-				if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId > 1 && uInfo->item->pItemData->pOwnerInventory->dwOwnerId != D2CLIENT_GetPlayerUnit()->dwUnitId)
-				{
-						is_shop = true;
-				}
+			is_shop = true;
 		}
+	}
 
-		return IntegerCompare(is_shop, (BYTE)EQUAL, 1);
+	return IntegerCompare(is_shop, (BYTE)EQUAL, 1);
 }
 
 bool ShopCondition::EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		return IntegerCompare(info->inStore, (BYTE)EQUAL, true);
+	return IntegerCompare(info->inStore, (BYTE)EQUAL, true);
 }
 
 bool OneHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
-		WeaponType weapon_type = (weapon_number == 0)
-				? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-		bool is_onehanded = false;
+	int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+	WeaponType weapon_type = (weapon_number == 0)
+		? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+	bool is_onehanded = false;
 
-		if (weapon_type == WeaponType::kAxe ||
-				weapon_type == WeaponType::kWand ||
-				weapon_type == WeaponType::kClub || 
-				weapon_type == WeaponType::kScepter ||
-				weapon_type == WeaponType::kMace ||
-				weapon_type == WeaponType::kHammer ||
-				weapon_type == WeaponType::kSword ||
-				weapon_type == WeaponType::kKnife ||
-				weapon_type == WeaponType::kThrowing ||
-				weapon_type == WeaponType::kJavelin ||
-				weapon_type == WeaponType::kThrowingPot ||
-				weapon_type == WeaponType::kClaw1 ||
-				weapon_type == WeaponType::kClaw2 ||
-				weapon_type == WeaponType::kOrb ||
-				weapon_type == WeaponType::kAmaJav
+	if (weapon_type == WeaponType::kAxe ||
+		weapon_type == WeaponType::kWand ||
+		weapon_type == WeaponType::kClub ||
+		weapon_type == WeaponType::kScepter ||
+		weapon_type == WeaponType::kMace ||
+		weapon_type == WeaponType::kHammer ||
+		weapon_type == WeaponType::kSword ||
+		weapon_type == WeaponType::kKnife ||
+		weapon_type == WeaponType::kThrowing ||
+		weapon_type == WeaponType::kJavelin ||
+		weapon_type == WeaponType::kThrowingPot ||
+		weapon_type == WeaponType::kClaw1 ||
+		weapon_type == WeaponType::kClaw2 ||
+		weapon_type == WeaponType::kOrb ||
+		weapon_type == WeaponType::kAmaJav
 
-				)
-		{
-				is_onehanded = true;
-		}
+		)
+	{
+		is_onehanded = true;
+	}
 
-		return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+	return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
 }
 
 bool OneHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		int weapon_number = code_to_dwtxtfileno[info->code];
-		WeaponType weapon_type = (weapon_number == 0)
-				? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-		bool is_onehanded = false;
+	int weapon_number = code_to_dwtxtfileno[info->code];
+	WeaponType weapon_type = (weapon_number == 0)
+		? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+	bool is_onehanded = false;
 
-		if (weapon_type == WeaponType::kAxe ||
-				weapon_type == WeaponType::kWand ||
-				weapon_type == WeaponType::kClub ||
-				weapon_type == WeaponType::kScepter ||
-				weapon_type == WeaponType::kMace ||
-				weapon_type == WeaponType::kHammer ||
-				weapon_type == WeaponType::kSword ||
-				weapon_type == WeaponType::kKnife ||
-				weapon_type == WeaponType::kThrowing ||
-				weapon_type == WeaponType::kJavelin ||
-				weapon_type == WeaponType::kThrowingPot ||
-				weapon_type == WeaponType::kClaw1 ||
-				weapon_type == WeaponType::kClaw2 ||
-				weapon_type == WeaponType::kOrb ||
-				weapon_type == WeaponType::kAmaJav
+	if (weapon_type == WeaponType::kAxe ||
+		weapon_type == WeaponType::kWand ||
+		weapon_type == WeaponType::kClub ||
+		weapon_type == WeaponType::kScepter ||
+		weapon_type == WeaponType::kMace ||
+		weapon_type == WeaponType::kHammer ||
+		weapon_type == WeaponType::kSword ||
+		weapon_type == WeaponType::kKnife ||
+		weapon_type == WeaponType::kThrowing ||
+		weapon_type == WeaponType::kJavelin ||
+		weapon_type == WeaponType::kThrowingPot ||
+		weapon_type == WeaponType::kClaw1 ||
+		weapon_type == WeaponType::kClaw2 ||
+		weapon_type == WeaponType::kOrb ||
+		weapon_type == WeaponType::kAmaJav
 
-				)
-		{
-				is_onehanded = true;
-		}
+		)
+	{
+		is_onehanded = true;
+	}
 
-		return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+	return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
 }
 
 bool TwoHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
-		WeaponType weapon_type = (weapon_number == 0)
-				? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-		bool is_twohanded = false;
+	int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+	WeaponType weapon_type = (weapon_number == 0)
+		? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+	bool is_twohanded = false;
 
-		if (weapon_type == WeaponType::kAxe2H ||
-				weapon_type == WeaponType::kHammer2H ||
-				weapon_type == WeaponType::kSword2H ||
-				weapon_type == WeaponType::kSpear ||
-				weapon_type == WeaponType::kPole ||
-				weapon_type == WeaponType::kStaff ||
-				weapon_type == WeaponType::kBow ||
-				weapon_type == WeaponType::kCrossbow ||
-				weapon_type == WeaponType::kAmaBow ||
-				weapon_type == WeaponType::kAmaSpear
+	if (weapon_type == WeaponType::kAxe2H ||
+		weapon_type == WeaponType::kHammer2H ||
+		weapon_type == WeaponType::kSword2H ||
+		weapon_type == WeaponType::kSpear ||
+		weapon_type == WeaponType::kPole ||
+		weapon_type == WeaponType::kStaff ||
+		weapon_type == WeaponType::kBow ||
+		weapon_type == WeaponType::kCrossbow ||
+		weapon_type == WeaponType::kAmaBow ||
+		weapon_type == WeaponType::kAmaSpear
 
-				)
-		{
-				is_twohanded = true;
-		}
+		)
+	{
+		is_twohanded = true;
+	}
 
-		return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+	return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
 }
 
 bool TwoHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		int weapon_number = code_to_dwtxtfileno[info->code];
-		WeaponType weapon_type = (weapon_number == 0)
-				? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-				: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-		bool is_twohanded = false;
+	int weapon_number = code_to_dwtxtfileno[info->code];
+	WeaponType weapon_type = (weapon_number == 0)
+		? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
+		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+	bool is_twohanded = false;
 
-		if (weapon_type == WeaponType::kAxe2H ||
-				weapon_type == WeaponType::kHammer2H ||
-				weapon_type == WeaponType::kSword2H ||
-				weapon_type == WeaponType::kSpear ||
-				weapon_type == WeaponType::kPole ||
-				weapon_type == WeaponType::kStaff ||
-				weapon_type == WeaponType::kBow ||
-				weapon_type == WeaponType::kCrossbow ||
-				weapon_type == WeaponType::kAmaBow ||
-				weapon_type == WeaponType::kAmaSpear
+	if (weapon_type == WeaponType::kAxe2H ||
+		weapon_type == WeaponType::kHammer2H ||
+		weapon_type == WeaponType::kSword2H ||
+		weapon_type == WeaponType::kSpear ||
+		weapon_type == WeaponType::kPole ||
+		weapon_type == WeaponType::kStaff ||
+		weapon_type == WeaponType::kBow ||
+		weapon_type == WeaponType::kCrossbow ||
+		weapon_type == WeaponType::kAmaBow ||
+		weapon_type == WeaponType::kAmaSpear
 
-				)
-		{
-				is_twohanded = true;
-		}
+		)
+	{
+		is_twohanded = true;
+	}
 
-		return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+	return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
 }
 
 bool GemmedCondition::EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		bool is_gemmed = false;
-		if (uInfo->item->pInventory)
-		{
-				is_gemmed = uInfo->item->pInventory->dwItemCount > 0;
-		}
+	bool is_gemmed = false;
+	if (uInfo->item->pInventory)
+	{
+		is_gemmed = uInfo->item->pInventory->dwItemCount > 0;
+	}
 
-		return IntegerCompare(is_gemmed, (BYTE)EQUAL, true);
+	return IntegerCompare(is_gemmed, (BYTE)EQUAL, true);
 }
 
 bool GemmedCondition::EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2)
+	Condition* arg1,
+	Condition* arg2)
 {
-		return IntegerCompare(info->usedSockets, (BYTE)EQUAL, true);
+	return IntegerCompare(info->usedSockets, (BYTE)EQUAL, true);
 }
 
 void SkillListCondition::Init()

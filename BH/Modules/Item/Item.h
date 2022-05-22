@@ -61,14 +61,16 @@ private:
 public:
 	unsigned int resyncKey;
 	unsigned int advStatMenuKey;
+	vector<string> ItemFilterNames;
 
 	Item() : Module("Item") {};
 
 	void OnLoad();
 	void OnUnload();
+	void RemoveSettingsTab();
 
 	void LoadConfig();
-	void DrawSettings();
+	void DrawSettings(bool replace = false);
 
 	void OnGameJoin();
 
