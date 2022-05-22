@@ -70,7 +70,7 @@ public:
 	void RemoveSettingsTab();
 
 	void LoadConfig();
-	void DrawSettings(bool replace = false);
+	void DrawSettings(bool pushFront = false);
 
 	void OnGameJoin();
 
