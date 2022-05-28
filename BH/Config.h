@@ -69,7 +69,7 @@ public:
 	bool				ReadBoolean(std::string key, bool& value);
 	std::string			ReadString(std::string key, std::string& value);
 	int					ReadInt(std::string key, int& value);
-	unsigned int    	ReadInt(std::string key, unsigned int& value);
+	unsigned int		ReadInt(std::string key, unsigned int& value, unsigned int defaultValue = 0);
 	unsigned int		ReadKey(std::string key, std::string toggle, unsigned int &value);
 	Toggle				ReadToggle(std::string key, std::string toggle, bool defaultState, Toggle& value);
 	std::vector<string> ReadArray(std::string key, std::vector<string>& value);

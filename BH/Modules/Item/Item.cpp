@@ -60,7 +60,7 @@ RunesTxt* GetRunewordTxtById(int rwId);
 void FixDecimalString(wchar_t* s, int n);
 
 map<std::string, Toggle> Item::Toggles;
-unsigned int Item::filterLevelSetting = 1;
+unsigned int Item::filterLevelSetting;
 UnitAny* Item::viewingUnit;
 
 Patch* itemNamePatch = new Patch(Call, D2CLIENT, { 0x92366, 0x96736 }, (int)ItemName_Interception, 6);
@@ -141,7 +141,7 @@ void Item::LoadConfig() {
 	BH::config->ReadKey("Resync Hotkey", "VK_9", resyncKey);
 	BH::config->ReadKey("Character Stats", "VK_8", advStatMenuKey);
 
-	BH::config->ReadInt("Filter Level", filterLevelSetting);
+	BH::config->ReadInt("Filter Level", filterLevelSetting, 1);
 }
 
 void Item::DrawSettings(bool pushFront) {
@@ -262,7 +262,7 @@ void Item::OnUnload() {
 }
 
 void Item::OnLoop() {
-	static unsigned int localFilterLevel = 0;
+	static unsigned int localFilterLevel = 9999;
 
 	// This is a bit of a hack to reset the cache when the user changes the item filter level
 	if (localFilterLevel != filterLevelSetting) {

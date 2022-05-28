@@ -208,17 +208,19 @@ int Config::ReadInt(std::string key, int& value) {
 /* ReadInt(std::string key, int value)
 *	Reads in a decimal or hex(which is converted to decimal) from the key-pair.
 */
-unsigned int Config::ReadInt(std::string key, unsigned int& value) {
+unsigned int Config::ReadInt(std::string key, unsigned int& value, unsigned int defaultValue) {
 	//Check if configuration value exists
+	
+	bool useDefaultValue = false;
 	if (contents.find(key) == contents.end()) {
+		value = defaultValue;
 		contents[key].key = key;
 		contents[key].value = value;
+		useDefaultValue = true;
 	}
 
 	contents[key].type = CTInt;
 	contents[key].pointer = &value;
-
-	unsigned int readValue = value;
 
 	if (!contents[key].value.find("0x")) {
 		from_string<unsigned int>(value, contents[key].value, std::hex);
@@ -226,8 +228,8 @@ unsigned int Config::ReadInt(std::string key, unsigned int& value) {
 	else {
 		from_string<unsigned int>(value, contents[key].value, std::dec);
 
-		if (value == 0) {
-			value = readValue;
+		if (useDefaultValue) {
+			value = defaultValue;
 		}
 	}
 	return value;
