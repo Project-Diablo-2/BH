@@ -707,7 +707,7 @@ void ItemMover::OnGamePacketRecv(BYTE* packet, bool* block) {
 				else if (!showOnMap) {
 					for (vector<Rule*>::iterator it = RuleList.begin(); it != RuleList.end(); it++) {
 						if ((*it)->Evaluate(NULL, &item)) {
-							if ((*it)->action.name.length() == 0) {
+							if ((*it)->action.name.length() == 0 && Item::GetFilterLevel() > 0) {
 								*block = true;
 							}
 							if ((*it)->action.stopProcessing) break;
