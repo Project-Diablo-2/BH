@@ -67,7 +67,7 @@ public:
 
 	void OnLoad();
 	void OnUnload();
-	void RemoveSettingsTab();
+	void ReplaceItemFilters(vector<string> itemFilterNames);
 
 	void LoadConfig();
 	void DrawSettings(bool pushFront = false);

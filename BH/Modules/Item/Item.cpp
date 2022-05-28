@@ -225,8 +225,24 @@ void Item::DrawSettings(bool pushFront) {
 	new Combohook(settingsTab, 120, y, 250, &filterLevelSetting, ItemFilterNames);
 }
 
-void Item::RemoveSettingsTab() {
-	settingsTab->~UITab();
+void Item::ReplaceItemFilters(vector<string> itemFilterNames) {
+	Hook* prev = NULL;
+	for (auto it = settingsTab->Hooks.begin(); it != settingsTab->Hooks.end(); it++) {
+		Hook* h = *it;
+		Combohook* dropDown = dynamic_cast<Combohook*> (h);
+		if (dropDown != NULL) {
+			if (dropDown->GetOptions()[0] == "0 - No Filtering") {
+				dropDown->ClearOptions();
+
+				for each (string option in ItemFilterNames)
+				{
+					dropDown->NewOption(option);
+				}
+
+				break;
+			}
+		}
+	}
 }
 
 void Item::OnUnload() {
@@ -668,18 +684,18 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 
 	if (Toggles["Advanced Item Display"].state)
 	{
-			string desc = item_desc_cache.Get(&uInfo);
-			if (desc != "") {
-					static wchar_t wDesc[MAXDESCRIPTION];
-					auto chars_written = MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, desc.c_str(), -1, wDesc, MAXDESCRIPTION);
+		string desc = item_desc_cache.Get(&uInfo);
+		if (desc != "") {
+			static wchar_t wDesc[MAXDESCRIPTION];
+			auto chars_written = MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, desc.c_str(), -1, wDesc, MAXDESCRIPTION);
 
-					int aLen = wcslen(wTxt);
-					swprintf_s(wTxt + aLen, MAXLEN - aLen, 
-							L"%s%s\n",
-							(chars_written > 0) ? wDesc : L"\377c1Item Description is too long.",
-							GetColorCode(TextColor::White).c_str()
-					);
-			}
+			int aLen = wcslen(wTxt);
+			swprintf_s(wTxt + aLen, MAXLEN - aLen,
+				L"%s%s\n",
+				(chars_written > 0) ? wDesc : L"\377c1Item Description is too long.",
+				GetColorCode(TextColor::White).c_str()
+			);
+		}
 	}
 
 	if (!(Toggles["Always Show Item Stat Ranges"].state ||
