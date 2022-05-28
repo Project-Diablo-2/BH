@@ -218,11 +218,17 @@ unsigned int Config::ReadInt(std::string key, unsigned int& value) {
 	contents[key].type = CTInt;
 	contents[key].pointer = &value;
 
+	unsigned int readValue = value;
+
 	if (!contents[key].value.find("0x")) {
 		from_string<unsigned int>(value, contents[key].value, std::hex);
 	}
 	else {
 		from_string<unsigned int>(value, contents[key].value, std::dec);
+
+		if (value == 0) {
+			value = readValue;
+		}
 	}
 	return value;
 }
