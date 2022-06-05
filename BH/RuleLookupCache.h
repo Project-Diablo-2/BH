@@ -14,26 +14,26 @@ struct Rule;
 template <typename T, typename... Args>
 class RuleLookupCache {
 	std::unique_ptr<cache::lru_cache<DWORD, std::pair<DWORD, T>>> cache;
-	
-	protected:
-	const std::vector<Rule*> &RuleList;
-	virtual T make_cached_T(UnitItemInfo *uInfo, Args&&... pack) = 0;
-	virtual std::string to_str(const T &cached_T) {
+
+protected:
+	const std::vector<Rule*>& RuleList;
+	virtual T make_cached_T(UnitItemInfo* uInfo, Args&&... pack) = 0;
+	virtual std::string to_str(const T& cached_T) {
 		// This function only needs to be implemented for debug printing
 		return std::string("???");
 	}
 
-	public:
-	RuleLookupCache(const std::vector<Rule*> &rule_list) 
+public:
+	RuleLookupCache(const std::vector<Rule*>& rule_list)
 		: RuleList(rule_list), cache(new cache::lru_cache<DWORD, std::pair<DWORD, T>>(100)) {}
 
 	void ResetCache() {
 		//PrintText(1, "Reseting LRU cache.");
 		cache.reset(new cache::lru_cache<DWORD, std::pair<DWORD, T>>(100));
 	}
-	
+
 	// TODO: UnitItemInfo should probably be const, but call to Evaluate needs non-const
-	T Get(UnitItemInfo *uInfo, Args&&... pack) {
+	T Get(UnitItemInfo* uInfo, Args&&... pack) {
 		// leave this false. doesn't work 
 		static DWORD last_printed_guid = 0; // to prevent excessive printing
 		DWORD guid = uInfo->item->dwUnitId; // global unique identifier
@@ -51,7 +51,8 @@ class RuleLookupCache {
 			if (orig_cached_flags == flags) {
 				cached_T = cache->get(guid).second;
 				cache_hit = true; // needed because empty string is also a valid item name
-			} else {
+			}
+			else {
 				// This print can give a hint if the GUID of an item ever changes. Problem is that it will also
 				// print whenever you ID an item, make a runeword, personalize an item, etc.
 				// Even seems to change when items get 'old'.
@@ -76,8 +77,16 @@ class RuleLookupCache {
 			//	}
 			//}
 		}
-			return cached_T;
+		return cached_T;
+	}
+
+	void Clear(UnitItemInfo* uInfo)
+	{
+		DWORD guid = uInfo->item->dwUnitId;
+		if (cache && cache->exists(guid)) {
+			cache->remove(guid);
 		}
+	}
 };
 
 #endif // RULE_LOOKUP_CACHE_H_
