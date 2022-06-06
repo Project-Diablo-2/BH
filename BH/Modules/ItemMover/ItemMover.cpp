@@ -4,6 +4,7 @@
 #include "../../D2Stubs.h"
 #include "../../D2Helpers.h"
 #include "../Item/Item.h"
+#include "../ScreenInfo/ScreenInfo.h"
 
 // This module was inspired by the RedVex plugin "Item Mover", written by kaiks.
 // Thanks to kaiks for sharing his code.
@@ -503,11 +504,8 @@ void ItemMover::OnRightClick(bool up, int x, int y, bool* block) {
 }
 
 void ItemMover::LoadConfig() {
-	//BH::config->ReadKey("Use TP Tome", "VK_NUMPADADD", TpKey);
-	//BH::config->ReadKey("Use Healing Potion", "VK_NUMPADMULTIPLY", HealKey);
-	//BH::config->ReadKey("Use Mana Potion", "VK_NUMPADSUBTRACT", ManaKey);
-
-	//BH::config->ReadInt("Low TP Warning", tp_warn_quantity);
+	BH::config->ReadToggle("Quick Cast", "None", false, ScreenInfo::Toggles["Quick Cast"]);
+	BH::config->ReadToggle("Quick Cast Bar", "None", false, ScreenInfo::Toggles["Quick Cast Bar"]);
 }
 
 void ItemMover::OnLoad() {
@@ -518,12 +516,15 @@ void ItemMover::OnLoad() {
 
 	unsigned int x = 8;
 	unsigned int y = 7;
-	/*new Drawing::Texthook(settingsTab, x, y, "Keys (esc to clear)");
-	new Drawing::Keyhook(settingsTab, x, (y += 15), &TpKey ,  "Quick Town Portal:     ");
-	new Drawing::Keyhook(settingsTab, x, (y += 15), &HealKey, "Use Healing Potion:    ");
-	new Drawing::Keyhook(settingsTab, x, (y += 15), &ManaKey, "Use Mana Potion:       ");*/
+	int keyhook_x = 230;
 
-	//y += 7;
+	new Drawing::Checkhook(settingsTab, 4, y, &ScreenInfo::Toggles["Quick Cast"].state, "Quick Cast");
+	new Drawing::Keyhook(settingsTab, keyhook_x, y + 2, &ScreenInfo::Toggles["Quick Cast"].toggle, "");
+	y += 15;
+
+	new Drawing::Checkhook(settingsTab, 4, y, &ScreenInfo::Toggles["Quick Cast Bar"].state, "Quick Cast Bar");
+	new Drawing::Keyhook(settingsTab, keyhook_x, y + 2, &ScreenInfo::Toggles["Quick Cast Bar"].toggle, "");
+	y += 20;
 
 	new Drawing::Texthook(settingsTab, x, (y), "QoL features");
 	colored_text = new Drawing::Texthook(settingsTab, x, (y += 15),
