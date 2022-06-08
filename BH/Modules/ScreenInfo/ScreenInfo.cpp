@@ -56,7 +56,7 @@ void ScreenInfo::MpqLoaded() {
 
 void ScreenInfo::OnGameJoin() {
 	BnetData* pInfo = (*p_D2LAUNCH_BnData);
-	UnitAny *unit = D2CLIENT_GetPlayerUnit();
+	UnitAny* unit = D2CLIENT_GetPlayerUnit();
 	/*if (unit) {
 		std::string title = (std::string)"Diablo II - ";
 		if (strlen(pInfo->szAccountName) > 0) {
@@ -75,11 +75,12 @@ void ScreenInfo::OnGameJoin() {
 }
 
 void ScreenInfo::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
-	for (map<string,Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
+	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
 		if (key == (*it).second.toggle) {
 			*block = true;
 			if (up) {
 				(*it).second.state = !(*it).second.state;
+				BH::config->Write();
 			}
 			return;
 		}
@@ -101,15 +102,15 @@ void ScreenInfo::OnRightClick(bool up, int x, int y, bool* block) {
 			OpenClipboard(NULL);
 			HGLOBAL glob = GetClipboardData(CF_TEXT);
 			size_t size = GlobalSize(glob);
-			char* cbtext = (char *)glob;
+			char* cbtext = (char*)glob;
 
 			std::vector<INPUT> events;
-			char buffer[120] = {0};
+			char buffer[120] = { 0 };
 			GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_ILANGUAGE, buffer, sizeof(buffer));
 			HKL hKeyboardLayout = LoadKeyboardLayout(buffer, KLF_ACTIVATE);
 
-			for (unsigned int i = 0; i < size-1; i++) {
-				INPUT keyEvent = {0};
+			for (unsigned int i = 0; i < size - 1; i++) {
+				INPUT keyEvent = { 0 };
 				const SHORT Vk = VkKeyScanEx(cbtext[i], hKeyboardLayout);
 				const UINT VKey = MapVirtualKey(LOBYTE(Vk), 0);
 
@@ -143,7 +144,7 @@ void ScreenInfo::OnRightClick(bool up, int x, int y, bool* block) {
 			}
 			CloseClipboard();
 
-			if(hKeyboardLayout) {
+			if (hKeyboardLayout) {
 				UnloadKeyboardLayout(hKeyboardLayout);
 			}
 			int retval = SendInput(events.size(), &events[0], sizeof(INPUT));
@@ -154,7 +155,7 @@ void ScreenInfo::OnRightClick(bool up, int x, int y, bool* block) {
 void ScreenInfo::OnDraw() {
 	int yOffset = 1;
 	BnetData* pData = (*p_D2LAUNCH_BnData);
-	void *quests = D2CLIENT_GetQuestInfo();
+	void* quests = D2CLIENT_GetQuestInfo();
 	if (!pData || !quests) {
 		return;
 	}
@@ -164,7 +165,7 @@ void ScreenInfo::OnDraw() {
 	if (!ReceivedQuestPacket && packetRequests < 6 && ms > 5000) {
 		// Ask for quest information from the server; server will respond with packet 0x52.
 		// (In case we inject mid-game and miss the packets sent upon game creation/joining)
-		BYTE RequestQuestData[1] = {0x40};
+		BYTE RequestQuestData[1] = { 0x40 };
 		D2NET_SendPacket(1, 0, RequestQuestData);
 		packetTicks = ticks;
 		packetRequests++;
@@ -220,11 +221,11 @@ void ScreenInfo::OnDraw() {
 	}
 }
 
-void ScreenInfo::drawExperienceInfo(){
+void ScreenInfo::drawExperienceInfo() {
 	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
 	int nTime = ((GetTickCount() - gameTimer) / 1000);
 	DWORD cExp = (DWORD)D2COMMON_GetUnitStat(pUnit, STAT_EXP, 0);
-	if (startExperience == 0){ startExperience = cExp; }
+	if (startExperience == 0) { startExperience = cExp; }
 
 	int cLevel = (int)D2COMMON_GetUnitStat(pUnit, STAT_LEVEL, 0);
 	if (startLevel == 0) { startLevel = cLevel; }
@@ -233,20 +234,20 @@ void ScreenInfo::drawExperienceInfo(){
 	double oldPctExp = ((double)startExperience - ExpByLevel[startLevel - 1]) / (ExpByLevel[startLevel] - ExpByLevel[startLevel - 1]) * 100.0;
 	double pExp = ((double)cExp - ExpByLevel[cLevel - 1]) / (ExpByLevel[cLevel] - ExpByLevel[cLevel - 1]) * 100.0;
 	double expGainPct = pExp - oldPctExp;
-	if (cLevel > startLevel){
+	if (cLevel > startLevel) {
 		expGainPct = (100 - oldPctExp) + pExp + ((cLevel - startLevel) - 1) * 100;
 	}
 	double expPerSecond = nTime > 0 ? (cExp - startExperience) / (double)nTime : 0;
 	char* unit = "";
-	if (expPerSecond > 1E9){
+	if (expPerSecond > 1E9) {
 		expPerSecond /= 1E9;
 		unit = "B";
 	}
-	else if (expPerSecond > 1E6){
+	else if (expPerSecond > 1E6) {
 		expPerSecond /= 1E6;
 		unit = "M";
 	}
-	else if (expPerSecond > 1E3){
+	else if (expPerSecond > 1E3) {
 		expPerSecond /= 1E3;
 		unit = "K";
 	}
@@ -259,14 +260,14 @@ void ScreenInfo::OnAutomapDraw() {
 	GameStructInfo* pInfo = (*p_D2CLIENT_GameInfo);
 	BnetData* pData = (*p_D2LAUNCH_BnData);
 	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
-	char* szDiff[3] = {"Normal", "Nightmare", "Hell"};
+	char* szDiff[3] = { "Normal", "Nightmare", "Hell" };
 	if (!pInfo || !pData || !pUnit)
 		return;
-	int y = 6+(BH::cGuardLoaded?16:0);
+	int y = 6 + (BH::cGuardLoaded ? 16 : 0);
 
 	char gameTime[20];
 	int nTime = ((GetTickCount() - gameTimer) / 1000);
-	sprintf_s(gameTime, 20, "%.2d:%.2d:%.2d", nTime/3600, (nTime/60)%60, nTime%60);
+	sprintf_s(gameTime, 20, "%.2d:%.2d:%.2d", nTime / 3600, (nTime / 60) % 60, nTime % 60);
 
 	time_t tTime;
 	time(&tTime);
@@ -279,7 +280,7 @@ void ScreenInfo::OnAutomapDraw() {
 	// will crash when you attempt to open the map (which calls OnAutomapDraw function). We need to get the player unit
 	// again after calling this function. It may be a good idea in general not to store the return value of
 	// GetPlayerUnit.
-	char *level = UnicodeToAnsi(D2CLIENT_GetLevelName(pUnit->pPath->pRoom1->pRoom2->pLevel->dwLevelNo));
+	char* level = UnicodeToAnsi(D2CLIENT_GetLevelName(pUnit->pPath->pRoom1->pRoom2->pLevel->dwLevelNo));
 	std::string szLevel = std::string(level);
 
 	pUnit = D2CLIENT_GetPlayerUnit();
@@ -331,12 +332,12 @@ void ScreenInfo::OnAutomapDraw() {
 				key.replace(key.find("%" + automap[n].key + "%"), automap[n].key.length() + 2, automap[n].value);
 		}
 		if (key.length() > 0) {
-			Texthook::Draw(*p_D2CLIENT_ScreenSizeX - 10, y, Right,0,Gold,"%s", key.c_str());
+			Texthook::Draw(*p_D2CLIENT_ScreenSizeX - 10, y, Right, 0, Gold, "%s", key.c_str());
 			y += 16;
 		}
 	}
 
-	delete [] level;
+	delete[] level;
 }
 
 void ScreenInfo::OnGamePacketRecv(BYTE* packet, bool* block) {
@@ -353,34 +354,34 @@ void ScreenInfo::OnGamePacketRecv(BYTE* packet, bool* block) {
 	switch (packet[0])
 	{
 	case 0x29:
-		{
-			// The packet consists of two-byte pairs for each of the 41 quests,
-			// starting at the third byte. The high bit of the first byte in the pair
-			// (corresponding to QFLAG_QUEST_COMPLETED_BEFORE) is always set when the
-			// quest was previously completed. QFLAG_PRIMARY_GOAL_ACHIEVED is often
-			// set as well.
-			// Packet received at game start, and upon talking to quest NPCs.
-			int packetLen = 97;
-			MephistoBlocked = (packet[2 + (THE_GUARDIAN * 2)] & 0x80) > 0;
-			DiabloBlocked = (packet[2 + (TERRORS_END * 2)] & 0x80) > 0;
-			BaalBlocked = (packet[2 + (EVE_OF_DESTRUCTION * 2)] & 0x80) > 0;
-			ReceivedQuestPacket = true;  // fixme: want this here?
-			break;
+	{
+		// The packet consists of two-byte pairs for each of the 41 quests,
+		// starting at the third byte. The high bit of the first byte in the pair
+		// (corresponding to QFLAG_QUEST_COMPLETED_BEFORE) is always set when the
+		// quest was previously completed. QFLAG_PRIMARY_GOAL_ACHIEVED is often
+		// set as well.
+		// Packet received at game start, and upon talking to quest NPCs.
+		int packetLen = 97;
+		MephistoBlocked = (packet[2 + (THE_GUARDIAN * 2)] & 0x80) > 0;
+		DiabloBlocked = (packet[2 + (TERRORS_END * 2)] & 0x80) > 0;
+		BaalBlocked = (packet[2 + (EVE_OF_DESTRUCTION * 2)] & 0x80) > 0;
+		ReceivedQuestPacket = true;  // fixme: want this here?
+		break;
 
-			// TODO: does it get cleared when quest completed while we are in game in different act?
-		}
+		// TODO: does it get cleared when quest completed while we are in game in different act?
+	}
 	case 0x52:
-		{
-			// We have one byte for each of the 41 quests: zero if the quest is blocked,
-			// and nonzero if we can complete it.
-			// Packet received upon opening quest log, and after sending 0x40 to server.
-			int packetLen = 42;
-			MephistoBlocked = packet[1 + THE_GUARDIAN] == 0;
-			DiabloBlocked = packet[1 + TERRORS_END] == 0;
-			BaalBlocked = packet[1 + EVE_OF_DESTRUCTION] == 0;
-			ReceivedQuestPacket = true;
-			break;
-		}
+	{
+		// We have one byte for each of the 41 quests: zero if the quest is blocked,
+		// and nonzero if we can complete it.
+		// Packet received upon opening quest log, and after sending 0x40 to server.
+		int packetLen = 42;
+		MephistoBlocked = packet[1 + THE_GUARDIAN] == 0;
+		DiabloBlocked = packet[1 + TERRORS_END] == 0;
+		BaalBlocked = packet[1 + EVE_OF_DESTRUCTION] == 0;
+		ReceivedQuestPacket = true;
+		break;
+	}
 	//case 0xA8:
 	//	{
 	//		// Packet received when the character begins a new state (i.e. buff/effect received).
