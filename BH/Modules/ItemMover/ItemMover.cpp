@@ -505,7 +505,7 @@ void ItemMover::OnRightClick(bool up, int x, int y, bool* block) {
 
 void ItemMover::LoadConfig() {
 	BH::config->ReadToggle("Quick Cast", "None", false, ScreenInfo::Toggles["Quick Cast"]);
-	//BH::config->ReadToggle("Quick Cast Bar", "None", false, ScreenInfo::Toggles["Quick Cast Bar"]);
+	BH::config->ReadToggle("Skill Bar", "None", false, ScreenInfo::Toggles["Skill Bar"]);
 }
 
 void ItemMover::OnLoad() {
@@ -520,10 +520,10 @@ void ItemMover::OnLoad() {
 
 	new Drawing::Checkhook(settingsTab, 4, y, &ScreenInfo::Toggles["Quick Cast"].state, "Quick Cast");
 	new Drawing::Keyhook(settingsTab, keyhook_x, y + 2, &ScreenInfo::Toggles["Quick Cast"].toggle, "");
-	//y += 15;
+	y += 15;
 
-	//new Drawing::Checkhook(settingsTab, 4, y, &ScreenInfo::Toggles["Quick Cast Bar"].state, "Quick Cast Bar");
-	//new Drawing::Keyhook(settingsTab, keyhook_x, y + 2, &ScreenInfo::Toggles["Quick Cast Bar"].toggle, "");
+	new Drawing::Checkhook(settingsTab, 4, y, &ScreenInfo::Toggles["Skill Bar"].state, "Skill Bar");
+	new Drawing::Keyhook(settingsTab, keyhook_x, y + 2, &ScreenInfo::Toggles["Skill Bar"].toggle, "");
 	y += 20;
 
 	new Drawing::Texthook(settingsTab, x, (y), "QoL features");
