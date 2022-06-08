@@ -506,6 +506,7 @@ void ItemMover::OnRightClick(bool up, int x, int y, bool* block) {
 void ItemMover::LoadConfig() {
 	BH::config->ReadToggle("Quick Cast", "None", false, ScreenInfo::Toggles["Quick Cast"]);
 	BH::config->ReadToggle("Skill Bar", "None", false, ScreenInfo::Toggles["Skill Bar"]);
+	BH::config->ReadToggle("Buff Timers", "None", false, ScreenInfo::Toggles["Buff Timers"]);
 }
 
 void ItemMover::OnLoad() {
@@ -524,6 +525,10 @@ void ItemMover::OnLoad() {
 
 	new Drawing::Checkhook(settingsTab, 4, y, &ScreenInfo::Toggles["Skill Bar"].state, "Skill Bar");
 	new Drawing::Keyhook(settingsTab, keyhook_x, y + 2, &ScreenInfo::Toggles["Skill Bar"].toggle, "");
+	y += 15;
+
+	new Drawing::Checkhook(settingsTab, 4, y, &ScreenInfo::Toggles["Buff Timers"].state, "Always show Buff Timers");
+	new Drawing::Keyhook(settingsTab, keyhook_x, y + 2, &ScreenInfo::Toggles["Buff Timers"].toggle, "");
 	y += 20;
 
 	new Drawing::Texthook(settingsTab, x, (y), "QoL features");
