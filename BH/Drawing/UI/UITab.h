@@ -10,19 +10,12 @@ namespace Drawing {
 		std::string name;
 		UI* ui;
 	public:
-		UITab(std::string name, UI* nui, bool pushFront = false) : name(name), ui(nui) {
-			if (pushFront) {
-				ui->Tabs.push_front(this);
+		UITab(std::string name, UI* nui) : name(name), ui(nui) {
+			ui->Tabs.push_back(this);
+
+			if (ui->Tabs.size() == 1) {
 				ui->SetCurrentTab(this);
 			}
-			else {
-				ui->Tabs.push_back(this);
-
-				if (ui->Tabs.size() == 1) {
-					ui->SetCurrentTab(this);
-				}
-			}
-
 		};
 		~UITab();
 

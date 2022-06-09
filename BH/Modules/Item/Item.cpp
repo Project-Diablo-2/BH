@@ -51,6 +51,7 @@
 #include "ItemDisplay.h"
 #include "../../MPQInit.h"
 #include "../../lrucache.hpp"
+#include "../GameSettings/GameSettings.h"
 
 ItemsTxtStat* GetAllStatModifier(ItemsTxtStat* pStats, int nStats, int nStat, ItemsTxtStat* pOrigin);
 ItemsTxtStat* GetMaxElemStatFromMin(ItemsTxtStat* pStats, int nStats, int nStat, ItemsTxtStat* pOrigin);
@@ -137,84 +138,85 @@ void Item::LoadConfig() {
 
 	//InitializeMPQData();
 
-	BH::config->ReadKey("Show Players Gear", "VK_0", showPlayer);
-	BH::config->ReadKey("Resync Hotkey", "VK_9", resyncKey);
-	BH::config->ReadKey("Character Stats", "VK_8", advStatMenuKey);
-
 	BH::config->ReadInt("Filter Level", filterLevelSetting, 1);
 }
 
-void Item::DrawSettings(bool pushFront) {
-	settingsTab = new UITab("Item", BH::settingsUI, pushFront);
-	int y = 10;
-	int keyhook_x = 230;
+void Item::DrawSettings() {
+	Drawing::Texthook* colored_text;
+	settingsTab = new UITab("Item", BH::settingsUI);
+	unsigned int x = 8;
+	unsigned int y = 7;
 
-	new Checkhook(settingsTab, 4, y, &Toggles["Show Ethereal"].state, "Show Ethereal");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Show Ethereal"].toggle, "");
+	// Settings
+	new Drawing::Texthook(settingsTab, x, (y), "Settings");
 	y += 15;
 
-	new Checkhook(settingsTab, 4, y, &Toggles["Show Sockets"].state, "Show Sockets");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Show Sockets"].toggle, "");
+	new Checkhook(settingsTab, x, y, &Toggles["Always Show Items"].state, "Always Show Items");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Always Show Items"].toggle, "");
 	y += 15;
 
-	new Checkhook(settingsTab, 4, y, &Toggles["Show iLvl"].state, "Show iLvl");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Show iLvl"].toggle, "");
+	new Checkhook(settingsTab, x, y, &Toggles["Always Show Item Stat Ranges"].state, "Always Show Item Stat Ranges");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Always Show Item Stat Ranges"].toggle, "");
 	y += 15;
 
-	new Checkhook(settingsTab, 4, y, &Toggles["Show Rune Numbers"].state, "Show Rune #");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Show Rune Numbers"].toggle, "");
+	new Checkhook(settingsTab, x, y, &Toggles["Show iLvl"].state, "Show Item Level");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Show iLvl"].toggle, "");
+	y += 20;
+
+	// Display Style
+	new Drawing::Texthook(settingsTab, x, (y), "Display Style (only without loot filter)");
 	y += 15;
 
-	new Checkhook(settingsTab, 4, y, &Toggles["Alt Item Style"].state, "Alt Style");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Alt Item Style"].toggle, "");
+	Checkhook* etheral = new Checkhook(settingsTab, x, y, &Toggles["Show Ethereal"].state, "Show Ethereal");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Show Ethereal"].toggle, "");
 	y += 15;
 
-	new Checkhook(settingsTab, 4, y, &Toggles["Color Mod"].state, "Color Mod");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Color Mod"].toggle, "");
+	Checkhook* sockets = new Checkhook(settingsTab, x, y, &Toggles["Show Sockets"].state, "Show Sockets");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Show Sockets"].toggle, "");
 	y += 15;
 
-	new Checkhook(settingsTab, 4, y, &Toggles["Shorten Item Names"].state, "Shorten Names");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Shorten Item Names"].toggle, "");
+	Checkhook* runes = new Checkhook(settingsTab, x, y, &Toggles["Show Rune Numbers"].state, "Show Rune Numbers");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Show Rune Numbers"].toggle, "");
 	y += 15;
 
-	new Checkhook(settingsTab, 4, y, &Toggles["Always Show Items"].state, "Always Show Items");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Always Show Items"].toggle, "");
+	Checkhook* alt = new Checkhook(settingsTab, x, y, &Toggles["Alt Item Style"].state, "Alt Style");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Alt Item Style"].toggle, "");
 	y += 15;
 
-	new Checkhook(settingsTab, 4, y, &Toggles["Always Show Item Stat Ranges"].state, "Always Show Item Stat Ranges");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Always Show Item Stat Ranges"].toggle, "");
+	Checkhook* color = new Checkhook(settingsTab, x, y, &Toggles["Color Mod"].state, "Color Mod");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Color Mod"].toggle, "");
 	y += 15;
 
-	new Checkhook(settingsTab, 4, y, &Toggles["Advanced Item Display"].state, "Advanced Item Display");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Advanced Item Display"].toggle, "");
-	y += 15;
+	Checkhook* shorten = new Checkhook(settingsTab, x, y, &Toggles["Shorten Item Names"].state, "Shorten Names");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Shorten Item Names"].toggle, "");
+	y += 20;
 
-	new Checkhook(settingsTab, 4, y, &Toggles["Item Drop Notifications"].state, "Item Drop Notifications");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Item Drop Notifications"].toggle, "");
-	y += 15;
-
-	new Checkhook(settingsTab, 4, y, &Toggles["Item Close Notifications"].state, "Item Close Notifications");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Item Close Notifications"].toggle, "");
-	y += 15;
-
-	new Checkhook(settingsTab, 4, y, &Toggles["Item Detailed Notifications"].state, "Item Detailed Notifications");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Item Detailed Notifications"].toggle, "");
-	y += 15;
-
-	new Checkhook(settingsTab, 4, y, &Toggles["Verbose Notifications"].state, "Verbose Notifications");
-	new Keyhook(settingsTab, keyhook_x, y + 2, &Toggles["Verbose Notifications"].toggle, "");
-	y += 15;
-
-	new Keyhook(settingsTab, 4, y + 2, &showPlayer, "Show Player's Gear:        ");
-	y += 15;
-	new Keyhook(settingsTab, 4, y + 2, &resyncKey, "Resync:                           ");
-	y += 15;
-	new Keyhook(settingsTab, 4, y + 2, &advStatMenuKey, "Advanced Stat Display:   ");
+	// Loot Filter
+	new Drawing::Texthook(settingsTab, x, (y), "Loot Filter");
 
 	y += 15;
+	new Checkhook(settingsTab, x, y, &Toggles["Advanced Item Display"].state, "Enable Loot Filter");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Advanced Item Display"].toggle, "");
+	y += 15;
 
-	new Texthook(settingsTab, 4, y + 2, "Filter Strictness:");
+	new Checkhook(settingsTab, x, y, &Toggles["Item Drop Notifications"].state, "Drop Notifications");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Item Drop Notifications"].toggle, "");
+	y += 15;
 
+	new Checkhook(settingsTab, x, y, &Toggles["Item Close Notifications"].state, "Close Notifications");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Item Close Notifications"].toggle, "");
+	y += 15;
+
+	new Checkhook(settingsTab, x, y, &Toggles["Item Detailed Notifications"].state, "Detailed Notifications");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Item Detailed Notifications"].toggle, "");
+	y += 15;
+
+	new Checkhook(settingsTab, x, y, &Toggles["Verbose Notifications"].state, "Verbose Notifications");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Verbose Notifications"].toggle, "");
+	y += 15;
+
+	colored_text = new Texthook(settingsTab, x, y + 2, "Filter Level:");
+	colored_text->SetColor(Gold);
 	// Just a default as this is called first time around, not used
 	if (ItemFilterNames.size() == 0) {
 		ItemFilterNames.clear();
@@ -222,7 +224,7 @@ void Item::DrawSettings(bool pushFront) {
 		ItemFilterNames.push_back("1 - Normal");
 	}
 
-	new Combohook(settingsTab, 120, y, 250, &filterLevelSetting, ItemFilterNames);
+	new Combohook(settingsTab, 120, y, 200, &filterLevelSetting, ItemFilterNames);
 }
 
 void Item::ReplaceItemFilters(vector<string> itemFilterNames) {
@@ -290,22 +292,6 @@ void Item::OnLoop() {
 }
 
 void Item::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
-	if (key == showPlayer) {
-		*block = true;
-		if (up)
-			return;
-		UnitAny* selectedUnit = D2CLIENT_GetSelectedUnit();
-		if (selectedUnit && selectedUnit->dwMode != 0 && selectedUnit->dwMode != 17 && ( // Alive
-			selectedUnit->dwType == 0 ||					// Player
-			selectedUnit->dwTxtFileNo == 291 ||		// Iron Golem
-			selectedUnit->dwTxtFileNo == 357 ||		// Valkerie
-			selectedUnit->dwTxtFileNo == 418)) {	// Shadow Master
-			viewingUnit = selectedUnit;
-			if (!D2CLIENT_GetUIState(0x01))
-				D2CLIENT_SetUIVar(0x01, 0, 0);
-			return;
-		}
-	}
 	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
 		if (key == (*it).second.toggle) {
 			*block = true;

@@ -9,6 +9,7 @@
 #include "../Basic/Boxhook/Boxhook.h"
 #include "../Basic/Framehook/Framehook.h"
 #include "../Basic/Texthook/Texthook.h"
+#include "../../Modules/GameSettings/GameSettings.h"
 
 
 using namespace Drawing;
@@ -878,9 +879,9 @@ bool StatsDisplay::OnKey(bool   up,
 	UnitAny* unit = D2CLIENT_GetPlayerUnit();
 	if (!unit)
 		return false;
-	Item* item = static_cast<Item*>(BH::moduleManager->Get("item"));
+	GameSettings* settings = static_cast<GameSettings*>(BH::moduleManager->Get("gamesettings"));
 	//Resync
-	if (!up && kkey == item->resyncKey)
+	if (!up && kkey == settings->resyncKey)
 	{
 		DWORD curTime = GetTickCount64();
 		if (curTime >= syncCooldown)
@@ -891,7 +892,7 @@ bool StatsDisplay::OnKey(bool   up,
 	}
 	if (IsMinimized())
 	{
-		if (!up && kkey == item->advStatMenuKey)
+		if (!up && kkey == settings->advStatMenuKey)
 		{
 			LoadConfig();
 			SetMinimized(false);
@@ -900,7 +901,7 @@ bool StatsDisplay::OnKey(bool   up,
 	}
 	else
 	{
-		if (!up && (kkey == item->advStatMenuKey || kkey == VK_ESCAPE))
+		if (!up && (kkey == settings->advStatMenuKey || kkey == VK_ESCAPE))
 		{
 			SetMinimized(true);
 			return true;

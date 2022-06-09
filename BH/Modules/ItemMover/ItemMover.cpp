@@ -504,56 +504,10 @@ void ItemMover::OnRightClick(bool up, int x, int y, bool* block) {
 }
 
 void ItemMover::LoadConfig() {
-	BH::config->ReadToggle("Quick Cast", "None", false, ScreenInfo::Toggles["Quick Cast"]);
-	BH::config->ReadToggle("Skill Bar", "None", false, ScreenInfo::Toggles["Skill Bar"]);
-	BH::config->ReadToggle("Skill Bar Disable", "None", false, ScreenInfo::Toggles["Skill Bar Disable"]);
-	BH::config->ReadToggle("Buff Timers", "None", false, ScreenInfo::Toggles["Buff Timers"]);
 }
 
 void ItemMover::OnLoad() {
 	LoadConfig();
-	Drawing::Texthook* colored_text;
-
-	settingsTab = new Drawing::UITab("Interaction", BH::settingsUI);
-
-	unsigned int x = 8;
-	unsigned int y = 7;
-	int keyhook_x = 230;
-
-	new Drawing::Checkhook(settingsTab, 4, y, &ScreenInfo::Toggles["Quick Cast"].state, "Quick Cast");
-	new Drawing::Keyhook(settingsTab, keyhook_x, y + 2, &ScreenInfo::Toggles["Quick Cast"].toggle, "");
-	y += 15;
-
-	new Drawing::Checkhook(settingsTab, 4, y, &ScreenInfo::Toggles["Skill Bar"].state, "Skill Bar");
-	new Drawing::Keyhook(settingsTab, keyhook_x, y + 2, &ScreenInfo::Toggles["Skill Bar"].toggle, "");
-	y += 15;
-
-	new Drawing::Checkhook(settingsTab, 4 + 15, y, &ScreenInfo::Toggles["Skill Bar Disable"].state, "Disable along Quick Cast");
-	new Drawing::Keyhook(settingsTab, keyhook_x, y + 2, &ScreenInfo::Toggles["Skill Bar Disable"].toggle, "");
-	y += 15;
-
-	new Drawing::Checkhook(settingsTab, 4, y, &ScreenInfo::Toggles["Buff Timers"].state, "Always show Buff Timers");
-	new Drawing::Keyhook(settingsTab, keyhook_x, y + 2, &ScreenInfo::Toggles["Buff Timers"].toggle, "");
-	y += 20;
-
-	new Drawing::Texthook(settingsTab, x, (y), "QoL features");
-	colored_text = new Drawing::Texthook(settingsTab, x, (y += 15),
-		"Shift-leftclick IDs an item if an ID tome is in inventory");
-	colored_text->SetColor(Gold);
-	colored_text = new Drawing::Texthook(settingsTab, x, (y += 15),
-		"Shift-rightclick moves between stash/open cube and inventory");
-	colored_text->SetColor(Gold);
-	colored_text = new Drawing::Texthook(settingsTab, x, (y += 15),
-		"Ctrl-rightclick moves item to ground");
-	colored_text->SetColor(Gold);
-	colored_text = new Drawing::Texthook(settingsTab, x, (y += 15),
-		"Ctrl-shift-rightclick moves item into closed cube");
-	colored_text->SetColor(Gold);
-
-	colored_text = new Drawing::Texthook(settingsTab, x, (y += 15),
-		"");
-	colored_text->SetColor(Gold);
-
 }
 
 void ItemMover::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {

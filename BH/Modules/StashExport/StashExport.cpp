@@ -22,11 +22,14 @@ void StashExport::OnLoad() {
 
 	settingsTab = new UITab("StashExport", BH::settingsUI);
 
-	int y = 15;
-	new Checkhook(settingsTab, 4, y, &Toggles["Include Equipment"].state, "Include Equipment");
-	new Checkhook(settingsTab, 4, (y += 15), &Toggles["Include Fixed Stats"].state, "Include Fixed Stats");
-	new Checkhook(settingsTab, 4, (y += 15), &Toggles["Condense Stats"].state, "Condense Stats");
-	new Checkhook(settingsTab, 4, (y += 15), &Toggles["Export On Menu"].state, "Export On Menu");
+	unsigned int x = 8;
+	unsigned int y = 7;
+	int keyhook_x = 310;
+
+	new Checkhook(settingsTab, x, y, &Toggles["Include Equipment"].state, "Include Equipment");
+	new Checkhook(settingsTab, x, (y += 15), &Toggles["Include Fixed Stats"].state, "Include Fixed Stats");
+	new Checkhook(settingsTab, x, (y += 15), &Toggles["Condense Stats"].state, "Condense Stats");
+	new Checkhook(settingsTab, x, (y += 15), &Toggles["Export On Menu"].state, "Export On Menu");
 
 	// the MustacheTemplates will not be reloaded
 	options.clear();
@@ -48,7 +51,7 @@ void StashExport::OnLoad() {
 		}
 	}
 
-	new Combohook(settingsTab, 4, (y += 15), 150, &exportType, options);
+	new Combohook(settingsTab, x, (y += 15), 150, &exportType, options);
 }
 
 void StashExport::LoadConfig() {

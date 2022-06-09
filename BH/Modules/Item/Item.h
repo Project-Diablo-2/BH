@@ -55,12 +55,10 @@ class Item : public Module {
 private:
 	static map<std::string, Toggle> Toggles;
 	unsigned int showPlayer;
-	static UnitAny* viewingUnit;
 	Drawing::UITab* settingsTab;
 	static unsigned int filterLevelSetting;
 public:
-	unsigned int resyncKey;
-	unsigned int advStatMenuKey;
+	static UnitAny* viewingUnit;
 	vector<string> ItemFilterNames;
 
 	Item() : Module("Item") {};
@@ -70,7 +68,7 @@ public:
 	void ReplaceItemFilters(vector<string> itemFilterNames);
 
 	void LoadConfig();
-	void DrawSettings(bool pushFront = false);
+	void DrawSettings();
 
 	void OnGameJoin();
 

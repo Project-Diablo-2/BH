@@ -97,6 +97,9 @@
     <ClCompile Include="Modules\StashExport\StashExport.cpp">
       <Filter>Modules\StashExport</Filter>
     </ClCompile>
+    <ClCompile Include="Modules\GameSettings\GameSettings.cpp">
+      <Filter>Modules\GameSettings</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AsyncDrawBuffer.h" />
@@ -203,6 +206,9 @@
     <ClInclude Include="Modules\StashExport\StashExport.h">
       <Filter>Modules\StashExport</Filter>
     </ClInclude>
+    <ClInclude Include="Modules\GameSettings\GameSettings.h">
+      <Filter>Modules\GameSettings</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -279,6 +285,9 @@
     </Filter>
     <Filter Include="Modules\ScreenInfo">
       <UniqueIdentifier>{355f39b5-6796-485b-b296-f6a70dbb43df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\GameSettings">
+      <UniqueIdentifier>{804cabda-3e31-4dee-bcf5-07cd55094c08}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
