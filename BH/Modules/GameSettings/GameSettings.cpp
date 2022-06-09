@@ -170,6 +170,8 @@ void GameSettings::LoadInteractionTab() {
 	new Drawing::Checkhook(tab, x, y, &GameSettings::Toggles["Rathma Aura"].state, "Show Rathma Aura");
 	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Rathma Aura"].toggle, "");
 
+	y += 20;
+	new Drawing::Texthook(tab, x, (y), "Developer Only");
 	y += 15;
 	new Drawing::Checkhook(tab, x, y, &GameSettings::Toggles["Developer Aura"].state, "Show Developer Aura");
 	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Developer Aura"].toggle, "");
