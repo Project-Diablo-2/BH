@@ -131,6 +131,7 @@ bool Config::Write() {
 
 	for (map<ConfigEntry, string>::iterator cit = changed.begin(); cit != changed.end(); ++cit)
 	{
+		contents[(*cit).first.key].value = (*cit).second;
 		stringstream newConfig;
 
 		newConfig << (*cit).first.key << ": " << (*cit).second;
@@ -210,7 +211,7 @@ int Config::ReadInt(std::string key, int& value) {
 */
 unsigned int Config::ReadInt(std::string key, unsigned int& value, unsigned int defaultValue) {
 	//Check if configuration value exists
-	
+
 	bool useDefaultValue = false;
 	if (contents.find(key) == contents.end()) {
 		value = defaultValue;
@@ -235,7 +236,7 @@ unsigned int Config::ReadInt(std::string key, unsigned int& value, unsigned int 
 	return value;
 }
 
-std::string Config::ReadString(std::string key, std::string &value) {
+std::string Config::ReadString(std::string key, std::string& value) {
 	//Check if configuration value exists
 	if (contents.find(key) == contents.end())
 	{
@@ -276,7 +277,7 @@ Toggle Config::ReadToggle(std::string key, std::string toggle, bool state, Toggl
 /* ReadKey(std::string key, std::string toggle)
 *	Reads in a key from the key->pair.
 */
-unsigned int Config::ReadKey(std::string key, std::string toggle, unsigned int &value) {
+unsigned int Config::ReadKey(std::string key, std::string toggle, unsigned int& value) {
 	//Check if configuration value exists.
 	if (contents.find(key) == contents.end()) {
 		contents[key].key = key;
@@ -299,7 +300,7 @@ unsigned int Config::ReadKey(std::string key, std::string toggle, unsigned int &
 /* ReadArray(std::string key)
 *	Reads in a index-based array from the array
 */
-vector<string> Config::ReadArray(std::string key, vector<string> &value) {
+vector<string> Config::ReadArray(std::string key, vector<string>& value) {
 	int currentIndex = 0;
 	value.clear();
 	while (true) {
@@ -322,7 +323,7 @@ vector<string> Config::ReadArray(std::string key, vector<string> &value) {
 *		Value[Test]: 0
 *		Value[Pickles]: 1
 */
-map<string, string> Config::ReadAssoc(std::string key, map<string, string> &value) {
+map<string, string> Config::ReadAssoc(std::string key, map<string, string>& value) {
 
 	for (map<string, ConfigEntry>::iterator it = contents.begin(); it != contents.end(); it++) {
 		if (!(*it).first.find(key + "[")) {
@@ -346,7 +347,7 @@ map<string, string> Config::ReadAssoc(std::string key, map<string, string> &valu
 	return value;
 }
 
-map<string, bool> Config::ReadAssoc(std::string key, map<string, bool> &value) {
+map<string, bool> Config::ReadAssoc(std::string key, map<string, bool>& value) {
 
 	for (map<string, ConfigEntry>::iterator it = contents.begin(); it != contents.end(); it++) {
 		if (!(*it).first.find(key + "[")) {
@@ -370,7 +371,7 @@ map<string, bool> Config::ReadAssoc(std::string key, map<string, bool> &value) {
 	return value;
 }
 
-map<string, unsigned int> Config::ReadAssoc(std::string key, map<string, unsigned int> &value) {
+map<string, unsigned int> Config::ReadAssoc(std::string key, map<string, unsigned int>& value) {
 
 	for (map<string, ConfigEntry>::iterator it = contents.begin(); it != contents.end(); it++) {
 		if ((*it).first.find(key + "[") != string::npos) {
