@@ -76,7 +76,7 @@ void MapNotify::OnDraw() {
 					uInfo.attrs = ItemAttributeMap[uInfo.itemCode];
 					for (vector<Rule*>::iterator it = MapRuleList.begin(); it != MapRuleList.end(); it++) {
 
-					if (Item::GetFilterLevel() != 0 && (*it)->action.pingLevel < Item::GetFilterLevel()) continue;
+						if (Item::GetFilterLevel() != 0 && (*it)->action.pingLevel != 0 && (*it)->action.pingLevel < Item::GetFilterLevel()) continue;
 
 						if ((*it)->Evaluate(&uInfo, NULL)) {
 							if ((unit->dwFlags & UNITFLAG_REVEALED) == 0x0
