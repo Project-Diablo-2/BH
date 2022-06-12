@@ -245,6 +245,10 @@ void Item::ReplaceItemFilters(vector<string> itemFilterNames) {
 			}
 		}
 	}
+
+	if (filterLevelSetting >= ItemFilterNames.size()) {
+		filterLevelSetting = 1;
+	}
 }
 
 void Item::OnUnload() {
