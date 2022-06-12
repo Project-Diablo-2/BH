@@ -220,7 +220,7 @@ void Item::DrawSettings() {
 	// Just a default as this is called first time around, not used
 	if (ItemFilterNames.size() == 0) {
 		ItemFilterNames.clear();
-		ItemFilterNames.push_back(string("0 - No Filtering"));
+		ItemFilterNames.push_back(string("0 - Show All Items"));
 		ItemFilterNames.push_back("1 - Normal");
 	}
 
@@ -233,7 +233,7 @@ void Item::ReplaceItemFilters(vector<string> itemFilterNames) {
 		Hook* h = *it;
 		Combohook* dropDown = dynamic_cast<Combohook*> (h);
 		if (dropDown != NULL) {
-			if (dropDown->GetOptions()[0] == "0 - No Filtering") {
+			if (dropDown->GetOptions()[0] == "0 - Show All Items") {
 				dropDown->ClearOptions();
 
 				for each (string option in ItemFilterNames)

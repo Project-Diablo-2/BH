@@ -840,12 +840,12 @@ namespace ItemDisplay
 
 		// Clear and add 0 to the list
 		item->ItemFilterNames.clear();
-		item->ItemFilterNames.push_back("0 - No Filtering");
+		item->ItemFilterNames.push_back("0 - Show All Items");
 
 		vector<pair<string, string>> filterDefinitions;
 		BH::lootFilter->ReadMapList("ItemDisplayFilterName", filterDefinitions);
 		for (unsigned int i = 0; i < filterDefinitions.size(); i++) {
-			item->ItemFilterNames.push_back(to_string(i+1) + " - " + filterDefinitions[i].second);
+			item->ItemFilterNames.push_back(to_string(i + 1) + " - " + filterDefinitions[i].second);
 
 			// Max 9 entries
 			if (i >= 8) {
