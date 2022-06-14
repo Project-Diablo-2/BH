@@ -964,7 +964,7 @@ void BuildAction(string* str,
 int ParsePingLevel(Action* act, const string& key_string) {
 	std::regex pattern("%" + key_string + "-([0-9])%",
 		std::regex_constants::ECMAScript | std::regex_constants::icase);
-	int ping_level = 0;
+	int ping_level = -1;
 	std::smatch the_match;
 
 	if (std::regex_search(act->name, the_match, pattern)) {
