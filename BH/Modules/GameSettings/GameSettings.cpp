@@ -184,6 +184,16 @@ void GameSettings::OnLoad() {
 }
 
 void GameSettings::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
+	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
+		if (key == (*it).second.toggle) {
+			*block = true;
+			if (up) {
+				(*it).second.state = !(*it).second.state;
+			}
+			return;
+		}
+	}
+
 	if (key == showPlayer) {
 		*block = true;
 		if (up)
