@@ -193,6 +193,7 @@ void GameSettings::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 			*block = true;
 			if (up) {
 				(*it).second.state = !(*it).second.state;
+				BH::config->Write();
 			}
 			return;
 		}
