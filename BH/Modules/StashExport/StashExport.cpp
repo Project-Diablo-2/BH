@@ -244,6 +244,7 @@ void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
 		pBuffer->set("unidentified", !checkFlag(pItem, ITEM_IDENTIFIED));
 		pBuffer->set("sockets", (int)D2COMMON_GetUnitStat(pItem, STAT_SOCKETS, 0));
 		pBuffer->set("defense", (int)D2COMMON_GetUnitStat(pItem, STAT_DEFENSE, 0));
+		pBuffer->set("quantity", (int)D2COMMON_GetUnitStat(pItem, STAT_AMMOQUANTITY, 0));
 
 		auto statsObject = new JSONArray();
 		pBuffer->set("stats", statsObject);
