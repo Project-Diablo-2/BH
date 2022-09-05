@@ -220,6 +220,27 @@ void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
 	pBuffer->set("quality", std::string(QUALITY_NAMES[pItem->pItemData->dwQuality]));
 	pBuffer->set("iLevel", (int)pItem->pItemData->dwItemLevel);
 
+	for (int j = 0; j < 6; j++)
+	{
+		const auto location = ITEM_LOCATIONS[j];
+		if (location.id != pItem->pItemData->ItemLocation) {
+			continue;
+		}
+
+		if (location.id == STORAGE_NULL) {
+			if (pItem->pItemData->NodePage == NODEPAGE_EQUIP) {
+				pBuffer->set("location", std::string("Equip"));
+			}
+
+			break;
+		}
+		else {
+			pBuffer->set("location", location.name);
+		}
+
+		break;
+	}
+
 	char cCode[] = {
 		txt->szCode[0],
 		txt->szCode[1],
