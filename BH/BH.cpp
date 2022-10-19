@@ -2,6 +2,7 @@
 #include "BH.h"
 #include <Shlwapi.h>
 #include <psapi.h>
+#include <io.h>
 #include "D2Ptrs.h"
 #include "D2Intercepts.h"
 #include "D2Handlers.h"
@@ -79,7 +80,19 @@ DWORD WINAPI LoadMPQData(VOID* lpvoid) {
 	if (start_pos != std::string::npos) {
 		start_pos++;
 		if (start_pos < patchPath.size()) {
-			patchPath.replace(start_pos, patchPath.size() - start_pos, "Patch_D2.mpq");
+			patchPath.replace(start_pos, patchPath.size() - start_pos, "..\\Patch_D2.mpq");
+		}
+	}
+
+	if (_access(patchPath.c_str(), 0) == -1)
+	{
+		patchPath.assign(szFileName);
+		start_pos = patchPath.rfind("\\");
+		if (start_pos != std::string::npos) {
+			start_pos++;
+			if (start_pos < patchPath.size()) {
+				patchPath.replace(start_pos, patchPath.size() - start_pos, "Patch_D2.mpq");
+			}
 		}
 	}
 
