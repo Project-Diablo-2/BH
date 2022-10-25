@@ -80,7 +80,7 @@ DWORD WINAPI LoadMPQData(VOID* lpvoid) {
 	if (start_pos != std::string::npos) {
 		start_pos++;
 		if (start_pos < patchPath.size()) {
-			patchPath.replace(start_pos, patchPath.size() - start_pos, "..\\Patch_D2.mpq");
+			patchPath.replace(start_pos, patchPath.size() - start_pos, "pd2data.mpq");
 		}
 	}
 
