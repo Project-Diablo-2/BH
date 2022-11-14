@@ -1595,26 +1595,7 @@ BOOL StatIsCorrupted(int nStat, int nCorruptor)
 	if (nCorruptor < 0 || nCorruptor >= NUM_CORRUPTIONS)
 		return false;
 
-	// all res
-	if (nCorruptor == 49) {
-		if (nStat == STAT_FIRERESIST || nStat == STAT_COLDRESIST || nStat == STAT_LIGHTNINGRESIST || nStat == STAT_POISONRESIST) {
-			return true;
-		}
-	}
-	// All stats
-	if (nCorruptor == 63) {
-		if (nStat == STAT_STRENGTH || nStat == STAT_DEXTERITY || nStat == STAT_VITALITY || nStat == STAT_ENERGY) {
-			return true;
-		}
-	}
-	// All res max
-	if (nCorruptor == 70) {
-		if (nStat == STAT_MAXFIRERESIST || nStat == STAT_MAXCOLDRESIST || nStat == STAT_MAXLIGHTNINGRESIST || nStat == STAT_MAXPOISONRESIST) {
-			return true;
-		}
-	}
-
-	for (int j = 0; j < 2; j++) {
+	for (int j = 0; j < 6; j++) {
 		if (CorruptionMods[nCorruptor][j] < 0) {
 			continue;
 		}
