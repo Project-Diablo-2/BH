@@ -1146,6 +1146,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 9, "CRAFTALVL") == 0) { Condition::AddOperand(conditions, new CraftLevelCondition(operation, value)); }
 	else if (key.compare(0, 6, "PREFIX") == 0) { Condition::AddOperand(conditions, new MagicPrefixCondition(operation, value)); }
 	else if (key.compare(0, 6, "SUFFIX") == 0) { Condition::AddOperand(conditions, new MagicSuffixCondition(operation, value)); }
+	else if (key.compare(0, 7, "AUTOMOD") == 0) { Condition::AddOperand(conditions, new AutomodCondition(operation, value)); }
 	else if (key.compare(0, 5, "MAPID") == 0) { Condition::AddOperand(conditions, new MapIdCondition(operation, value)); }
 	else if (key.compare(0, 5, "CRAFT") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_CRAFT)); }
 	else if (key.compare(0, 2, "RW") == 0) { Condition::AddOperand(conditions, new FlagsCondition(ITEM_RUNEWORD)); }
@@ -1799,6 +1800,35 @@ bool MagicSuffixCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	return IntegerCompare(-1, operation, suffixID);
 }
 
+bool AutomodCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	auto itemData = uInfo->item->pItemData;
+
+	if ((itemData->dwQuality == ITEM_QUALITY_MAGIC || itemData->dwQuality == ITEM_QUALITY_RARE) && !(itemData->dwFlags & ITEM_IDENTIFIED))
+	{
+		return false;
+	}
+	if (itemData->wAutoPrefix == automodID)
+	{
+		return IntegerCompare(itemData->wAutoPrefix, operation, automodID);
+	}
+
+	return IntegerCompare(-1, operation, automodID);
+
+}
+
+bool AutomodCondition::EvaluateInternalFromPacket(ItemInfo* info,
+	Condition* arg1,
+	Condition* arg2)
+{
+	if ((info->quality == ITEM_QUALITY_MAGIC || info->quality == ITEM_QUALITY_RARE) && !(info->identified))
+	{
+		return false;
+	}
+	return IntegerCompare(-1, operation, automodID);
+}
 
 bool CharacterClassCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,

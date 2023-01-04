@@ -500,6 +500,25 @@ private:
 		Condition* arg2);
 };
 
+class AutomodCondition : public Condition
+{
+public:
+	AutomodCondition(BYTE op,
+		unsigned int automod) : automodID(automod),
+		operation(op) {
+		conditionType = CT_Operand;
+	};
+private:
+	BYTE operation;
+	unsigned int automodID;
+	bool EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+	bool EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2);
+};
+
 class MagicPrefixCondition : public Condition
 {
 public:
