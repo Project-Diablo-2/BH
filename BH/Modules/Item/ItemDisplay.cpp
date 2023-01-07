@@ -1810,13 +1810,8 @@ bool AutomodCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	{
 		return false;
 	}
-	if (itemData->wAutoPrefix == automodID)
-	{
-		return IntegerCompare(itemData->wAutoPrefix, operation, automodID);
-	}
 
-	return IntegerCompare(-1, operation, automodID);
-
+	return IntegerCompare(itemData->wAutoPrefix, operation, automodID);
 }
 
 bool AutomodCondition::EvaluateInternalFromPacket(ItemInfo* info,
