@@ -392,6 +392,7 @@ enum Operation
 	EQUAL,
 	GREATER_THAN,
 	LESS_THAN,
+	BETWEEN,
 	NONE
 };
 
@@ -772,6 +773,7 @@ BYTE GetOperation(string* op)
 	else if ((*op)[0] == '=') { return EQUAL; }
 	else if ((*op)[0] == '<') { return LESS_THAN; }
 	else if ((*op)[0] == '>') { return GREATER_THAN; }
+	else if ((*op)[0] == '~') { return BETWEEN; }
 	return NONE;
 }
 
@@ -783,7 +785,8 @@ unsigned int GetItemCodeIndex(char codeChar)
 
 bool IntegerCompare(unsigned int Lvalue,
 	BYTE         operation,
-	unsigned int Rvalue)
+	unsigned int Rvalue,
+	unsigned int Bvalue = 0)
 {
 	switch (operation)
 	{
@@ -793,6 +796,8 @@ bool IntegerCompare(unsigned int Lvalue,
 		return Lvalue > Rvalue;
 	case LESS_THAN:
 		return Lvalue < Rvalue;
+	case BETWEEN:
+		return (Rvalue <= Lvalue && Lvalue <= Bvalue);
 	default:
 		return false;
 	}
@@ -1007,7 +1012,7 @@ int ParseMapColor(Action* act,
 	return color;
 }
 
-const string Condition::tokenDelims = "<=>";
+const string Condition::tokenDelims = "<=>~";
 
 // Implements the shunting-yard algorithm to evaluate condition expressions
 // Returns a vector of conditions in Reverse Polish Notation
@@ -1103,11 +1108,12 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		else { break; }
 	}
 	if (i < (int)(token.length() - 1)) { token.erase(i + 1, string::npos); }
-
+	
 	size_t delPos = token.find_first_of(tokenDelims);
 	string key;
 	string delim = "";
 	int    value = 0;
+	int    value2 = 0;
 	if (delPos != string::npos)
 	{
 		key = Trim(token.substr(0, delPos));
@@ -1115,10 +1121,23 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		string valueStr = Trim(token.substr(delPos + 1));
 		if (valueStr.length() > 0)
 		{
-			stringstream ss(valueStr);
-			if ((ss >> value).fail())
+			// Get min/max values if a range is given
+			if (delim == "~" && valueStr.find("-") != string::npos)
 			{
-				return; // TODO: returning errors
+				auto rangeDelim = valueStr.find("-");
+				stringstream ss1(valueStr.substr(0, rangeDelim));
+				valueStr.erase(0, rangeDelim + 1);
+				stringstream ss2(valueStr);
+				if ((ss1 >> value).fail()  || (ss2 >> value2).fail())
+				{
+					return; // TODO: returning errors
+				}
+			} else {
+				stringstream ss(valueStr);
+				if ((ss >> value).fail())
+				{
+					return; // TODO: returning errors
+				}
 			}
 		}
 	}
