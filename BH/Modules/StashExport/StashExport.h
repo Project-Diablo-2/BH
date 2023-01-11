@@ -54,3 +54,4 @@ char* QUALITY_NAMES[];
 IdNamePair NODE_PAGES[];
 IdNamePair CLASS_NAMES[];
 IdNamePair SKILL_TABS[];
+IdNamePair ITEM_LOCATIONS[];
