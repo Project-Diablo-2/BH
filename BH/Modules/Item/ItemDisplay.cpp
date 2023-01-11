@@ -387,6 +387,14 @@ std::map<std::string, int> code_to_dwtxtfileno = {
 		{"amf", 305},
 };
 
+std::map<std::string, int> maptiers = {
+	{"pvpm", 0},
+	{"t1m", 1},
+	{"t2m", 2},
+	{"t3m", 3},
+	{"t4m", 4},
+};
+
 enum Operation
 {
 	EQUAL,
@@ -1147,6 +1155,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 6, "PREFIX") == 0) { Condition::AddOperand(conditions, new MagicPrefixCondition(operation, value)); }
 	else if (key.compare(0, 6, "SUFFIX") == 0) { Condition::AddOperand(conditions, new MagicSuffixCondition(operation, value)); }
 	else if (key.compare(0, 5, "MAPID") == 0) { Condition::AddOperand(conditions, new MapIdCondition(operation, value)); }
+	else if (key.compare(0, 7, "MAPTIER") == 0) { Condition::AddOperand(conditions, new MapTierCondition(operation, value)); }
 	else if (key.compare(0, 5, "CRAFT") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_CRAFT)); }
 	else if (key.compare(0, 2, "RW") == 0) { Condition::AddOperand(conditions, new FlagsCondition(ITEM_RUNEWORD)); }
 	else if (key.compare(0, 4, "NMAG") == 0) { Condition::AddOperand(conditions, new NonMagicalCondition()); }
@@ -1680,6 +1689,20 @@ bool MapIdCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	auto map_id = **Var_D2CLIENT_MapId();
 
 	return IntegerCompare(map_id, operation, mapId);
+}
+
+bool MapTierCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	return IntegerCompare(maptiers.at(uInfo->attrs->category), operation, mapTier);
+}
+
+bool MapTierCondition::EvaluateInternalFromPacket(ItemInfo* info,
+	Condition* arg1,
+	Condition* arg2)
+{
+	return IntegerCompare(maptiers.at(info->attrs->category), operation, mapTier);
 }
 
 bool CraftLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,

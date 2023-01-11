@@ -481,6 +481,25 @@ private:
 		Condition* arg2);
 };
 
+class MapTierCondition : public Condition
+{
+public:
+	MapTierCondition(BYTE op,
+		BYTE mtier) : mapTier(mtier),
+		operation(op) {
+		conditionType = CT_Operand;
+	};
+private:
+	BYTE operation;
+	BYTE mapTier;
+	bool EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+	bool EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2);
+};
+
 class CraftLevelCondition : public Condition
 {
 public:
