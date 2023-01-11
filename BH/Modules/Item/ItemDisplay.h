@@ -519,17 +519,39 @@ private:
 		Condition* arg2);
 };
 
-class MagicPrefixCondition : public Condition
+class AutomodCondition : public Condition
 {
 public:
-	MagicPrefixCondition(BYTE op,
-		unsigned int prefix) : prefixID(prefix),
+	AutomodCondition(BYTE op,
+		unsigned int automod) : automodID(automod),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
-	unsigned int prefixID;
+	unsigned int automodID;
+	bool EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+	bool EvaluateInternalFromPacket(ItemInfo* info,
+		Condition* arg1,
+		Condition* arg2);
+};
+
+class MagicPrefixCondition : public Condition
+{
+public:
+	MagicPrefixCondition(BYTE op,
+		unsigned int prefix1,
+		unsigned int prefix2) : prefixID1(prefix1),
+		prefixID2(prefix2),
+		operation(op) {
+		conditionType = CT_Operand;
+	};
+private:
+	BYTE operation;
+	unsigned int prefixID1;
+	unsigned int prefixID2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -542,13 +564,16 @@ class MagicSuffixCondition : public Condition
 {
 public:
 	MagicSuffixCondition(BYTE op,
-		unsigned int suffix) : suffixID(suffix),
+		unsigned int suffix1,
+		unsigned int suffix2) : suffixID1(suffix1),
+		suffixID2(suffix2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
-	unsigned int suffixID;
+	unsigned int suffixID1;
+	unsigned int suffixID2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);

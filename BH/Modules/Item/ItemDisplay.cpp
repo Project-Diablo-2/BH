@@ -400,6 +400,7 @@ enum Operation
 	EQUAL,
 	GREATER_THAN,
 	LESS_THAN,
+	BETWEEN,
 	NONE
 };
 
@@ -780,6 +781,7 @@ BYTE GetOperation(string* op)
 	else if ((*op)[0] == '=') { return EQUAL; }
 	else if ((*op)[0] == '<') { return LESS_THAN; }
 	else if ((*op)[0] == '>') { return GREATER_THAN; }
+	else if ((*op)[0] == '~') { return BETWEEN; }
 	return NONE;
 }
 
@@ -791,7 +793,8 @@ unsigned int GetItemCodeIndex(char codeChar)
 
 bool IntegerCompare(unsigned int Lvalue,
 	BYTE         operation,
-	unsigned int Rvalue)
+	unsigned int Rvalue,
+	unsigned int Bvalue = 0)
 {
 	switch (operation)
 	{
@@ -801,6 +804,8 @@ bool IntegerCompare(unsigned int Lvalue,
 		return Lvalue > Rvalue;
 	case LESS_THAN:
 		return Lvalue < Rvalue;
+	case BETWEEN:
+		return (Rvalue <= Lvalue && Lvalue <= Bvalue);
 	default:
 		return false;
 	}
@@ -1015,7 +1020,7 @@ int ParseMapColor(Action* act,
 	return color;
 }
 
-const string Condition::tokenDelims = "<=>";
+const string Condition::tokenDelims = "<=>~";
 
 // Implements the shunting-yard algorithm to evaluate condition expressions
 // Returns a vector of conditions in Reverse Polish Notation
@@ -1116,6 +1121,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	string key;
 	string delim = "";
 	int    value = 0;
+	int    value2 = 0;
 	if (delPos != string::npos)
 	{
 		key = Trim(token.substr(0, delPos));
@@ -1123,10 +1129,23 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		string valueStr = Trim(token.substr(delPos + 1));
 		if (valueStr.length() > 0)
 		{
-			stringstream ss(valueStr);
-			if ((ss >> value).fail())
+			// Get min/max values if a range is given
+			if (delim == "~" && valueStr.find("-") != string::npos)
 			{
-				return; // TODO: returning errors
+				auto rangeDelim = valueStr.find("-");
+				stringstream ss1(valueStr.substr(0, rangeDelim));
+				valueStr.erase(0, rangeDelim + 1);
+				stringstream ss2(valueStr);
+				if ((ss1 >> value).fail()  || (ss2 >> value2).fail())
+				{
+					return; // TODO: returning errors
+				}
+			} else {
+				stringstream ss(valueStr);
+				if ((ss >> value).fail())
+				{
+					return; // TODO: returning errors
+				}
 			}
 		}
 	}
@@ -1152,8 +1171,9 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	else if (key.compare(0, 5, "DRUID") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 5)); }
 	else if (key.compare(0, 8, "ASSASSIN") == 0) { Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 6)); }
 	else if (key.compare(0, 9, "CRAFTALVL") == 0) { Condition::AddOperand(conditions, new CraftLevelCondition(operation, value)); }
-	else if (key.compare(0, 6, "PREFIX") == 0) { Condition::AddOperand(conditions, new MagicPrefixCondition(operation, value)); }
-	else if (key.compare(0, 6, "SUFFIX") == 0) { Condition::AddOperand(conditions, new MagicSuffixCondition(operation, value)); }
+	else if (key.compare(0, 6, "PREFIX") == 0) { Condition::AddOperand(conditions, new MagicPrefixCondition(operation, value, value2)); }
+	else if (key.compare(0, 6, "SUFFIX") == 0) { Condition::AddOperand(conditions, new MagicSuffixCondition(operation, value, value2)); }
+	else if (key.compare(0, 7, "AUTOMOD") == 0) { Condition::AddOperand(conditions, new AutomodCondition(operation, value)); }
 	else if (key.compare(0, 5, "MAPID") == 0) { Condition::AddOperand(conditions, new MapIdCondition(operation, value)); }
 	else if (key.compare(0, 7, "MAPTIER") == 0) { Condition::AddOperand(conditions, new MapTierCondition(operation, value)); }
 	else if (key.compare(0, 5, "CRAFT") == 0) { Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_CRAFT)); }
@@ -1756,20 +1776,25 @@ bool MagicPrefixCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	{
 		return false;
 	}
-	if (itemData->wPrefix[0] == prefixID)
+	if (operation == GREATER_THAN || operation == LESS_THAN)
 	{
-		return IntegerCompare(itemData->wPrefix[0], operation, prefixID);
-	}
-	if (itemData->wPrefix[1] == prefixID)
-	{
-		return IntegerCompare(itemData->wPrefix[1], operation, prefixID);
-	}
-	if (itemData->wPrefix[2] == prefixID)
-	{
-		return IntegerCompare(itemData->wPrefix[2], operation, prefixID);
+		return false;
 	}
 
-	return IntegerCompare(-1, operation, prefixID);
+	if ((itemData->wPrefix[0] > 0) ? IntegerCompare(itemData->wPrefix[0], operation, prefixID1, prefixID2) : false)
+	{
+		return true;
+	}
+	if ((itemData->wPrefix[1] > 0) ? IntegerCompare(itemData->wPrefix[1], operation, prefixID1, prefixID2) : false)
+	{
+		return true;
+	}
+	if ((itemData->wPrefix[2] > 0) ? IntegerCompare(itemData->wPrefix[2], operation, prefixID1, prefixID2) : false)
+	{
+		return true;
+	}
+
+	return false;
 }
 
 bool MagicPrefixCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -1781,7 +1806,7 @@ bool MagicPrefixCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		return false;
 	}
 
-	return IntegerCompare(-1, operation, prefixID);
+	return false;
 }
 
 bool MagicSuffixCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -1794,20 +1819,25 @@ bool MagicSuffixCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	{
 		return false;
 	}
-	if (itemData->wSuffix[0] == suffixID)
+	if (operation == GREATER_THAN || operation == LESS_THAN)
 	{
-		return IntegerCompare(itemData->wSuffix[0], operation, suffixID);
-	}
-	if (itemData->wSuffix[1] == suffixID)
-	{
-		return IntegerCompare(itemData->wSuffix[1], operation, suffixID);
-	}
-	if (itemData->wSuffix[2] == suffixID)
-	{
-		return IntegerCompare(itemData->wSuffix[2], operation, suffixID);
+		return false;
 	}
 
-	return IntegerCompare(-1, operation, suffixID);
+	if ((itemData->wSuffix[0] > 0) ? IntegerCompare(itemData->wSuffix[0], operation, suffixID1, suffixID2) : false)
+	{
+		return true;
+	}
+	if ((itemData->wSuffix[1] > 0) ? IntegerCompare(itemData->wSuffix[1], operation, suffixID1, suffixID2) : false)
+	{
+		return true;
+	}
+	if ((itemData->wSuffix[2] > 0) ? IntegerCompare(itemData->wSuffix[2], operation, suffixID1, suffixID2) : false)
+	{
+		return true;
+	}
+
+	return false;
 }
 
 bool MagicSuffixCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -1819,9 +1849,33 @@ bool MagicSuffixCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		return false;
 	}
 
-	return IntegerCompare(-1, operation, suffixID);
+	return false;
 }
 
+bool AutomodCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	auto itemData = uInfo->item->pItemData;
+
+	if ((itemData->dwQuality == ITEM_QUALITY_MAGIC || itemData->dwQuality == ITEM_QUALITY_RARE) && !(itemData->dwFlags & ITEM_IDENTIFIED))
+	{
+		return false;
+	}
+
+	return IntegerCompare(itemData->wAutoPrefix, operation, automodID);
+}
+
+bool AutomodCondition::EvaluateInternalFromPacket(ItemInfo* info,
+	Condition* arg1,
+	Condition* arg2)
+{
+	if ((info->quality == ITEM_QUALITY_MAGIC || info->quality == ITEM_QUALITY_RARE) && !(info->identified))
+	{
+		return false;
+	}
+	return false;
+}
 
 bool CharacterClassCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
