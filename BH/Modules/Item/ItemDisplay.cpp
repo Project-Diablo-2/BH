@@ -1108,7 +1108,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		else { break; }
 	}
 	if (i < (int)(token.length() - 1)) { token.erase(i + 1, string::npos); }
-	
+
 	size_t delPos = token.find_first_of(tokenDelims);
 	string key;
 	string delim = "";
@@ -1783,7 +1783,7 @@ bool MagicPrefixCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		return false;
 	}
 
-	return IntegerCompare(-1, operation, prefixID1);
+	return false;
 }
 
 bool MagicSuffixCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -1826,7 +1826,7 @@ bool MagicSuffixCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		return false;
 	}
 
-	return IntegerCompare(-1, operation, suffixID1, suffixID2);
+	return false;
 }
 
 bool AutomodCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -1851,7 +1851,7 @@ bool AutomodCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	{
 		return false;
 	}
-	return IntegerCompare(-1, operation, automodID);
+	return false;
 }
 
 bool CharacterClassCondition::EvaluateInternal(UnitItemInfo* uInfo,
