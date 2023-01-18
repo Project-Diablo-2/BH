@@ -512,34 +512,7 @@ enum FilterCondition
 	COND_STAFF,
 	COND_WAND,
 	COND_SCEPTER,
-	COND_EQ1,
-	COND_EQ2,
-	COND_EQ3,
-	COND_EQ4,
-	COND_EQ5,
-	COND_EQ6,
-	COND_EQ7,
-	COND_CL1,
-	COND_CL2,
-	COND_CL3,
-	COND_CL4,
-	COND_CL5,
-	COND_CL6,
-	COND_CL7,
 	COND_WEAPON,
-	COND_WP1,
-	COND_WP2,
-	COND_WP3,
-	COND_WP4,
-	COND_WP5,
-	COND_WP6,
-	COND_WP7,
-	COND_WP8,
-	COND_WP9,
-	COND_WP10,
-	COND_WP11,
-	COND_WP12,
-	COND_WP13,
 	COND_SK,
 	COND_OS,
 	COND_CHSK,
@@ -666,34 +639,34 @@ std::map<std::string, FilterCondition> condition_map =
 	{"STAFF", COND_STAFF},
 	{"WAND", COND_WAND},
 	{"SCEPTER", COND_SCEPTER},
-	{"EQ1", COND_EQ1},
-	{"EQ2", COND_EQ2},
-	{"EQ3", COND_EQ3},
-	{"EQ4", COND_EQ4},
-	{"EQ5", COND_EQ5},
-	{"EQ6", COND_EQ6},
-	{"EQ7", COND_EQ7},
-	{"CL1", COND_CL1},
-	{"CL2", COND_CL2},
-	{"CL3", COND_CL3},
-	{"CL4", COND_CL4},
-	{"CL5", COND_CL5},
-	{"CL6", COND_CL6},
-	{"CL7", COND_CL7},
+	{"EQ1", COND_HELM},
+	{"EQ2", COND_ARMOR},
+	{"EQ3", COND_SHIELD},
+	{"EQ4", COND_GLOVES},
+	{"EQ5", COND_BOOTS},
+	{"EQ6", COND_BELT},
+	{"EQ7", COND_CIRC},
+	{"CL1", COND_DRU},
+	{"CL2", COND_BAR},
+	{"CL3", COND_DIN},
+	{"CL4", COND_NEC},
+	{"CL5", COND_SIN},
+	{"CL6", COND_SOR},
+	{"CL7", COND_ZON},
 	{"WEAPON", COND_WEAPON},
-	{"WP1", COND_WP1},
-	{"WP2", COND_WP2},
-	{"WP3", COND_WP3},
-	{"WP4", COND_WP4},
-	{"WP5", COND_WP5},
-	{"WP6", COND_WP6},
-	{"WP7", COND_WP7},
-	{"WP8", COND_WP8},
-	{"WP9", COND_WP9},
-	{"WP10", COND_WP10},
-	{"WP11", COND_WP11},
-	{"WP12", COND_WP12},
-	{"WP13", COND_WP13},
+	{"WP1", COND_AXE},
+	{"WP2", COND_MACE},
+	{"WP3", COND_SWORD},
+	{"WP4", COND_DAGGER},
+	{"WP5", COND_THROWING},
+	{"WP6", COND_JAV},
+	{"WP7", COND_SPEAR},
+	{"WP8", COND_POLEARM},
+	{"WP9", COND_BOW},
+	{"WP10", COND_XBOW},
+	{"WP11", COND_STAFF},
+	{"WP12", COND_WAND},
+	{"WP13", COND_SCEPTER},
 	{"ALLSK", COND_ALLSK},
 	{"PRICE", COND_PRICE},
 	// These have a number as part of the key, handled separately
@@ -1836,89 +1809,8 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_SCEPTER:
 		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SCEPTER));
 		break;
-	case COND_EQ1:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_HELM));
-		break;
-	case COND_EQ2:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ARMOR));
-		break;
-	case COND_EQ3:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SHIELD));
-		break;
-	case COND_EQ4:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_GLOVES));
-		break;
-	case COND_EQ5:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BOOTS));
-		break;
-	case COND_EQ6:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BELT));
-		break;
-	case COND_EQ7:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_CIRCLET));
-		break;
-	case COND_CL1:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_DRUID_PELT));
-		break;
-	case COND_CL2:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BARBARIAN_HELM));
-		break;
-	case COND_CL3:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_PALADIN_SHIELD));
-		break;
-	case COND_CL4:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_NECROMANCER_SHIELD));
-		break;
-	case COND_CL5:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ASSASSIN_KATAR));
-		break;
-	case COND_CL6:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SORCERESS_ORB));
-		break;
-	case COND_CL7:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AMAZON_WEAPON));
-		break;
 	case COND_WEAPON:
 		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ALLWEAPON));
-		break;
-	case COND_WP1:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AXE));
-		break;
-	case COND_WP2:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_MACE));
-		break;
-	case COND_WP3:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SWORD));
-		break;
-	case COND_WP4:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_DAGGER));
-		break;
-	case COND_WP5:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_THROWING));
-		break;
-	case COND_WP6:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_THROWING | ITEM_GROUP_SPEAR));
-		break;
-	case COND_WP7:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SPEAR));
-		break;
-	case COND_WP8:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_POLEARM));
-		break;
-	case COND_WP9:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BOW));
-		break;
-	case COND_WP10:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_CROSSBOW));
-		break;
-	case COND_WP11:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_STAFF));
-		break;
-	case COND_WP12:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_WAND));
-		break;
-	case COND_WP13:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SCEPTER));
 		break;
 	case COND_SK:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)SKILL_MAX) { break; }
