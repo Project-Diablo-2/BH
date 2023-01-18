@@ -1837,11 +1837,11 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SKILLTAB, cond_num, operation, value));
 		break;
 	case COND_STAT:
-		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)STAT_MAX) { return; }
+		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)STAT_MAX) { break; }
 		Condition::AddOperand(conditions, new ItemStatCondition(cond_num, 0, operation, value));
 		break;
 	case COND_CHARSTAT:
-		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)STAT_MAX) { return; }
+		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)STAT_MAX) { break; }
 		Condition::AddOperand(conditions, new CharStatCondition(cond_num, 0, operation, value));
 		break;
 	case COND_MULTI:
