@@ -338,6 +338,7 @@ FUNCPTR(D2COMMON, CopyStatList, DWORD __stdcall, (StatList* pStatList, Stat* pSt
 FUNCPTR(D2COMMON, GetBaseStatSigned, int __stdcall, (UnitAny* pUnit, int nStat, int nLayer), -10587, -10216)
 FUNCPTR(D2COMMON, GetUnitStat, DWORD __stdcall, (UnitAny* pUnit, DWORD dwStat, DWORD dwStat2), -10973, -10550)
 FUNCPTR(D2COMMON, GetUnitState, int __stdcall, (UnitAny* pUnit, DWORD dwStateNo), -10494, -10706)
+FUNCPTR(D2COMMON, GetStateStatList, StatList* __stdcall, (UnitAny* pUnit, DWORD dwStateNo), -10871)
 FUNCPTR(D2COMMON, GetStatValueFromStatList, int __stdcall, (StatList* pStatList, int statId, WORD nLayer), -10680)
 
 FUNCPTR(D2COMMON, CheckUnitCollision, DWORD __stdcall, (UnitAny* pUnitA, UnitAny* pUnitB, DWORD dwBitMask), -10839, -10221)

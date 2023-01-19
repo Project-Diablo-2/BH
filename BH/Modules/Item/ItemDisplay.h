@@ -1139,3 +1139,4 @@ BYTE GetAffixLevel(BYTE ilvl,
 	BYTE mlvl);
 BYTE GetRequiredLevel(UnitAny* item);
 BYTE RuneNumberFromItemCode(char* code);
+int GetStatFromList(UnitItemInfo* uInfo, int itemStat);

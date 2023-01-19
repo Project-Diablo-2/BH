@@ -968,8 +968,15 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			{
 				auto value = D2COMMON_GetUnitStat(item, stat, 0);
 				// Hp and mana need adjusting
-				if (stat == 7 || stat == 9)
+				if (stat == STAT_MAXHP || stat == STAT_MAXMANA)
+				{
 					value /= 256;
+				}
+				// These stat values need to be grabbed differently, otherwise they just return 0
+				else if (stat == STAT_ENHANCEDDEFENSE || stat == STAT_ENHANCEDMAXIMUMDAMAGE || stat == STAT_ENHANCEDMINIMUMDAMAGE)
+				{
+					value = GetStatFromList(uInfo, stat);
+				}
 				sprintf_s(statVal, "%d", value);
 			}
 			name.replace(
@@ -2412,17 +2419,7 @@ bool EDCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		// Normal %ED will have the same value for STAT_ENHANCEDMAXIMUMDAMAGE and STAT_ENHANCEDMINIMUMDAMAGE
 		stat = STAT_ENHANCEDMAXIMUMDAMAGE;
 	}
-
-	// Pulled from JSUnit.cpp in d2bs
-	DWORD     value = 0;
-	Stat      aStatList[256] = { NULL };
-	StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
-	if (pStatList)
-	{
-		DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
-		for (UINT i = 0; i < dwStats; i++) { if (aStatList[i].wStatIndex == stat && aStatList[i].wSubIndex == 0) { value += aStatList[i].dwStatValue; } }
-	}
-	return IntegerCompare(value, operation, targetED);
+	return IntegerCompare(GetStatFromList(uInfo, stat), operation, targetED);
 }
 
 bool EDCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2824,7 +2821,18 @@ bool DifficultyCondition::EvaluateInternalFromPacket(ItemInfo* info,
 bool ItemStatCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(D2COMMON_GetUnitStat(uInfo->item, itemStat, itemStat2), operation, targetStat);
+	int newTarget = targetStat;
+	if (itemStat == STAT_MAXHP || itemStat == STAT_MAXMANA)
+	{
+		newTarget *= 256;
+	}
+	// These stat values need to be grabbed differently, otherwise they just return 0
+	else if (itemStat == STAT_ENHANCEDDEFENSE || itemStat == STAT_ENHANCEDMAXIMUMDAMAGE || itemStat == STAT_ENHANCEDMINIMUMDAMAGE)
+	{
+		return IntegerCompare(GetStatFromList(uInfo, itemStat), operation, targetStat);
+	}
+	return IntegerCompare(D2COMMON_GetUnitStat(uInfo->item, itemStat, itemStat2), operation, newTarget);
+
 }
 
 bool ItemStatCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2966,6 +2974,36 @@ int GetDefense(ItemInfo* item)
 		}
 	}
 	return def;
+}
+
+int GetStatFromList(UnitItemInfo* uInfo, int itemStat)
+{
+	int value = 0;
+	StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+	int sockets = D2COMMON_GetUnitStat(uInfo->item, STAT_SOCKETS, 0);
+
+	if (pStatList)
+	{
+		value += D2COMMON_GetStatValueFromStatList(pStatList, itemStat, 0);
+	}
+
+	if (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD)
+	{
+		StatList* pStateStatList = D2COMMON_GetStateStatList(uInfo->item, 171);  // 171=runeword
+		if (pStateStatList)
+		{
+			value += D2COMMON_GetStatValueFromStatList(pStateStatList, itemStat, 0);
+		}
+	}
+
+	if (sockets)
+	{
+		for (UnitAny* sItem = uInfo->item->pInventory->pFirstItem; sItem; sItem = sItem->pItemData->pNextInvItem)
+		{
+			value += D2COMMON_GetUnitStat(sItem, itemStat, 0);
+		}
+	}
+	return value;
 }
 
 void HandleUnknownItemCode(char* code,
