@@ -12,6 +12,8 @@ public:
 	static map<std::string, Toggle> Toggles;
 	unsigned int resyncKey;
 	unsigned int advStatMenuKey;
+	unsigned int reloadConfig;
+	unsigned int reloadConfigCtrl;
 
 	GameSettings() : Module("GameSettings") {};
 	~GameSettings() {};
