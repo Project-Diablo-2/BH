@@ -306,6 +306,7 @@ ItemAttributes ItemAttributeList[] = {
 	{"Flawless Ruby", "glrs", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 264, 0},
 	{"Perfect Ruby", "gprs", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 272, 0},
 	{"Flawless Diamond", "glws", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 72, 0},
+	{"Perfect Diamond", "gpws", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 80, 0 },
 	{"Flawless Skull", "skls", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 2056, 0},
 	{"Perfect Skull", "skzs", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 2064, 0},
 	{"Minor Healing Potion", "hp1", "Health Potion", 1, 1, 0, 1, 0, 0, 0, 0, 0, 0},
