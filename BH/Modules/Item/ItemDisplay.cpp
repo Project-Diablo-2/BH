@@ -574,6 +574,7 @@ std::map<std::string, FilterCondition> condition_map =
 	{"GEMMED", COND_GEMMED},
 	{"GEMTYPE", COND_GEMTYPE},
 	{"GEM", COND_GEM},
+	{"GEMLEVEL", COND_GEM},
 	{"ED", COND_ED},
 	{"DEF", COND_DEF},
 	{"MAXDUR", COND_MAXDUR},
