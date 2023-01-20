@@ -2609,126 +2609,142 @@ bool OneHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
-	WeaponType weapon_type = (weapon_number == 0)
-		? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-	bool is_onehanded = false;
-
-	if (weapon_type == WeaponType::kAxe ||
-		weapon_type == WeaponType::kWand ||
-		weapon_type == WeaponType::kClub ||
-		weapon_type == WeaponType::kScepter ||
-		weapon_type == WeaponType::kMace ||
-		weapon_type == WeaponType::kHammer ||
-		weapon_type == WeaponType::kSword ||
-		weapon_type == WeaponType::kKnife ||
-		weapon_type == WeaponType::kThrowing ||
-		weapon_type == WeaponType::kJavelin ||
-		weapon_type == WeaponType::kThrowingPot ||
-		weapon_type == WeaponType::kClaw1 ||
-		weapon_type == WeaponType::kClaw2 ||
-		weapon_type == WeaponType::kOrb ||
-		weapon_type == WeaponType::kAmaJav
-
-		)
+	if (code_to_dwtxtfileno.find(uInfo->itemCode) != code_to_dwtxtfileno.end())
 	{
-		is_onehanded = true;
-	}
+		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_onehanded = false;
 
-	return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+		if (weapon_type == WeaponType::kAxe ||
+			weapon_type == WeaponType::kWand ||
+			weapon_type == WeaponType::kClub ||
+			weapon_type == WeaponType::kScepter ||
+			weapon_type == WeaponType::kMace ||
+			weapon_type == WeaponType::kHammer ||
+			weapon_type == WeaponType::kSword ||
+			weapon_type == WeaponType::kKnife ||
+			weapon_type == WeaponType::kThrowing ||
+			weapon_type == WeaponType::kJavelin ||
+			weapon_type == WeaponType::kThrowingPot ||
+			weapon_type == WeaponType::kClaw1 ||
+			weapon_type == WeaponType::kClaw2 ||
+			weapon_type == WeaponType::kOrb ||
+			weapon_type == WeaponType::kAmaJav
+			)
+		{
+			is_onehanded = true;
+		}
+
+		return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool OneHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	int weapon_number = code_to_dwtxtfileno[info->code];
-	WeaponType weapon_type = (weapon_number == 0)
-		? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-	bool is_onehanded = false;
-
-	if (weapon_type == WeaponType::kAxe ||
-		weapon_type == WeaponType::kWand ||
-		weapon_type == WeaponType::kClub ||
-		weapon_type == WeaponType::kScepter ||
-		weapon_type == WeaponType::kMace ||
-		weapon_type == WeaponType::kHammer ||
-		weapon_type == WeaponType::kSword ||
-		weapon_type == WeaponType::kKnife ||
-		weapon_type == WeaponType::kThrowing ||
-		weapon_type == WeaponType::kJavelin ||
-		weapon_type == WeaponType::kThrowingPot ||
-		weapon_type == WeaponType::kClaw1 ||
-		weapon_type == WeaponType::kClaw2 ||
-		weapon_type == WeaponType::kOrb ||
-		weapon_type == WeaponType::kAmaJav
-
-		)
+	if (code_to_dwtxtfileno.find(info->code) != code_to_dwtxtfileno.end())
 	{
-		is_onehanded = true;
-	}
+		int weapon_number = code_to_dwtxtfileno[info->code];
+		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_onehanded = false;
 
-	return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+		if (weapon_type == WeaponType::kAxe ||
+			weapon_type == WeaponType::kWand ||
+			weapon_type == WeaponType::kClub ||
+			weapon_type == WeaponType::kScepter ||
+			weapon_type == WeaponType::kMace ||
+			weapon_type == WeaponType::kHammer ||
+			weapon_type == WeaponType::kSword ||
+			weapon_type == WeaponType::kKnife ||
+			weapon_type == WeaponType::kThrowing ||
+			weapon_type == WeaponType::kJavelin ||
+			weapon_type == WeaponType::kThrowingPot ||
+			weapon_type == WeaponType::kClaw1 ||
+			weapon_type == WeaponType::kClaw2 ||
+			weapon_type == WeaponType::kOrb ||
+			weapon_type == WeaponType::kAmaJav
+			)
+		{
+			is_onehanded = true;
+		}
+
+		return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool TwoHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
-	WeaponType weapon_type = (weapon_number == 0)
-		? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-	bool is_twohanded = false;
-
-	if (weapon_type == WeaponType::kAxe2H ||
-		weapon_type == WeaponType::kHammer2H ||
-		weapon_type == WeaponType::kSword2H ||
-		weapon_type == WeaponType::kSpear ||
-		weapon_type == WeaponType::kPole ||
-		weapon_type == WeaponType::kStaff ||
-		weapon_type == WeaponType::kBow ||
-		weapon_type == WeaponType::kCrossbow ||
-		weapon_type == WeaponType::kAmaBow ||
-		weapon_type == WeaponType::kAmaSpear
-
-		)
+	if (code_to_dwtxtfileno.find(uInfo->itemCode) != code_to_dwtxtfileno.end())
 	{
-		is_twohanded = true;
-	}
+		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_twohanded = false;
 
-	return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+		if (weapon_type == WeaponType::kAxe2H ||
+			weapon_type == WeaponType::kHammer2H ||
+			weapon_type == WeaponType::kSword2H ||
+			weapon_type == WeaponType::kSpear ||
+			weapon_type == WeaponType::kPole ||
+			weapon_type == WeaponType::kStaff ||
+			weapon_type == WeaponType::kBow ||
+			weapon_type == WeaponType::kCrossbow ||
+			weapon_type == WeaponType::kAmaBow ||
+			weapon_type == WeaponType::kAmaSpear
+			)
+		{
+			is_twohanded = true;
+		}
+
+		return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool TwoHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	int weapon_number = code_to_dwtxtfileno[info->code];
-	WeaponType weapon_type = (weapon_number == 0)
-		? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-	bool is_twohanded = false;
-
-	if (weapon_type == WeaponType::kAxe2H ||
-		weapon_type == WeaponType::kHammer2H ||
-		weapon_type == WeaponType::kSword2H ||
-		weapon_type == WeaponType::kSpear ||
-		weapon_type == WeaponType::kPole ||
-		weapon_type == WeaponType::kStaff ||
-		weapon_type == WeaponType::kBow ||
-		weapon_type == WeaponType::kCrossbow ||
-		weapon_type == WeaponType::kAmaBow ||
-		weapon_type == WeaponType::kAmaSpear
-
-		)
+	if (code_to_dwtxtfileno.find(info->code) != code_to_dwtxtfileno.end())
 	{
-		is_twohanded = true;
-	}
+		int weapon_number = code_to_dwtxtfileno[info->code];
+		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_twohanded = false;
 
-	return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+		if (weapon_type == WeaponType::kAxe2H ||
+			weapon_type == WeaponType::kHammer2H ||
+			weapon_type == WeaponType::kSword2H ||
+			weapon_type == WeaponType::kSpear ||
+			weapon_type == WeaponType::kPole ||
+			weapon_type == WeaponType::kStaff ||
+			weapon_type == WeaponType::kBow ||
+			weapon_type == WeaponType::kCrossbow ||
+			weapon_type == WeaponType::kAmaBow ||
+			weapon_type == WeaponType::kAmaSpear
+			)
+		{
+			is_twohanded = true;
+		}
+
+		return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool GemmedCondition::EvaluateInternal(UnitItemInfo* uInfo,
