@@ -641,7 +641,7 @@ std::map<std::string, FilterCondition> condition_map =
 	{"WAND", COND_WAND},
 	{"SCEPTER", COND_SCEPTER},
 	{"EQ1", COND_HELM},
-	{"EQ2", COND_ARMOR},
+	{"EQ2", COND_CHEST},
 	{"EQ3", COND_SHIELD},
 	{"EQ4", COND_GLOVES},
 	{"EQ5", COND_BOOTS},
