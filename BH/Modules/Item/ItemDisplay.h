@@ -91,21 +91,21 @@ struct ItemInfo
 	BYTE                       sockets;
 	bool                       equipped;
 	bool                       inSocket;
-	bool                       identified;
-	bool                       switchedIn;
-	bool                       switchedOut;
-	bool                       broken;
+	bool                       identified;		// ITEM_IDENTIFIED
+	bool                       switchedIn;		// ITEM_SWITCHIN
+	bool                       switchedOut;		// ITEM_SWITCHOUT
+	bool                       broken;			// ITEM_BROKEN
 	bool                       potion;
-	bool                       hasSockets;
-	bool                       inStore;
+	bool                       hasSockets;		// ITEM_HASSOCKETS
+	bool                       inStore;			// ITEM_NEW
 	bool                       notInSocket;
-	bool                       ear;
-	bool                       startItem;
-	bool                       simpleItem;
-	bool                       ethereal;
-	bool                       personalized;
+	bool                       ear;				// ITEM_ISEAR
+	bool                       startItem;		// ITEM_STARTITEM
+	bool                       simpleItem;		// ITEM_COMPACTSAVE
+	bool                       ethereal;		// ITEM_ETHEREAL
+	bool                       personalized;	// ITEM_PERSONALIZED
 	bool                       gambling;
-	bool                       runeword;
+	bool                       runeword;		// ITEM_RUNEWORD
 	bool                       ground;
 	bool                       unspecifiedDirectory;
 	bool                       isGold;

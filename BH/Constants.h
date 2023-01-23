@@ -1149,14 +1149,14 @@ enum QuestFlags {
 
 ///////////////////////////////////////////////////
 // Item Attributes (From D2jsp scripting document)
+// https://d2mods.info/forum/viewtopic.php?p=486829#p486829
 ///////////////////////////////////////////////////
 #define ITEM_IDENTIFIED			0x00000010 // Identified
 #define ITEM_SWITCHIN			0x00000040 // Switched in(activated)
 #define ITEM_SWITCHOUT			0x00000080 // Switched out(deactivated)
 #define ITEM_BROKEN				0x00000100 // Broken(0 durability)
 #define ITEM_HASSOCKETS			0x00000800 // Has sockets
-#define ITEM_INSTORE			0x00002000 // In npc store or gamble screen
-#define ITEM_NEW				0x00002000 // In npc store or gamble screen
+#define ITEM_NEW				0x00002000 // Set when an item first drops
 #define ITEM_ISEAR				0x00010000 // Player's ear
 #define ITEM_STARTITEM			0x00020000 // Start item(1 selling/repair value)
 #define ITEM_COMPACTSAVE		0x00200000 

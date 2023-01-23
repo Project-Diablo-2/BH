@@ -2603,7 +2603,7 @@ bool ShopCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(info->inStore, (BYTE)EQUAL, true);
+	return false;
 }
 
 bool OneHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
