@@ -2568,7 +2568,7 @@ bool EquippedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	{
 		if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId == D2CLIENT_GetPlayerUnit()->dwUnitId)
 		{
-			if (uInfo->item->pItemData->BodyLocation > 0)
+			if (uInfo->item->pItemData->BodyLocation > 0 && uInfo->item->pItemData->ItemLocation == STORAGE_NULL)
 			{
 				is_equipped = true;
 			}
@@ -2582,7 +2582,7 @@ bool EquippedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(info->equipped, (BYTE)EQUAL, true);
+	return false;
 }
 
 bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
