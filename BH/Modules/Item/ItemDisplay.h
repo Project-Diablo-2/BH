@@ -1120,9 +1120,9 @@ int    ParseMapColor(Action* act,
 void HandleUnknownItemCode(char* code,
 	char* tag);
 BYTE        GetOperation(string* op);
-inline bool IntegerCompare(unsigned int Lvalue,
+inline bool IntegerCompare(int Lvalue,
 	int          operation,
-	unsigned int Rvalue);
+	int Rvalue);
 void GetItemName(UnitItemInfo* uInfo,
 	string& name);
 void SubstituteNameVariables(UnitItemInfo* uInfo,

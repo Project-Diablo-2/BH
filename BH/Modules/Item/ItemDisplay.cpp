@@ -1076,10 +1076,10 @@ unsigned int GetItemCodeIndex(char codeChar)
 	return codeChar - (codeChar < 90 ? 48 : 87);
 }
 
-bool IntegerCompare(unsigned int Lvalue,
+bool IntegerCompare(int Lvalue,
 	BYTE         operation,
-	unsigned int Rvalue,
-	unsigned int Bvalue = 0)
+	int Rvalue,
+	int Bvalue = 0)
 {
 	switch (operation)
 	{
