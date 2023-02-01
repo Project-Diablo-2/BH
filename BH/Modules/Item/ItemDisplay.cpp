@@ -448,6 +448,8 @@ enum FilterCondition
 	COND_GEMTYPE,
 	COND_GEM,
 	COND_ED,
+	COND_EDEF,
+	COND_EDAM,
 	COND_DEF,
 	COND_MAXDUR,
 	COND_RES,
@@ -537,6 +539,7 @@ std::map<std::string, FilterCondition> condition_map =
 	{"||", COND_OR},
 	{"ETH", COND_ETH},
 	{"SOCK", COND_SOCK},
+	{"SOCKETS", COND_SOCK},
 	{"SET", COND_SET},
 	{"MAG", COND_MAG},
 	{"RARE", COND_RARE},
@@ -576,6 +579,8 @@ std::map<std::string, FilterCondition> condition_map =
 	{"GEM", COND_GEM},
 	{"GEMLEVEL", COND_GEM},
 	{"ED", COND_ED},
+	{"EDEF", COND_EDEF},
+	{"EDAM", COND_EDAM},
 	{"DEF", COND_DEF},
 	{"MAXDUR", COND_MAXDUR},
 	{"RES", COND_RES},
@@ -1624,6 +1629,12 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		break;
 	case COND_ED:
 		Condition::AddOperand(conditions, new EDCondition(operation, value));
+		break;
+	case COND_EDEF:
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ENHANCEDDEFENSE, 0, operation, value));
+		break;
+	case COND_EDAM:
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ENHANCEDMAXIMUMDAMAGE, 0, operation, value));
 		break;
 	case COND_DEF:
 		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DEFENSE, 0, operation, value));
