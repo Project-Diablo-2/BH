@@ -687,6 +687,37 @@ std::map<std::string, FilterCondition> condition_map =
 
 };
 
+std::map<std::string, int> stat_id_map =
+{
+	{"EDEF", STAT_ENHANCEDDEFENSE},
+	{"EDAM", STAT_ENHANCEDMAXIMUMDAMAGE},
+	{"DEF", STAT_DEFENSE},
+	{"FRES", STAT_FIRERESIST},
+	{"CRES", STAT_COLDRESIST},
+	{"LRES", STAT_LIGHTNINGRESIST},
+	{"PRES", STAT_POISONRESIST},
+	{"IAS", STAT_IAS},
+	{"FCR", STAT_FASTERCAST},
+	{"FHR", STAT_FASTERHITRECOVERY},
+	{"FBR", STAT_FASTERBLOCK},
+	{"LIFE", STAT_MAXHP},
+	{"MANA", STAT_MAXMANA},
+	{"ARPER", STAT_TOHITPERCENT},
+	{"MFIND", STAT_MAGICFIND},
+	{"GFIND", STAT_GOLDFIND},
+	{"STR", STAT_STRENGTH},
+	{"DEX", STAT_DEXTERITY},
+	{"FRW", STAT_FASTERRUNWALK},
+	{"MINDMG", STAT_MINIMUMDAMAGE},
+	{"MAXDMG", STAT_MAXIMUMDAMAGE},
+	{"AR", STAT_ATTACKRATING},
+	{"DTM", STAT_DAMAGETOMANA},
+	{"MAEK", STAT_MANAAFTEREACHKILL},
+	{"REPLIFE", STAT_REPLENISHLIFE},
+	{"REPQUANT", STAT_REPLENISHESQUANTITY},
+	{"REPAIR", STAT_REPAIRSDURABILITY},
+};
+
 SkillReplace skills[] = {
 	COMBO_STATS
 };
@@ -959,11 +990,20 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			else { name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, replacements[n].value); }
 		}
 	}
-
-	// stat replacements
-	if (name.find("%STAT-") != string::npos)
+	// Replace named stat output strings with their STAT# counterpart
+	map<string, int>::iterator it;
+	for (it = stat_id_map.begin(); it != stat_id_map.end(); it++)
 	{
-		std::regex  stat_reg("%STAT-([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		while (name.find("%" + it->first + "%") != string::npos)
+		{
+			name.replace(name.find("%" + it->first + "%"), it->first.length() + 2, "%STAT" + std::to_string(it->second) + "%");
+		}
+	}
+
+	// stat & skill replacements
+	if (name.find("%STAT") != string::npos)
+	{
+		std::regex  stat_reg("%STAT([0-9]{1,4})%", std::regex_constants::ECMAScript);
 		std::smatch stat_match;
 
 		while (std::regex_search(name, stat_match, stat_reg))
@@ -983,6 +1023,127 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				{
 					value = GetStatFromList(uInfo, stat);
 				}
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%SK") != string::npos)
+	{
+		std::regex  stat_reg("%SK([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat2 <= (int)SKILL_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(item, STAT_SINGLESKILL, stat2);
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%OS") != string::npos)
+	{
+		std::regex  stat_reg("%OS([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat2 <= (int)SKILL_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(item, STAT_NONCLASSSKILL, stat2);
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%CLSK") != string::npos)
+	{
+		std::regex  stat_reg("%CLSK([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat2 <= (int)SKILL_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(item, STAT_CLASSSKILLS, stat2);
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%TABSK") != string::npos)
+	{
+		std::regex  stat_reg("%TABSK([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat2 <= (int)SKILL_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(item, STAT_SKILLTAB, stat2);
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%MULTI") != string::npos)
+	{
+		std::regex  stat_reg("%MULTI([0-9]{1,4}),([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat = stoi(stat_match[1].str(), nullptr, 10);
+			int stat2 = stoi(stat_match[2].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat <= (int)STAT_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(item, stat, stat2);
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%CHARSTAT") != string::npos)
+	{
+		std::regex  stat_reg("%CHARSTAT([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat = stoi(stat_match[1].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat <= (int)STAT_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat, 0);
 				sprintf_s(statVal, "%d", value);
 			}
 			name.replace(
