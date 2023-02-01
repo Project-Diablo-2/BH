@@ -2308,14 +2308,16 @@ bool MagicPrefixCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		return false;
 	}
 
-	// If the vector is empty then we only have 0/1 suffix on the item and the id is in info->suffix
-	if (info->suffixes.size() == 0)
+	// If the vector is empty then we only have 0/1 prefix on the item and the id is in info->prefix
+	// The ids here also don't match what we get in UnitItemInfo, 
+	// so we need to subtract the total number of suffixes from the expected value(s)
+	if (info->prefixes.size() == 0)
 	{
-		return IntegerCompare(info->suffix, operation, suffixID1, suffixID2);
+		return IntegerCompare(info->prefix, operation, prefixID1 - (int)SUFFIX_MAX, prefixID2 - (int)SUFFIX_MAX);
 	}
-	for (unsigned int i = 0; i < info->suffixes.size(); i++)
+	for (unsigned int i = 0; i < info->prefixes.size(); i++)
 	{
-		if (info->suffixes[i] > 0 ? IntegerCompare(info->suffixes[i], operation, suffixID1, suffixID2) : false)
+		if (info->prefixes[i] > 0 ? IntegerCompare(info->prefixes[i], operation, prefixID1 - (int)SUFFIX_MAX, prefixID2 - (int)SUFFIX_MAX) : false)
 		{
 			return true;
 		}
@@ -2368,16 +2370,14 @@ bool MagicSuffixCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		return false;
 	}
 
-	// If the vector is empty then we only have 0/1 prefix on the item and the id is in info->prefix
-	// The ids here also don't match what we get in UnitItemInfo, 
-	// so we need to subtract the total number of suffixes from the expected value(s)
-	if (info->prefixes.size() == 0)
+	// If the vector is empty then we only have 0/1 suffix on the item and the id is in info->suffix
+	if (info->suffixes.size() == 0)
 	{
-		return IntegerCompare(info->prefix, operation, prefixID1 - (int)SUFFIX_MAX, prefixID2 - (int)SUFFIX_MAX);
+		return IntegerCompare(info->suffix, operation, suffixID1, suffixID2);
 	}
-	for (unsigned int i = 0; i < info->prefixes.size(); i++)
+	for (unsigned int i = 0; i < info->suffixes.size(); i++)
 	{
-		if (info->prefixes[i] > 0 ? IntegerCompare(info->prefixes[i], operation, prefixID1 - (int)SUFFIX_MAX, prefixID2 - (int)SUFFIX_MAX) : false)
+		if (info->suffixes[i] > 0 ? IntegerCompare(info->suffixes[i], operation, suffixID1, suffixID2) : false)
 		{
 			return true;
 		}
