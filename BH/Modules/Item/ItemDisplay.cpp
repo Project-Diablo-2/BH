@@ -1687,7 +1687,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new FlagsCondition(ITEM_ETHEREAL));
 		break;
 	case COND_SOCK:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SOCKETS, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SOCKETS, 0, operation, value, value2));
 		break;
 	case COND_SET:
 		Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_SET));
@@ -1723,7 +1723,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 6));
 		break;
 	case COND_CRAFTALVL:
-		Condition::AddOperand(conditions, new CraftLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new CraftLevelCondition(operation, value, value2));
 		break;
 	case COND_PREFIX:
 		Condition::AddOperand(conditions, new MagicPrefixCondition(operation, value, value2));
@@ -1732,13 +1732,13 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new MagicSuffixCondition(operation, value, value2));
 		break;
 	case COND_AUTOMOD:
-		Condition::AddOperand(conditions, new AutomodCondition(operation, value));
+		Condition::AddOperand(conditions, new AutomodCondition(operation, value, value2));
 		break;
 	case COND_MAPID:
-		Condition::AddOperand(conditions, new MapIdCondition(operation, value));
+		Condition::AddOperand(conditions, new MapIdCondition(operation, value, value2));
 		break;
 	case COND_MAPTIER:
-		Condition::AddOperand(conditions, new MapTierCondition(operation, value));
+		Condition::AddOperand(conditions, new MapTierCondition(operation, value, value2));
 		break;
 	case COND_CRAFT:
 		Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_CRAFT));
@@ -1768,88 +1768,88 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new FlagsCondition(ITEM_IDENTIFIED));
 		break;
 	case COND_ILVL:
-		Condition::AddOperand(conditions, new ItemLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new ItemLevelCondition(operation, value, value2));
 		break;
 	case COND_QLVL:
-		Condition::AddOperand(conditions, new QualityLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new QualityLevelCondition(operation, value, value2));
 		break;
 	case COND_ALVL:
-		Condition::AddOperand(conditions, new AffixLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new AffixLevelCondition(operation, value, value2));
 		break;
 	case COND_CLVL:
-		Condition::AddOperand(conditions, new CharStatCondition(STAT_LEVEL, 0, operation, value));
+		Condition::AddOperand(conditions, new CharStatCondition(STAT_LEVEL, 0, operation, value, value2));
 		break;
 	case COND_FILTLVL:
-		Condition::AddOperand(conditions, new FilterLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new FilterLevelCondition(operation, value, value2));
 		break;
 	case COND_DIFF:
-		Condition::AddOperand(conditions, new DifficultyCondition(operation, value));
+		Condition::AddOperand(conditions, new DifficultyCondition(operation, value, value2));
 		break;
 	case COND_RUNE:
-		Condition::AddOperand(conditions, new RuneCondition(operation, value));
+		Condition::AddOperand(conditions, new RuneCondition(operation, value, value2));
 		break;
 	case COND_GOLD:
-		Condition::AddOperand(conditions, new GoldCondition(operation, value));
+		Condition::AddOperand(conditions, new GoldCondition(operation, value, value2));
 		break;
 	case COND_GEMMED:
 		Condition::AddOperand(conditions, new GemmedCondition());
 		break;
 	case COND_GEMTYPE:
-		Condition::AddOperand(conditions, new GemTypeCondition(operation, value));
+		Condition::AddOperand(conditions, new GemTypeCondition(operation, value, value2));
 		break;
 	case COND_GEM:
-		Condition::AddOperand(conditions, new GemLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new GemLevelCondition(operation, value, value2));
 		break;
 	case COND_ED:
-		Condition::AddOperand(conditions, new EDCondition(operation, value));
+		Condition::AddOperand(conditions, new EDCondition(operation, value, value2));
 		break;
 	case COND_EDEF:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ENHANCEDDEFENSE, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ENHANCEDDEFENSE, 0, operation, value, value2));
 		break;
 	case COND_EDAM:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ENHANCEDMAXIMUMDAMAGE, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ENHANCEDMAXIMUMDAMAGE, 0, operation, value, value2));
 		break;
 	case COND_DEF:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DEFENSE, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DEFENSE, 0, operation, value, value2));
 		break;
 	case COND_MAXDUR:
-		Condition::AddOperand(conditions, new DurabilityCondition(operation, value));
+		Condition::AddOperand(conditions, new DurabilityCondition(operation, value, value2));
 		break;
 	case COND_RES:
-		Condition::AddOperand(conditions, new ResistAllCondition(operation, value));
+		Condition::AddOperand(conditions, new ResistAllCondition(operation, value, value2));
 		break;
 	case COND_FRES:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FIRERESIST, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FIRERESIST, 0, operation, value, value2));
 		break;
 	case COND_CRES:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_COLDRESIST, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_COLDRESIST, 0, operation, value, value2));
 		break;
 	case COND_LRES:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_LIGHTNINGRESIST, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_LIGHTNINGRESIST, 0, operation, value, value2));
 		break;
 	case COND_PRES:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_POISONRESIST, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_POISONRESIST, 0, operation, value, value2));
 		break;
 	case COND_IAS:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_IAS, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_IAS, 0, operation, value, value2));
 		break;
 	case COND_FCR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERCAST, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERCAST, 0, operation, value, value2));
 		break;
 	case COND_FHR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERHITRECOVERY, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERHITRECOVERY, 0, operation, value, value2));
 		break;
 	case COND_FBR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERBLOCK, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERBLOCK, 0, operation, value, value2));
 		break;
 	case COND_LIFE:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXHP, 0, operation, value * 256));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXHP, 0, operation, value * 256, value2 * 256));
 		break;
 	case COND_MANA:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXMANA, 0, operation, value * 256));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXMANA, 0, operation, value * 256, value2 * 256));
 		break;
 	case COND_QTY:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_AMMOQUANTITY, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_AMMOQUANTITY, 0, operation, value, value2));
 		break;
 	case COND_GOODSK:
 		Condition::AddOperand(conditions, new SkillListCondition(operation, CLASS_SKILLS, value));
@@ -1861,49 +1861,49 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new FoolsCondition());
 		break;
 	case COND_LVLREQ:
-		Condition::AddOperand(conditions, new RequiredLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new RequiredLevelCondition(operation, value, value2));
 		break;
 	case COND_ARPER:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_TOHITPERCENT, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_TOHITPERCENT, 0, operation, value, value2));
 		break;
 	case COND_MFIND:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAGICFIND, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAGICFIND, 0, operation, value, value2));
 		break;
 	case COND_GFIND:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_GOLDFIND, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_GOLDFIND, 0, operation, value, value2));
 		break;
 	case COND_STR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_STRENGTH, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_STRENGTH, 0, operation, value, value2));
 		break;
 	case COND_DEX:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DEXTERITY, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DEXTERITY, 0, operation, value, value2));
 		break;
 	case COND_FRW:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERRUNWALK, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERRUNWALK, 0, operation, value, value2));
 		break;
 	case COND_MINDMG:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MINIMUMDAMAGE, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MINIMUMDAMAGE, 0, operation, value, value2));
 		break;
 	case COND_MAXDMG:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXIMUMDAMAGE, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXIMUMDAMAGE, 0, operation, value, value2));
 		break;
 	case COND_AR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ATTACKRATING, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ATTACKRATING, 0, operation, value, value2));
 		break;
 	case COND_DTM:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DAMAGETOMANA, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DAMAGETOMANA, 0, operation, value, value2));
 		break;
 	case COND_MAEK:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MANAAFTEREACHKILL, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MANAAFTEREACHKILL, 0, operation, value, value2));
 		break;
 	case COND_REPLIFE:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPLENISHLIFE, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPLENISHLIFE, 0, operation, value, value2));
 		break;
 	case COND_REPQUANT:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPLENISHESQUANTITY, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPLENISHESQUANTITY, 0, operation, value, value2));
 		break;
 	case COND_REPAIR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPAIRSDURABILITY, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPAIRSDURABILITY, 0, operation, value, value2));
 		break;
 	case COND_ARMOR:
 		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ALLARMOR));
@@ -2006,35 +2006,35 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		break;
 	case COND_SK:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)SKILL_MAX) { break; }
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SINGLESKILL, cond_num, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SINGLESKILL, cond_num, operation, value, value2));
 		break;
 	case COND_OS:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)SKILL_MAX) { break; }
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_NONCLASSSKILL, cond_num, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_NONCLASSSKILL, cond_num, operation, value, value2));
 		break;
 	case COND_CHSK:
 		// skills granted by charges
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)SKILL_MAX) { break; }
-		Condition::AddOperand(conditions, new ChargedCondition(operation, cond_num, value));
+		Condition::AddOperand(conditions, new ChargedCondition(operation, cond_num, value, value2));
 		break;
 	case COND_CLSK:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >= CLASS_NA) { break; }
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_CLASSSKILLS, cond_num, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_CLASSSKILLS, cond_num, operation, value, value2));
 		break;
 	case COND_ALLSK:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ALLSKILLS, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ALLSKILLS, 0, operation, value, value2));
 		break;
 	case COND_TABSK:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num > SKILLTAB_MAX) { break; }
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SKILLTAB, cond_num, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SKILLTAB, cond_num, operation, value, value2));
 		break;
 	case COND_STAT:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)STAT_MAX) { break; }
-		Condition::AddOperand(conditions, new ItemStatCondition(cond_num, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(cond_num, 0, operation, value, value2));
 		break;
 	case COND_CHARSTAT:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)STAT_MAX) { break; }
-		Condition::AddOperand(conditions, new CharStatCondition(cond_num, 0, operation, value));
+		Condition::AddOperand(conditions, new CharStatCondition(cond_num, 0, operation, value, value2));
 		break;
 	case COND_MULTI:
 		if (std::regex_search(key, multi_match, multi_reg))
@@ -2043,11 +2043,11 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 			stat1 = stoi(multi_match[1].str(), nullptr, 10);
 			stat2 = stoi(multi_match[2].str(), nullptr, 10);
 
-			Condition::AddOperand(conditions, new ItemStatCondition(stat1, stat2, operation, value));
+			Condition::AddOperand(conditions, new ItemStatCondition(stat1, stat2, operation, value, value2));
 		}
 		break;
 	case COND_PRICE:
-		Condition::AddOperand(conditions, new ItemPriceCondition(operation, value));
+		Condition::AddOperand(conditions, new ItemPriceCondition(operation, value, value2));
 		break;
 	case COND_ITEMCODE:
 		Condition::AddOperand(conditions, new ItemCodeCondition(key.substr(0, 4).c_str()));
@@ -2099,10 +2099,10 @@ bool Condition::Evaluate(UnitItemInfo* uInfo,
 }
 
 bool FilterLevelCondition::EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2) {
-	return IntegerCompare(Item::GetFilterLevel(), operation, filterLevel);
+	return IntegerCompare(Item::GetFilterLevel(), operation, filterLevel, filterLevel2);
 }
 bool FilterLevelCondition::EvaluateInternalFromPacket(ItemInfo* info, Condition* arg1, Condition* arg2) {
-	return IntegerCompare(Item::GetFilterLevel(), operation, filterLevel);
+	return IntegerCompare(Item::GetFilterLevel(), operation, filterLevel, filterLevel2);
 }
 
 bool TrueCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2259,7 +2259,7 @@ bool GemLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsGem(uInfo->attrs)) { return IntegerCompare(GetGemLevel(uInfo->attrs), operation, gemLevel); }
+	if (IsGem(uInfo->attrs)) { return IntegerCompare(GetGemLevel(uInfo->attrs), operation, gemLevel, gemLevel2); }
 	return false;
 }
 
@@ -2267,7 +2267,7 @@ bool GemLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsGem(info->attrs)) { return IntegerCompare(GetGemLevel(info->attrs), operation, gemLevel); }
+	if (IsGem(info->attrs)) { return IntegerCompare(GetGemLevel(info->attrs), operation, gemLevel, gemLevel2); }
 	return false;
 }
 
@@ -2275,7 +2275,7 @@ bool GemTypeCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsGem(uInfo->attrs)) { return IntegerCompare(GetGemType(uInfo->attrs), operation, gemType); }
+	if (IsGem(uInfo->attrs)) { return IntegerCompare(GetGemType(uInfo->attrs), operation, gemType, gemType2); }
 	return false;
 }
 
@@ -2283,7 +2283,7 @@ bool GemTypeCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsGem(info->attrs)) { return IntegerCompare(GetGemType(info->attrs), operation, gemType); }
+	if (IsGem(info->attrs)) { return IntegerCompare(GetGemType(info->attrs), operation, gemType, gemType2); }
 	return false;
 }
 
@@ -2291,7 +2291,7 @@ bool RuneCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsRune(uInfo->attrs)) { return IntegerCompare(RuneNumberFromItemCode(uInfo->itemCode), operation, runeNumber); }
+	if (IsRune(uInfo->attrs)) { return IntegerCompare(RuneNumberFromItemCode(uInfo->itemCode), operation, runeNumber, runeNumber2); }
 	return false;
 }
 
@@ -2299,7 +2299,7 @@ bool RuneCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsRune(info->attrs)) { return IntegerCompare(RuneNumberFromItemCode(info->code), operation, runeNumber); }
+	if (IsRune(info->attrs)) { return IntegerCompare(RuneNumberFromItemCode(info->code), operation, runeNumber, runeNumber2); }
 	return false;
 }
 
@@ -2314,20 +2314,20 @@ bool GoldCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (info->code[0] == 'g' && info->code[1] == 'l' && info->code[2] == 'd') { return IntegerCompare(info->amount, operation, goldAmount); }
+	if (info->code[0] == 'g' && info->code[1] == 'l' && info->code[2] == 'd') { return IntegerCompare(info->amount, operation, goldAmount, goldAmount2); }
 	return false;
 }
 
 bool ItemLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(uInfo->item->pItemData->dwItemLevel, operation, itemLevel);
+	return IntegerCompare(uInfo->item->pItemData->dwItemLevel, operation, itemLevel, itemLevel2);
 }
 
 bool ItemLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(info->level, operation, itemLevel);
+	return IntegerCompare(info->level, operation, itemLevel, itemLevel2);
 }
 
 bool QualityLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2335,7 +2335,7 @@ bool QualityLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg2)
 {
 	BYTE qlvl = uInfo->attrs->qualityLevel;
-	return IntegerCompare(qlvl, operation, qualityLevel);
+	return IntegerCompare(qlvl, operation, qualityLevel, qualityLevel2);
 }
 
 bool QualityLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2343,7 +2343,7 @@ bool QualityLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg2)
 {
 	int qlvl = info->attrs->qualityLevel;
-	return IntegerCompare(qlvl, operation, qualityLevel);
+	return IntegerCompare(qlvl, operation, qualityLevel, qualityLevel2);
 }
 
 bool AffixLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2352,7 +2352,7 @@ bool AffixLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 {
 	BYTE qlvl = uInfo->attrs->qualityLevel;
 	BYTE alvl = GetAffixLevel((BYTE)uInfo->item->pItemData->dwItemLevel, (BYTE)uInfo->attrs->qualityLevel, uInfo->attrs->magicLevel);
-	return IntegerCompare(alvl, operation, affixLevel);
+	return IntegerCompare(alvl, operation, affixLevel, affixLevel2);
 }
 
 bool AffixLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2361,7 +2361,7 @@ bool AffixLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 {
 	int  qlvl = info->attrs->qualityLevel;
 	BYTE alvl = GetAffixLevel(info->level, info->attrs->qualityLevel, info->attrs->magicLevel);
-	return IntegerCompare(alvl, operation, affixLevel);
+	return IntegerCompare(alvl, operation, affixLevel, affixLevel2);
 }
 
 bool MapIdCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2370,7 +2370,7 @@ bool MapIdCondition::EvaluateInternal(UnitItemInfo* uInfo,
 {
 	auto map_id = **Var_D2CLIENT_MapId();
 
-	return IntegerCompare(map_id, operation, mapId);
+	return IntegerCompare(map_id, operation, mapId, mapId2);
 }
 
 bool MapIdCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2379,21 +2379,21 @@ bool MapIdCondition::EvaluateInternalFromPacket(ItemInfo* info,
 {
 	auto map_id = **Var_D2CLIENT_MapId();
 
-	return IntegerCompare(map_id, operation, mapId);
+	return IntegerCompare(map_id, operation, mapId, mapId2);
 }
 
 bool MapTierCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(maptiers.at(uInfo->attrs->category), operation, mapTier);
+	return IntegerCompare(maptiers.at(uInfo->attrs->category), operation, mapTier, mapTier2);
 }
 
 bool MapTierCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(maptiers.at(info->attrs->category), operation, mapTier);
+	return IntegerCompare(maptiers.at(info->attrs->category), operation, mapTier, mapTier2);
 }
 
 bool CraftLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2413,7 +2413,7 @@ bool CraftLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	//(4) if ilvl < (99 – int(qlvl/2)= then affix level = ilvl - int(qlvl/2) else affix level = ilvl * 2 - 99.
 	auto craft_alvl = craft_ilvl < (99 - qlvl_int / 2) ? craft_ilvl - qlvl_int / 2 : craft_ilvl * 2 - 99;
 
-	return IntegerCompare(craft_alvl, operation, craftLevel);
+	return IntegerCompare(craft_alvl, operation, craftLevel, craftLevel2);
 }
 
 bool CraftLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2433,7 +2433,7 @@ bool CraftLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	//(4) if ilvl < (99 – int(qlvl/2)= then affix level = ilvl - int(qlvl/2) else affix level = ilvl * 2 - 99.
 	auto craft_alvl = craft_ilvl < (99 - qlvl_int / 2) ? craft_ilvl - qlvl_int / 2 : craft_ilvl * 2 - 99;
 
-	return IntegerCompare(craft_alvl, operation, craftLevel);
+	return IntegerCompare(craft_alvl, operation, craftLevel, craftLevel2);
 }
 
 
@@ -2570,7 +2570,7 @@ bool AutomodCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		return false;
 	}
 
-	return IntegerCompare(itemData->wAutoPrefix, operation, automodID);
+	return IntegerCompare(itemData->wAutoPrefix, operation, automodID, automodID2);
 }
 
 bool AutomodCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2604,7 +2604,7 @@ bool RequiredLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 {
 	unsigned int rlvl = GetRequiredLevel(uInfo->item);
 
-	return IntegerCompare(rlvl, operation, requiredLevel);
+	return IntegerCompare(rlvl, operation, requiredLevel, requiredLevel2);
 }
 
 bool RequiredLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2640,7 +2640,7 @@ bool EDCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		// Normal %ED will have the same value for STAT_ENHANCEDMAXIMUMDAMAGE and STAT_ENHANCEDMINIMUMDAMAGE
 		stat = STAT_ENHANCEDMAXIMUMDAMAGE;
 	}
-	return IntegerCompare(GetStatFromList(uInfo, stat), operation, targetED);
+	return IntegerCompare(GetStatFromList(uInfo, stat), operation, targetED, targetED2);
 }
 
 bool EDCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2658,7 +2658,7 @@ bool EDCondition::EvaluateInternalFromPacket(ItemInfo* info,
 
 	DWORD value = 0;
 	for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++) { if (prop->stat == stat) { value += prop->value; } }
-	return IntegerCompare(value, operation, targetED);
+	return IntegerCompare(value, operation, targetED, targetED2);
 }
 
 bool DurabilityCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2674,7 +2674,7 @@ bool DurabilityCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
 		for (UINT i = 0; i < dwStats; i++) { if (aStatList[i].wStatIndex == STAT_ENHANCEDMAXDURABILITY && aStatList[i].wSubIndex == 0) { value += aStatList[i].dwStatValue; } }
 	}
-	return IntegerCompare(value, operation, targetDurability);
+	return IntegerCompare(value, operation, targetDurability, targetDurability2);
 }
 
 bool DurabilityCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2686,7 +2686,7 @@ bool DurabilityCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	{
 		if (prop->stat == STAT_ENHANCEDMAXDURABILITY) { value += prop->value; }
 	}
-	return IntegerCompare(value, operation, targetDurability);
+	return IntegerCompare(value, operation, targetDurability, targetDurability2);
 }
 
 bool ChargedCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2711,7 +2711,7 @@ bool ChargedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 			}
 		}
 	}
-	return IntegerCompare(value, operation, targetLevel);
+	return IntegerCompare(value, operation, targetLevel, targetLevel2);
 }
 
 bool ChargedCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2727,7 +2727,7 @@ bool ChargedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 			//PrintText(1, "Found charged skill. skill=%u level=%u", prop->skill, prop->level);
 		}
 	}
-	return IntegerCompare(num, operation, targetLevel);
+	return IntegerCompare(num, operation, targetLevel, targetLevel2);
 }
 
 bool FoolsCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -3033,42 +3033,44 @@ bool SkillListCondition::EvaluateInternalFromPacket(ItemInfo* info,
 bool CharStatCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat1, stat2), operation, targetStat);
+	return IntegerCompare(D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat1, stat2), operation, targetStat, targetStat2);
 }
 
 bool CharStatCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat1, stat2), operation, targetStat);
+	return IntegerCompare(D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat1, stat2), operation, targetStat, targetStat2);
 }
 
 bool DifficultyCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(D2CLIENT_GetDifficulty(), operation, targetDiff);
+	return IntegerCompare(D2CLIENT_GetDifficulty(), operation, targetDiff, targetDiff2);
 }
 
 bool DifficultyCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(D2CLIENT_GetDifficulty(), operation, targetDiff);
+	return IntegerCompare(D2CLIENT_GetDifficulty(), operation, targetDiff, targetDiff2);
 }
 
 bool ItemStatCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2) {
 	int newTarget = targetStat;
+	int newTarget2 = targetStat2;
 	if (itemStat == STAT_MAXHP || itemStat == STAT_MAXMANA)
 	{
 		newTarget *= 256;
+		newTarget2 *= 256;
 	}
 	// These stat values need to be grabbed differently, otherwise they just return 0
 	else if (itemStat == STAT_ENHANCEDDEFENSE || itemStat == STAT_ENHANCEDMAXIMUMDAMAGE || itemStat == STAT_ENHANCEDMINIMUMDAMAGE)
 	{
-		return IntegerCompare(GetStatFromList(uInfo, itemStat), operation, targetStat);
+		return IntegerCompare(GetStatFromList(uInfo, itemStat), operation, targetStat, targetStat2);
 	}
-	return IntegerCompare(D2COMMON_GetUnitStat(uInfo->item, itemStat, itemStat2), operation, newTarget);
+	return IntegerCompare(D2COMMON_GetUnitStat(uInfo->item, itemStat, itemStat2), operation, newTarget, newTarget2);
 
 }
 
@@ -3080,36 +3082,36 @@ bool ItemStatCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	switch (itemStat)
 	{
 	case STAT_SOCKETS:
-		return IntegerCompare(info->sockets, operation, targetStat);
+		return IntegerCompare(info->sockets, operation, targetStat, targetStat2);
 	case STAT_DEFENSE:
-		return IntegerCompare(GetDefense(info), operation, targetStat);
+		return IntegerCompare(GetDefense(info), operation, targetStat, targetStat2);
 	case STAT_NONCLASSSKILL:
 		for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++)
 		{
 			if (prop->stat == STAT_NONCLASSSKILL && prop->skill == itemStat2) { num += prop->value; }
 		}
-		return IntegerCompare(num, operation, targetStat);
+		return IntegerCompare(num, operation, targetStat, targetStat2);
 	case STAT_SINGLESKILL:
 		for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++)
 		{
 			if (prop->stat == STAT_SINGLESKILL && prop->skill == itemStat2) { num += prop->value; }
 		}
-		return IntegerCompare(num, operation, targetStat);
+		return IntegerCompare(num, operation, targetStat, targetStat2);
 	case STAT_CLASSSKILLS:
 		for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++)
 		{
 			if (prop->stat == STAT_CLASSSKILLS && prop->characterClass == itemStat2) { num += prop->value; }
 		}
-		return IntegerCompare(num, operation, targetStat);
+		return IntegerCompare(num, operation, targetStat, targetStat2);
 	case STAT_SKILLTAB:
 		for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++)
 		{
 			if (prop->stat == STAT_SKILLTAB && (prop->characterClass * 8 + prop->tab) == itemStat2) { num += prop->value; }
 		}
-		return IntegerCompare(num, operation, targetStat);
+		return IntegerCompare(num, operation, targetStat, targetStat2);
 	default:
 		for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++) { if (prop->stat == itemStat) { num += prop->value; } }
-		return IntegerCompare(num, operation, targetStat);
+		return IntegerCompare(num, operation, targetStat, targetStat2);
 	}
 	return false;
 }
@@ -3118,7 +3120,7 @@ bool ItemPriceCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(D2COMMON_GetItemPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1), operation, targetStat);
+	return IntegerCompare(D2COMMON_GetItemPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1), operation, targetStat, targetStat2);
 }
 
 bool ItemPriceCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -3137,10 +3139,10 @@ bool ResistAllCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	int lRes = D2COMMON_GetUnitStat(uInfo->item, STAT_LIGHTNINGRESIST, 0);
 	int cRes = D2COMMON_GetUnitStat(uInfo->item, STAT_COLDRESIST, 0);
 	int pRes = D2COMMON_GetUnitStat(uInfo->item, STAT_POISONRESIST, 0);
-	return (IntegerCompare(fRes, operation, targetStat) &&
-		IntegerCompare(lRes, operation, targetStat) &&
-		IntegerCompare(cRes, operation, targetStat) &&
-		IntegerCompare(pRes, operation, targetStat));
+	return (IntegerCompare(fRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(lRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(cRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(pRes, operation, targetStat, targetStat2));
 }
 
 bool ResistAllCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -3155,10 +3157,10 @@ bool ResistAllCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		else if (prop->stat == STAT_COLDRESIST) { cRes += prop->value; }
 		else if (prop->stat == STAT_POISONRESIST) { pRes += prop->value; }
 	}
-	return (IntegerCompare(fRes, operation, targetStat) &&
-		IntegerCompare(lRes, operation, targetStat) &&
-		IntegerCompare(cRes, operation, targetStat) &&
-		IntegerCompare(pRes, operation, targetStat));
+	return (IntegerCompare(fRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(lRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(cRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(pRes, operation, targetStat, targetStat2));
 }
 
 void AddCondition::Init()
