@@ -907,7 +907,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 {
 	char origName[512], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4] = "0";
 	char gemtype[16] = "", gemlevel[16] = "", sellValue[16] = "", statVal[16] = "", qty[4] = "";
-	char lvlreq[4], wpnspd[4], rangeadder[4];
+	char lvlreq[4], wpnspd[4], rangeadder[4], allres[4];
 
 	UnitAny* item = uInfo->item;
 	ItemsTxt* txt = D2COMMON_GetItemText(item->dwTxtFileNo);
@@ -924,6 +924,17 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		(BYTE)uInfo->attrs->qualityLevel,
 		uInfo->attrs->magicLevel);
 	auto clvl_int = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
+
+	int fRes = D2COMMON_GetUnitStat(item, STAT_FIRERESIST, 0);
+	int lRes = D2COMMON_GetUnitStat(item, STAT_LIGHTNINGRESIST, 0);
+	int cRes = D2COMMON_GetUnitStat(item, STAT_COLDRESIST, 0);
+	int pRes = D2COMMON_GetUnitStat(item, STAT_POISONRESIST, 0);
+	int minres = 0;
+	if (fRes && lRes && cRes && pRes)
+	{
+		minres = min(min(fRes, lRes), min(cRes, pRes));
+	}
+	sprintf_s(allres, "%d", minres);
 
 	sprintf_s(sockets, "%d", D2COMMON_GetUnitStat(item, STAT_SOCKETS, 0));
 	sprintf_s(ilvl, "%d", item->pItemData->dwItemLevel);
@@ -978,6 +989,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		{ "NL", "\n" },
 		{ "PRICE", sellValue },
 		{ "QTY", qty },
+		{ "RES", allres},
 		COLOR_REPLACEMENTS
 	};
 	int nColorCodesSize = 0;
