@@ -91,21 +91,21 @@ struct ItemInfo
 	BYTE                       sockets;
 	bool                       equipped;
 	bool                       inSocket;
-	bool                       identified;
-	bool                       switchedIn;
-	bool                       switchedOut;
-	bool                       broken;
+	bool                       identified;		// ITEM_IDENTIFIED
+	bool                       switchedIn;		// ITEM_SWITCHIN
+	bool                       switchedOut;		// ITEM_SWITCHOUT
+	bool                       broken;			// ITEM_BROKEN
 	bool                       potion;
-	bool                       hasSockets;
-	bool                       inStore;
+	bool                       hasSockets;		// ITEM_HASSOCKETS
+	bool                       inStore;			// ITEM_NEW
 	bool                       notInSocket;
-	bool                       ear;
-	bool                       startItem;
-	bool                       simpleItem;
-	bool                       ethereal;
-	bool                       personalized;
+	bool                       ear;				// ITEM_ISEAR
+	bool                       startItem;		// ITEM_STARTITEM
+	bool                       simpleItem;		// ITEM_COMPACTSAVE
+	bool                       ethereal;		// ITEM_ETHEREAL
+	bool                       personalized;	// ITEM_PERSONALIZED
 	bool                       gambling;
-	bool                       runeword;
+	bool                       runeword;		// ITEM_RUNEWORD
 	bool                       ground;
 	bool                       unspecifiedDirectory;
 	bool                       isGold;
@@ -333,13 +333,16 @@ class GemLevelCondition : public Condition
 {
 public:
 	GemLevelCondition(BYTE op,
-		BYTE gem) : gemLevel(gem),
+		BYTE gem,
+		BYTE gem2) : gemLevel(gem),
+		gemLevel2(gem2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	BYTE gemLevel;
+	BYTE gemLevel2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -352,13 +355,16 @@ class GemTypeCondition : public Condition
 {
 public:
 	GemTypeCondition(BYTE op,
-		BYTE gType) : gemType(gType),
+		BYTE gType,
+		BYTE gType2) : gemType(gType),
+		gemType2(gType2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	BYTE gemType;
+	BYTE gemType2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -371,13 +377,16 @@ class RuneCondition : public Condition
 {
 public:
 	RuneCondition(BYTE op,
-		BYTE rune) : runeNumber(rune),
+		BYTE rune,
+		BYTE rune2) : runeNumber(rune),
+		runeNumber2(rune2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	BYTE runeNumber;
+	BYTE runeNumber2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -389,14 +398,17 @@ private:
 class GoldCondition : public Condition
 {
 public:
-	GoldCondition(BYTE         op,
-		unsigned int amt) : goldAmount(amt),
+	GoldCondition(BYTE op,
+		unsigned int amt,
+		unsigned int amt2) : goldAmount(amt),
+		goldAmount2(amt2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE         operation;
 	unsigned int goldAmount;
+	unsigned int goldAmount2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -409,13 +421,16 @@ class ItemLevelCondition : public Condition
 {
 public:
 	ItemLevelCondition(BYTE op,
-		BYTE ilvl) : itemLevel(ilvl),
+		BYTE ilvl,
+		BYTE ilvl2) : itemLevel(ilvl),
+		itemLevel2(ilvl2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	BYTE itemLevel;
+	BYTE itemLevel2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -428,13 +443,16 @@ class QualityLevelCondition : public Condition
 {
 public:
 	QualityLevelCondition(BYTE op,
-		BYTE qlvl) : qualityLevel(qlvl),
+		BYTE qlvl,
+		BYTE qlvl2) : qualityLevel(qlvl),
+		qualityLevel2(qlvl2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	BYTE qualityLevel;
+	BYTE qualityLevel2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -447,13 +465,16 @@ class AffixLevelCondition : public Condition
 {
 public:
 	AffixLevelCondition(BYTE op,
-		BYTE alvl) : affixLevel(alvl),
+		BYTE alvl,
+		BYTE alvl2) : affixLevel(alvl),
+		affixLevel2(alvl2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	BYTE affixLevel;
+	BYTE affixLevel2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -466,13 +487,16 @@ class MapIdCondition : public Condition
 {
 public:
 	MapIdCondition(BYTE op,
-		BYTE mid) : mapId(mid),
+		BYTE mid,
+		BYTE mid2) : mapId(mid),
+		mapId2(mid2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	BYTE mapId;
+	BYTE mapId2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -485,13 +509,16 @@ class MapTierCondition : public Condition
 {
 public:
 	MapTierCondition(BYTE op,
-		BYTE mtier) : mapTier(mtier),
+		BYTE mtier,
+		BYTE mtier2) : mapTier(mtier),
+		mapTier2(mtier2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	BYTE mapTier;
+	BYTE mapTier2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -504,13 +531,16 @@ class CraftLevelCondition : public Condition
 {
 public:
 	CraftLevelCondition(BYTE op,
-		BYTE calvl) : craftLevel(calvl),
+		BYTE calvl,
+		BYTE calvl2) : craftLevel(calvl),
+		craftLevel2(calvl2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	BYTE craftLevel;
+	BYTE craftLevel2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -523,13 +553,16 @@ class AutomodCondition : public Condition
 {
 public:
 	AutomodCondition(BYTE op,
-		unsigned int automod) : automodID(automod),
+		unsigned int automod,
+		unsigned int automod2) : automodID(automod),
+		automodID2(automod2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	unsigned int automodID;
+	unsigned int automodID2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -605,13 +638,16 @@ class RequiredLevelCondition : public Condition
 {
 public:
 	RequiredLevelCondition(BYTE op,
-		BYTE rlvl) : requiredLevel(rlvl),
+		BYTE rlvl,
+		BYTE rlvl2) : requiredLevel(rlvl),
+		requiredLevel2(rlvl2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	BYTE requiredLevel;
+	BYTE requiredLevel2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -637,14 +673,17 @@ private:
 class EDCondition : public Condition
 {
 public:
-	EDCondition(BYTE         op,
-		unsigned int target) : operation(op),
-		targetED(target) {
+	EDCondition(BYTE op,
+		unsigned int target,
+		unsigned int target2) : operation(op),
+		targetED(target),
+		targetED2(target2) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE         operation;
 	unsigned int targetED;
+	unsigned int targetED2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -657,14 +696,17 @@ private:
 class DurabilityCondition : public Condition
 {
 public:
-	DurabilityCondition(BYTE         op,
-		unsigned int target) : operation(op),
-		targetDurability(target) {
+	DurabilityCondition(BYTE op,
+		unsigned int target,
+		unsigned int target2) : operation(op),
+		targetDurability(target),
+		targetDurability2(target2) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE         operation;
 	unsigned int targetDurability;
+	unsigned int targetDurability2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -676,17 +718,20 @@ private:
 class ChargedCondition : public Condition
 {
 public:
-	ChargedCondition(BYTE         op,
+	ChargedCondition(BYTE op,
 		unsigned int sk,
-		unsigned int target) : operation(op),
+		unsigned int target,
+		unsigned int target2) : operation(op),
 		skill(sk),
-		targetLevel(target) {
+		targetLevel(target),
+		targetLevel2(target2) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE         operation;
 	unsigned int skill;
 	unsigned int targetLevel;
+	unsigned int targetLevel2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -808,11 +853,13 @@ public:
 	CharStatCondition(unsigned int stat,
 		unsigned int stat2,
 		BYTE         op,
-		unsigned int target)
+		unsigned int target,
+		unsigned int target2)
 		: stat1(stat),
 		stat2(stat2),
 		operation(op),
-		targetStat(target) {
+		targetStat(target),
+		targetStat2(target2) {
 		conditionType = CT_Operand;
 	};
 private:
@@ -820,6 +867,7 @@ private:
 	unsigned int stat2;
 	BYTE         operation;
 	unsigned int targetStat;
+	unsigned int targetStat2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -831,15 +879,18 @@ private:
 class DifficultyCondition : public Condition
 {
 public:
-	DifficultyCondition(BYTE         op,
-		unsigned int target)
+	DifficultyCondition(BYTE op,
+		unsigned int target,
+		unsigned int target2)
 		: operation(op),
-		targetDiff(target) {
+		targetDiff(target),
+		targetDiff2(target2) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE         operation;
 	unsigned int targetDiff;
+	unsigned int targetDiff2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -851,13 +902,18 @@ private:
 class FilterLevelCondition : public Condition
 {
 public:
-	FilterLevelCondition(BYTE op, unsigned int target)
-		: operation(op), filterLevel(target) {
+	FilterLevelCondition(BYTE op, 
+		unsigned int target,
+		unsigned int target2)
+		: operation(op), 
+		filterLevel(target),
+		filterLevel2(target2) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
 	unsigned int filterLevel;
+	unsigned int filterLevel2;
 	bool EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2);
 	bool EvaluateInternalFromPacket(ItemInfo* info, Condition* arg1, Condition* arg2);
 };
@@ -868,11 +924,13 @@ public:
 	ItemStatCondition(unsigned int stat,
 		unsigned int stat2,
 		BYTE         op,
-		unsigned int target)
+		unsigned int target,
+		unsigned int target2)
 		: itemStat(stat),
 		itemStat2(stat2),
 		operation(op),
-		targetStat(target) {
+		targetStat(target),
+		targetStat2(target2) {
 		conditionType = CT_Operand;
 	};
 private:
@@ -880,6 +938,7 @@ private:
 	unsigned int itemStat2;
 	BYTE         operation;
 	unsigned int targetStat;
+	unsigned int targetStat2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -891,15 +950,18 @@ private:
 class ItemPriceCondition : public Condition
 {
 public:
-	ItemPriceCondition(BYTE         op,
-		unsigned int target)
+	ItemPriceCondition(BYTE op,
+		unsigned int target,
+		unsigned int target2)
 		: operation(op),
-		targetStat(target) {
+		targetStat(target),
+		targetStat2(target2) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE         operation;
 	unsigned int targetStat;
+	unsigned int targetStat2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -911,14 +973,17 @@ private:
 class ResistAllCondition : public Condition
 {
 public:
-	ResistAllCondition(BYTE         op,
-		unsigned int target) : operation(op),
-		targetStat(target) {
+	ResistAllCondition(BYTE op,
+		unsigned int target,
+		unsigned int target2) : operation(op),
+		targetStat(target),
+		targetStat2(target2) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE         operation;
 	unsigned int targetStat;
+	unsigned int targetStat2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -1120,9 +1185,9 @@ int    ParseMapColor(Action* act,
 void HandleUnknownItemCode(char* code,
 	char* tag);
 BYTE        GetOperation(string* op);
-inline bool IntegerCompare(unsigned int Lvalue,
+inline bool IntegerCompare(int Lvalue,
 	int          operation,
-	unsigned int Rvalue);
+	int Rvalue);
 void GetItemName(UnitItemInfo* uInfo,
 	string& name);
 void SubstituteNameVariables(UnitItemInfo* uInfo,
@@ -1139,3 +1204,4 @@ BYTE GetAffixLevel(BYTE ilvl,
 	BYTE mlvl);
 BYTE GetRequiredLevel(UnitAny* item);
 BYTE RuneNumberFromItemCode(char* code);
+int GetStatFromList(UnitItemInfo* uInfo, int itemStat);

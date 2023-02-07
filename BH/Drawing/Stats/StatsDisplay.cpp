@@ -197,7 +197,6 @@ StatsDisplay::StatsDisplay(std::string name)
 	SetActive(true);
 	SetMinimized(true);
 
-	//BH::config->ReadKey("Character Stats", "VK_8", statsKey);
 	display = this;
 }
 

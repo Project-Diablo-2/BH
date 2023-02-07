@@ -448,6 +448,8 @@ enum FilterCondition
 	COND_GEMTYPE,
 	COND_GEM,
 	COND_ED,
+	COND_EDEF,
+	COND_EDAM,
 	COND_DEF,
 	COND_MAXDUR,
 	COND_RES,
@@ -537,6 +539,7 @@ std::map<std::string, FilterCondition> condition_map =
 	{"||", COND_OR},
 	{"ETH", COND_ETH},
 	{"SOCK", COND_SOCK},
+	{"SOCKETS", COND_SOCK},
 	{"SET", COND_SET},
 	{"MAG", COND_MAG},
 	{"RARE", COND_RARE},
@@ -574,7 +577,10 @@ std::map<std::string, FilterCondition> condition_map =
 	{"GEMMED", COND_GEMMED},
 	{"GEMTYPE", COND_GEMTYPE},
 	{"GEM", COND_GEM},
+	{"GEMLEVEL", COND_GEM},
 	{"ED", COND_ED},
+	{"EDEF", COND_EDEF},
+	{"EDAM", COND_EDAM},
 	{"DEF", COND_DEF},
 	{"MAXDUR", COND_MAXDUR},
 	{"RES", COND_RES},
@@ -640,7 +646,7 @@ std::map<std::string, FilterCondition> condition_map =
 	{"WAND", COND_WAND},
 	{"SCEPTER", COND_SCEPTER},
 	{"EQ1", COND_HELM},
-	{"EQ2", COND_ARMOR},
+	{"EQ2", COND_CHEST},
 	{"EQ3", COND_SHIELD},
 	{"EQ4", COND_GLOVES},
 	{"EQ5", COND_BOOTS},
@@ -679,6 +685,37 @@ std::map<std::string, FilterCondition> condition_map =
 	//{"CHARSTAT", COND_CHARSTAT},
 	//{"MULTI", COND_MULTI},
 
+};
+
+std::map<std::string, int> stat_id_map =
+{
+	{"EDEF", STAT_ENHANCEDDEFENSE},
+	{"EDAM", STAT_ENHANCEDMAXIMUMDAMAGE},
+	{"DEF", STAT_DEFENSE},
+	{"FRES", STAT_FIRERESIST},
+	{"CRES", STAT_COLDRESIST},
+	{"LRES", STAT_LIGHTNINGRESIST},
+	{"PRES", STAT_POISONRESIST},
+	{"IAS", STAT_IAS},
+	{"FCR", STAT_FASTERCAST},
+	{"FHR", STAT_FASTERHITRECOVERY},
+	{"FBR", STAT_FASTERBLOCK},
+	{"LIFE", STAT_MAXHP},
+	{"MANA", STAT_MAXMANA},
+	{"ARPER", STAT_TOHITPERCENT},
+	{"MFIND", STAT_MAGICFIND},
+	{"GFIND", STAT_GOLDFIND},
+	{"STR", STAT_STRENGTH},
+	{"DEX", STAT_DEXTERITY},
+	{"FRW", STAT_FASTERRUNWALK},
+	{"MINDMG", STAT_MINIMUMDAMAGE},
+	{"MAXDMG", STAT_MAXIMUMDAMAGE},
+	{"AR", STAT_ATTACKRATING},
+	{"DTM", STAT_DAMAGETOMANA},
+	{"MAEK", STAT_MANAAFTEREACHKILL},
+	{"REPLIFE", STAT_REPLENISHLIFE},
+	{"REPQUANT", STAT_REPLENISHESQUANTITY},
+	{"REPAIR", STAT_REPAIRSDURABILITY},
 };
 
 SkillReplace skills[] = {
@@ -870,7 +907,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 {
 	char origName[512], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4] = "0";
 	char gemtype[16] = "", gemlevel[16] = "", sellValue[16] = "", statVal[16] = "", qty[4] = "";
-	char lvlreq[4], wpnspd[4], rangeadder[4];
+	char lvlreq[4], wpnspd[4], rangeadder[4], allres[4];
 
 	UnitAny* item = uInfo->item;
 	ItemsTxt* txt = D2COMMON_GetItemText(item->dwTxtFileNo);
@@ -887,6 +924,17 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		(BYTE)uInfo->attrs->qualityLevel,
 		uInfo->attrs->magicLevel);
 	auto clvl_int = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
+
+	int fRes = D2COMMON_GetUnitStat(item, STAT_FIRERESIST, 0);
+	int lRes = D2COMMON_GetUnitStat(item, STAT_LIGHTNINGRESIST, 0);
+	int cRes = D2COMMON_GetUnitStat(item, STAT_COLDRESIST, 0);
+	int pRes = D2COMMON_GetUnitStat(item, STAT_POISONRESIST, 0);
+	int minres = 0;
+	if (fRes && lRes && cRes && pRes)
+	{
+		minres = min(min(fRes, lRes), min(cRes, pRes));
+	}
+	sprintf_s(allres, "%d", minres);
 
 	sprintf_s(sockets, "%d", D2COMMON_GetUnitStat(item, STAT_SOCKETS, 0));
 	sprintf_s(ilvl, "%d", item->pItemData->dwItemLevel);
@@ -941,6 +989,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		{ "NL", "\n" },
 		{ "PRICE", sellValue },
 		{ "QTY", qty },
+		{ "RES", allres},
 		COLOR_REPLACEMENTS
 	};
 	int nColorCodesSize = 0;
@@ -953,11 +1002,20 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			else { name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, replacements[n].value); }
 		}
 	}
-
-	// stat replacements
-	if (name.find("%STAT-") != string::npos)
+	// Replace named stat output strings with their STAT# counterpart
+	map<string, int>::iterator it;
+	for (it = stat_id_map.begin(); it != stat_id_map.end(); it++)
 	{
-		std::regex  stat_reg("%STAT-([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		while (name.find("%" + it->first + "%") != string::npos)
+		{
+			name.replace(name.find("%" + it->first + "%"), it->first.length() + 2, "%STAT" + std::to_string(it->second) + "%");
+		}
+	}
+
+	// stat & skill replacements
+	if (name.find("%STAT") != string::npos)
+	{
+		std::regex  stat_reg("%STAT([0-9]{1,4})%", std::regex_constants::ECMAScript);
 		std::smatch stat_match;
 
 		while (std::regex_search(name, stat_match, stat_reg))
@@ -968,8 +1026,136 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			{
 				auto value = D2COMMON_GetUnitStat(item, stat, 0);
 				// Hp and mana need adjusting
-				if (stat == 7 || stat == 9)
+				if (stat == STAT_MAXHP || stat == STAT_MAXMANA)
+				{
 					value /= 256;
+				}
+				// These stat values need to be grabbed differently, otherwise they just return 0
+				else if (stat == STAT_ENHANCEDDEFENSE || stat == STAT_ENHANCEDMAXIMUMDAMAGE || stat == STAT_ENHANCEDMINIMUMDAMAGE)
+				{
+					value = GetStatFromList(uInfo, stat);
+				}
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%SK") != string::npos)
+	{
+		std::regex  stat_reg("%SK([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat2 <= (int)SKILL_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(item, STAT_SINGLESKILL, stat2);
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%OS") != string::npos)
+	{
+		std::regex  stat_reg("%OS([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat2 <= (int)SKILL_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(item, STAT_NONCLASSSKILL, stat2);
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%CLSK") != string::npos)
+	{
+		std::regex  stat_reg("%CLSK([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat2 <= (int)SKILL_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(item, STAT_CLASSSKILLS, stat2);
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%TABSK") != string::npos)
+	{
+		std::regex  stat_reg("%TABSK([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat2 <= (int)SKILL_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(item, STAT_SKILLTAB, stat2);
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%MULTI") != string::npos)
+	{
+		std::regex  stat_reg("%MULTI([0-9]{1,4}),([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat = stoi(stat_match[1].str(), nullptr, 10);
+			int stat2 = stoi(stat_match[2].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat <= (int)STAT_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(item, stat, stat2);
+				sprintf_s(statVal, "%d", value);
+			}
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
+	else if (name.find("%CHARSTAT") != string::npos)
+	{
+		std::regex  stat_reg("%CHARSTAT([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			int stat = stoi(stat_match[1].str(), nullptr, 10);
+			statVal[0] = '\0';
+			if (stat <= (int)STAT_MAX)
+			{
+				auto value = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat, 0);
 				sprintf_s(statVal, "%d", value);
 			}
 			name.replace(
@@ -1068,10 +1254,10 @@ unsigned int GetItemCodeIndex(char codeChar)
 	return codeChar - (codeChar < 90 ? 48 : 87);
 }
 
-bool IntegerCompare(unsigned int Lvalue,
+bool IntegerCompare(int Lvalue,
 	BYTE         operation,
-	unsigned int Rvalue,
-	unsigned int Bvalue = 0)
+	int Rvalue,
+	int Bvalue = 0)
 {
 	switch (operation)
 	{
@@ -1501,7 +1687,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new FlagsCondition(ITEM_ETHEREAL));
 		break;
 	case COND_SOCK:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SOCKETS, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SOCKETS, 0, operation, value, value2));
 		break;
 	case COND_SET:
 		Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_SET));
@@ -1537,7 +1723,7 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new CharacterClassCondition(EQUAL, 6));
 		break;
 	case COND_CRAFTALVL:
-		Condition::AddOperand(conditions, new CraftLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new CraftLevelCondition(operation, value, value2));
 		break;
 	case COND_PREFIX:
 		Condition::AddOperand(conditions, new MagicPrefixCondition(operation, value, value2));
@@ -1546,13 +1732,13 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new MagicSuffixCondition(operation, value, value2));
 		break;
 	case COND_AUTOMOD:
-		Condition::AddOperand(conditions, new AutomodCondition(operation, value));
+		Condition::AddOperand(conditions, new AutomodCondition(operation, value, value2));
 		break;
 	case COND_MAPID:
-		Condition::AddOperand(conditions, new MapIdCondition(operation, value));
+		Condition::AddOperand(conditions, new MapIdCondition(operation, value, value2));
 		break;
 	case COND_MAPTIER:
-		Condition::AddOperand(conditions, new MapTierCondition(operation, value));
+		Condition::AddOperand(conditions, new MapTierCondition(operation, value, value2));
 		break;
 	case COND_CRAFT:
 		Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_CRAFT));
@@ -1582,82 +1768,88 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new FlagsCondition(ITEM_IDENTIFIED));
 		break;
 	case COND_ILVL:
-		Condition::AddOperand(conditions, new ItemLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new ItemLevelCondition(operation, value, value2));
 		break;
 	case COND_QLVL:
-		Condition::AddOperand(conditions, new QualityLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new QualityLevelCondition(operation, value, value2));
 		break;
 	case COND_ALVL:
-		Condition::AddOperand(conditions, new AffixLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new AffixLevelCondition(operation, value, value2));
 		break;
 	case COND_CLVL:
-		Condition::AddOperand(conditions, new CharStatCondition(STAT_LEVEL, 0, operation, value));
+		Condition::AddOperand(conditions, new CharStatCondition(STAT_LEVEL, 0, operation, value, value2));
 		break;
 	case COND_FILTLVL:
-		Condition::AddOperand(conditions, new FilterLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new FilterLevelCondition(operation, value, value2));
 		break;
 	case COND_DIFF:
-		Condition::AddOperand(conditions, new DifficultyCondition(operation, value));
+		Condition::AddOperand(conditions, new DifficultyCondition(operation, value, value2));
 		break;
 	case COND_RUNE:
-		Condition::AddOperand(conditions, new RuneCondition(operation, value));
+		Condition::AddOperand(conditions, new RuneCondition(operation, value, value2));
 		break;
 	case COND_GOLD:
-		Condition::AddOperand(conditions, new GoldCondition(operation, value));
+		Condition::AddOperand(conditions, new GoldCondition(operation, value, value2));
 		break;
 	case COND_GEMMED:
 		Condition::AddOperand(conditions, new GemmedCondition());
 		break;
 	case COND_GEMTYPE:
-		Condition::AddOperand(conditions, new GemTypeCondition(operation, value));
+		Condition::AddOperand(conditions, new GemTypeCondition(operation, value, value2));
 		break;
 	case COND_GEM:
-		Condition::AddOperand(conditions, new GemLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new GemLevelCondition(operation, value, value2));
 		break;
 	case COND_ED:
-		Condition::AddOperand(conditions, new EDCondition(operation, value));
+		Condition::AddOperand(conditions, new EDCondition(operation, value, value2));
+		break;
+	case COND_EDEF:
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ENHANCEDDEFENSE, 0, operation, value, value2));
+		break;
+	case COND_EDAM:
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ENHANCEDMAXIMUMDAMAGE, 0, operation, value, value2));
 		break;
 	case COND_DEF:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DEFENSE, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DEFENSE, 0, operation, value, value2));
 		break;
 	case COND_MAXDUR:
-		Condition::AddOperand(conditions, new DurabilityCondition(operation, value));
+		Condition::AddOperand(conditions, new DurabilityCondition(operation, value, value2));
 		break;
 	case COND_RES:
-		Condition::AddOperand(conditions, new ResistAllCondition(operation, value));
+		Condition::AddOperand(conditions, new ResistAllCondition(operation, value, value2));
 		break;
 	case COND_FRES:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FIRERESIST, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FIRERESIST, 0, operation, value, value2));
 		break;
 	case COND_CRES:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_COLDRESIST, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_COLDRESIST, 0, operation, value, value2));
 		break;
 	case COND_LRES:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_LIGHTNINGRESIST, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_LIGHTNINGRESIST, 0, operation, value, value2));
 		break;
 	case COND_PRES:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_POISONRESIST, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_POISONRESIST, 0, operation, value, value2));
 		break;
 	case COND_IAS:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_IAS, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_IAS, 0, operation, value, value2));
 		break;
 	case COND_FCR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERCAST, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERCAST, 0, operation, value, value2));
 		break;
 	case COND_FHR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERHITRECOVERY, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERHITRECOVERY, 0, operation, value, value2));
 		break;
 	case COND_FBR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERBLOCK, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERBLOCK, 0, operation, value, value2));
 		break;
 	case COND_LIFE:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXHP, 0, operation, value * 256));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXHP, 0, operation, value * 256, value2 * 256));
 		break;
 	case COND_MANA:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXMANA, 0, operation, value * 256));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXMANA, 0, operation, value * 256, value2 * 256));
 		break;
 	case COND_QTY:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_AMMOQUANTITY, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_AMMOQUANTITY, 0, operation, value, value2));
 		break;
 	case COND_GOODSK:
 		Condition::AddOperand(conditions, new SkillListCondition(operation, CLASS_SKILLS, value));
@@ -1669,49 +1861,49 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new FoolsCondition());
 		break;
 	case COND_LVLREQ:
-		Condition::AddOperand(conditions, new RequiredLevelCondition(operation, value));
+		Condition::AddOperand(conditions, new RequiredLevelCondition(operation, value, value2));
 		break;
 	case COND_ARPER:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_TOHITPERCENT, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_TOHITPERCENT, 0, operation, value, value2));
 		break;
 	case COND_MFIND:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAGICFIND, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAGICFIND, 0, operation, value, value2));
 		break;
 	case COND_GFIND:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_GOLDFIND, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_GOLDFIND, 0, operation, value, value2));
 		break;
 	case COND_STR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_STRENGTH, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_STRENGTH, 0, operation, value, value2));
 		break;
 	case COND_DEX:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DEXTERITY, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DEXTERITY, 0, operation, value, value2));
 		break;
 	case COND_FRW:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERRUNWALK, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERRUNWALK, 0, operation, value, value2));
 		break;
 	case COND_MINDMG:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MINIMUMDAMAGE, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MINIMUMDAMAGE, 0, operation, value, value2));
 		break;
 	case COND_MAXDMG:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXIMUMDAMAGE, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXIMUMDAMAGE, 0, operation, value, value2));
 		break;
 	case COND_AR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ATTACKRATING, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ATTACKRATING, 0, operation, value, value2));
 		break;
 	case COND_DTM:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DAMAGETOMANA, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_DAMAGETOMANA, 0, operation, value, value2));
 		break;
 	case COND_MAEK:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MANAAFTEREACHKILL, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MANAAFTEREACHKILL, 0, operation, value, value2));
 		break;
 	case COND_REPLIFE:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPLENISHLIFE, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPLENISHLIFE, 0, operation, value, value2));
 		break;
 	case COND_REPQUANT:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPLENISHESQUANTITY, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPLENISHESQUANTITY, 0, operation, value, value2));
 		break;
 	case COND_REPAIR:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPAIRSDURABILITY, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPAIRSDURABILITY, 0, operation, value, value2));
 		break;
 	case COND_ARMOR:
 		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ALLARMOR));
@@ -1814,35 +2006,35 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		break;
 	case COND_SK:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)SKILL_MAX) { break; }
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SINGLESKILL, cond_num, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SINGLESKILL, cond_num, operation, value, value2));
 		break;
 	case COND_OS:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)SKILL_MAX) { break; }
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_NONCLASSSKILL, cond_num, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_NONCLASSSKILL, cond_num, operation, value, value2));
 		break;
 	case COND_CHSK:
 		// skills granted by charges
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)SKILL_MAX) { break; }
-		Condition::AddOperand(conditions, new ChargedCondition(operation, cond_num, value));
+		Condition::AddOperand(conditions, new ChargedCondition(operation, cond_num, value, value2));
 		break;
 	case COND_CLSK:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >= CLASS_NA) { break; }
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_CLASSSKILLS, cond_num, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_CLASSSKILLS, cond_num, operation, value, value2));
 		break;
 	case COND_ALLSK:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ALLSKILLS, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_ALLSKILLS, 0, operation, value, value2));
 		break;
 	case COND_TABSK:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num > SKILLTAB_MAX) { break; }
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SKILLTAB, cond_num, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_SKILLTAB, cond_num, operation, value, value2));
 		break;
 	case COND_STAT:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)STAT_MAX) { break; }
-		Condition::AddOperand(conditions, new ItemStatCondition(cond_num, 0, operation, value));
+		Condition::AddOperand(conditions, new ItemStatCondition(cond_num, 0, operation, value, value2));
 		break;
 	case COND_CHARSTAT:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)STAT_MAX) { break; }
-		Condition::AddOperand(conditions, new CharStatCondition(cond_num, 0, operation, value));
+		Condition::AddOperand(conditions, new CharStatCondition(cond_num, 0, operation, value, value2));
 		break;
 	case COND_MULTI:
 		if (std::regex_search(key, multi_match, multi_reg))
@@ -1851,11 +2043,11 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 			stat1 = stoi(multi_match[1].str(), nullptr, 10);
 			stat2 = stoi(multi_match[2].str(), nullptr, 10);
 
-			Condition::AddOperand(conditions, new ItemStatCondition(stat1, stat2, operation, value));
+			Condition::AddOperand(conditions, new ItemStatCondition(stat1, stat2, operation, value, value2));
 		}
 		break;
 	case COND_PRICE:
-		Condition::AddOperand(conditions, new ItemPriceCondition(operation, value));
+		Condition::AddOperand(conditions, new ItemPriceCondition(operation, value, value2));
 		break;
 	case COND_ITEMCODE:
 		Condition::AddOperand(conditions, new ItemCodeCondition(key.substr(0, 4).c_str()));
@@ -1907,10 +2099,10 @@ bool Condition::Evaluate(UnitItemInfo* uInfo,
 }
 
 bool FilterLevelCondition::EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2) {
-	return IntegerCompare(Item::GetFilterLevel(), operation, filterLevel);
+	return IntegerCompare(Item::GetFilterLevel(), operation, filterLevel, filterLevel2);
 }
 bool FilterLevelCondition::EvaluateInternalFromPacket(ItemInfo* info, Condition* arg1, Condition* arg2) {
-	return IntegerCompare(Item::GetFilterLevel(), operation, filterLevel);
+	return IntegerCompare(Item::GetFilterLevel(), operation, filterLevel, filterLevel2);
 }
 
 bool TrueCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2067,7 +2259,7 @@ bool GemLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsGem(uInfo->attrs)) { return IntegerCompare(GetGemLevel(uInfo->attrs), operation, gemLevel); }
+	if (IsGem(uInfo->attrs)) { return IntegerCompare(GetGemLevel(uInfo->attrs), operation, gemLevel, gemLevel2); }
 	return false;
 }
 
@@ -2075,7 +2267,7 @@ bool GemLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsGem(info->attrs)) { return IntegerCompare(GetGemLevel(info->attrs), operation, gemLevel); }
+	if (IsGem(info->attrs)) { return IntegerCompare(GetGemLevel(info->attrs), operation, gemLevel, gemLevel2); }
 	return false;
 }
 
@@ -2083,7 +2275,7 @@ bool GemTypeCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsGem(uInfo->attrs)) { return IntegerCompare(GetGemType(uInfo->attrs), operation, gemType); }
+	if (IsGem(uInfo->attrs)) { return IntegerCompare(GetGemType(uInfo->attrs), operation, gemType, gemType2); }
 	return false;
 }
 
@@ -2091,7 +2283,7 @@ bool GemTypeCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsGem(info->attrs)) { return IntegerCompare(GetGemType(info->attrs), operation, gemType); }
+	if (IsGem(info->attrs)) { return IntegerCompare(GetGemType(info->attrs), operation, gemType, gemType2); }
 	return false;
 }
 
@@ -2099,7 +2291,7 @@ bool RuneCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsRune(uInfo->attrs)) { return IntegerCompare(RuneNumberFromItemCode(uInfo->itemCode), operation, runeNumber); }
+	if (IsRune(uInfo->attrs)) { return IntegerCompare(RuneNumberFromItemCode(uInfo->itemCode), operation, runeNumber, runeNumber2); }
 	return false;
 }
 
@@ -2107,7 +2299,7 @@ bool RuneCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (IsRune(info->attrs)) { return IntegerCompare(RuneNumberFromItemCode(info->code), operation, runeNumber); }
+	if (IsRune(info->attrs)) { return IntegerCompare(RuneNumberFromItemCode(info->code), operation, runeNumber, runeNumber2); }
 	return false;
 }
 
@@ -2122,20 +2314,20 @@ bool GoldCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	if (info->code[0] == 'g' && info->code[1] == 'l' && info->code[2] == 'd') { return IntegerCompare(info->amount, operation, goldAmount); }
+	if (info->code[0] == 'g' && info->code[1] == 'l' && info->code[2] == 'd') { return IntegerCompare(info->amount, operation, goldAmount, goldAmount2); }
 	return false;
 }
 
 bool ItemLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(uInfo->item->pItemData->dwItemLevel, operation, itemLevel);
+	return IntegerCompare(uInfo->item->pItemData->dwItemLevel, operation, itemLevel, itemLevel2);
 }
 
 bool ItemLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(info->level, operation, itemLevel);
+	return IntegerCompare(info->level, operation, itemLevel, itemLevel2);
 }
 
 bool QualityLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2143,7 +2335,7 @@ bool QualityLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg2)
 {
 	BYTE qlvl = uInfo->attrs->qualityLevel;
-	return IntegerCompare(qlvl, operation, qualityLevel);
+	return IntegerCompare(qlvl, operation, qualityLevel, qualityLevel2);
 }
 
 bool QualityLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2151,7 +2343,7 @@ bool QualityLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg2)
 {
 	int qlvl = info->attrs->qualityLevel;
-	return IntegerCompare(qlvl, operation, qualityLevel);
+	return IntegerCompare(qlvl, operation, qualityLevel, qualityLevel2);
 }
 
 bool AffixLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2160,7 +2352,7 @@ bool AffixLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 {
 	BYTE qlvl = uInfo->attrs->qualityLevel;
 	BYTE alvl = GetAffixLevel((BYTE)uInfo->item->pItemData->dwItemLevel, (BYTE)uInfo->attrs->qualityLevel, uInfo->attrs->magicLevel);
-	return IntegerCompare(alvl, operation, affixLevel);
+	return IntegerCompare(alvl, operation, affixLevel, affixLevel2);
 }
 
 bool AffixLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2169,7 +2361,7 @@ bool AffixLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 {
 	int  qlvl = info->attrs->qualityLevel;
 	BYTE alvl = GetAffixLevel(info->level, info->attrs->qualityLevel, info->attrs->magicLevel);
-	return IntegerCompare(alvl, operation, affixLevel);
+	return IntegerCompare(alvl, operation, affixLevel, affixLevel2);
 }
 
 bool MapIdCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2178,7 +2370,7 @@ bool MapIdCondition::EvaluateInternal(UnitItemInfo* uInfo,
 {
 	auto map_id = **Var_D2CLIENT_MapId();
 
-	return IntegerCompare(map_id, operation, mapId);
+	return IntegerCompare(map_id, operation, mapId, mapId2);
 }
 
 bool MapIdCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2187,21 +2379,21 @@ bool MapIdCondition::EvaluateInternalFromPacket(ItemInfo* info,
 {
 	auto map_id = **Var_D2CLIENT_MapId();
 
-	return IntegerCompare(map_id, operation, mapId);
+	return IntegerCompare(map_id, operation, mapId, mapId2);
 }
 
 bool MapTierCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(maptiers.at(uInfo->attrs->category), operation, mapTier);
+	return IntegerCompare(maptiers.at(uInfo->attrs->category), operation, mapTier, mapTier2);
 }
 
 bool MapTierCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(maptiers.at(info->attrs->category), operation, mapTier);
+	return IntegerCompare(maptiers.at(info->attrs->category), operation, mapTier, mapTier2);
 }
 
 bool CraftLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2221,7 +2413,7 @@ bool CraftLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	//(4) if ilvl < (99 – int(qlvl/2)= then affix level = ilvl - int(qlvl/2) else affix level = ilvl * 2 - 99.
 	auto craft_alvl = craft_ilvl < (99 - qlvl_int / 2) ? craft_ilvl - qlvl_int / 2 : craft_ilvl * 2 - 99;
 
-	return IntegerCompare(craft_alvl, operation, craftLevel);
+	return IntegerCompare(craft_alvl, operation, craftLevel, craftLevel2);
 }
 
 bool CraftLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2241,7 +2433,7 @@ bool CraftLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	//(4) if ilvl < (99 – int(qlvl/2)= then affix level = ilvl - int(qlvl/2) else affix level = ilvl * 2 - 99.
 	auto craft_alvl = craft_ilvl < (99 - qlvl_int / 2) ? craft_ilvl - qlvl_int / 2 : craft_ilvl * 2 - 99;
 
-	return IntegerCompare(craft_alvl, operation, craftLevel);
+	return IntegerCompare(craft_alvl, operation, craftLevel, craftLevel2);
 }
 
 
@@ -2283,6 +2475,25 @@ bool MagicPrefixCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	if (info->quality == ITEM_QUALITY_RARE && !(info->identified))
 	{
 		return false;
+	}
+	if (operation == GREATER_THAN || operation == LESS_THAN)
+	{
+		return false;
+	}
+
+	// If the vector is empty then we only have 0/1 prefix on the item and the id is in info->prefix
+	// The ids here also don't match what we get in UnitItemInfo, 
+	// so we need to subtract the total number of suffixes from the expected value(s)
+	if (info->prefixes.size() == 0)
+	{
+		return IntegerCompare(info->prefix, operation, prefixID1 - (int)SUFFIX_MAX, prefixID2 - (int)SUFFIX_MAX);
+	}
+	for (unsigned int i = 0; i < info->prefixes.size(); i++)
+	{
+		if (info->prefixes[i] > 0 ? IntegerCompare(info->prefixes[i], operation, prefixID1 - (int)SUFFIX_MAX, prefixID2 - (int)SUFFIX_MAX) : false)
+		{
+			return true;
+		}
 	}
 
 	return false;
@@ -2327,6 +2538,23 @@ bool MagicSuffixCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	{
 		return false;
 	}
+	if (operation == GREATER_THAN || operation == LESS_THAN)
+	{
+		return false;
+	}
+
+	// If the vector is empty then we only have 0/1 suffix on the item and the id is in info->suffix
+	if (info->suffixes.size() == 0)
+	{
+		return IntegerCompare(info->suffix, operation, suffixID1, suffixID2);
+	}
+	for (unsigned int i = 0; i < info->suffixes.size(); i++)
+	{
+		if (info->suffixes[i] > 0 ? IntegerCompare(info->suffixes[i], operation, suffixID1, suffixID2) : false)
+		{
+			return true;
+		}
+	}
 
 	return false;
 }
@@ -2342,7 +2570,7 @@ bool AutomodCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		return false;
 	}
 
-	return IntegerCompare(itemData->wAutoPrefix, operation, automodID);
+	return IntegerCompare(itemData->wAutoPrefix, operation, automodID, automodID2);
 }
 
 bool AutomodCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2376,7 +2604,7 @@ bool RequiredLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 {
 	unsigned int rlvl = GetRequiredLevel(uInfo->item);
 
-	return IntegerCompare(rlvl, operation, requiredLevel);
+	return IntegerCompare(rlvl, operation, requiredLevel, requiredLevel2);
 }
 
 bool RequiredLevelCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2412,17 +2640,7 @@ bool EDCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		// Normal %ED will have the same value for STAT_ENHANCEDMAXIMUMDAMAGE and STAT_ENHANCEDMINIMUMDAMAGE
 		stat = STAT_ENHANCEDMAXIMUMDAMAGE;
 	}
-
-	// Pulled from JSUnit.cpp in d2bs
-	DWORD     value = 0;
-	Stat      aStatList[256] = { NULL };
-	StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
-	if (pStatList)
-	{
-		DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
-		for (UINT i = 0; i < dwStats; i++) { if (aStatList[i].wStatIndex == stat && aStatList[i].wSubIndex == 0) { value += aStatList[i].dwStatValue; } }
-	}
-	return IntegerCompare(value, operation, targetED);
+	return IntegerCompare(GetStatFromList(uInfo, stat), operation, targetED, targetED2);
 }
 
 bool EDCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2440,7 +2658,7 @@ bool EDCondition::EvaluateInternalFromPacket(ItemInfo* info,
 
 	DWORD value = 0;
 	for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++) { if (prop->stat == stat) { value += prop->value; } }
-	return IntegerCompare(value, operation, targetED);
+	return IntegerCompare(value, operation, targetED, targetED2);
 }
 
 bool DurabilityCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2456,7 +2674,7 @@ bool DurabilityCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
 		for (UINT i = 0; i < dwStats; i++) { if (aStatList[i].wStatIndex == STAT_ENHANCEDMAXDURABILITY && aStatList[i].wSubIndex == 0) { value += aStatList[i].dwStatValue; } }
 	}
-	return IntegerCompare(value, operation, targetDurability);
+	return IntegerCompare(value, operation, targetDurability, targetDurability2);
 }
 
 bool DurabilityCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2468,7 +2686,7 @@ bool DurabilityCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	{
 		if (prop->stat == STAT_ENHANCEDMAXDURABILITY) { value += prop->value; }
 	}
-	return IntegerCompare(value, operation, targetDurability);
+	return IntegerCompare(value, operation, targetDurability, targetDurability2);
 }
 
 bool ChargedCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2493,7 +2711,7 @@ bool ChargedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 			}
 		}
 	}
-	return IntegerCompare(value, operation, targetLevel);
+	return IntegerCompare(value, operation, targetLevel, targetLevel2);
 }
 
 bool ChargedCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2509,7 +2727,7 @@ bool ChargedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 			//PrintText(1, "Found charged skill. skill=%u level=%u", prop->skill, prop->level);
 		}
 	}
-	return IntegerCompare(num, operation, targetLevel);
+	return IntegerCompare(num, operation, targetLevel, targetLevel2);
 }
 
 bool FoolsCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2568,7 +2786,7 @@ bool EquippedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	{
 		if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId == D2CLIENT_GetPlayerUnit()->dwUnitId)
 		{
-			if (uInfo->item->pItemData->BodyLocation > 0)
+			if (uInfo->item->pItemData->BodyLocation > 0 && uInfo->item->pItemData->ItemLocation == STORAGE_NULL)
 			{
 				is_equipped = true;
 			}
@@ -2582,7 +2800,7 @@ bool EquippedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(info->equipped, (BYTE)EQUAL, true);
+	return false;
 }
 
 bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2605,133 +2823,149 @@ bool ShopCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(info->inStore, (BYTE)EQUAL, true);
+	return false;
 }
 
 bool OneHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
-	WeaponType weapon_type = (weapon_number == 0)
-		? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-	bool is_onehanded = false;
-
-	if (weapon_type == WeaponType::kAxe ||
-		weapon_type == WeaponType::kWand ||
-		weapon_type == WeaponType::kClub ||
-		weapon_type == WeaponType::kScepter ||
-		weapon_type == WeaponType::kMace ||
-		weapon_type == WeaponType::kHammer ||
-		weapon_type == WeaponType::kSword ||
-		weapon_type == WeaponType::kKnife ||
-		weapon_type == WeaponType::kThrowing ||
-		weapon_type == WeaponType::kJavelin ||
-		weapon_type == WeaponType::kThrowingPot ||
-		weapon_type == WeaponType::kClaw1 ||
-		weapon_type == WeaponType::kClaw2 ||
-		weapon_type == WeaponType::kOrb ||
-		weapon_type == WeaponType::kAmaJav
-
-		)
+	if (code_to_dwtxtfileno.find(uInfo->itemCode) != code_to_dwtxtfileno.end())
 	{
-		is_onehanded = true;
-	}
+		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_onehanded = false;
 
-	return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+		if (weapon_type == WeaponType::kAxe ||
+			weapon_type == WeaponType::kWand ||
+			weapon_type == WeaponType::kClub ||
+			weapon_type == WeaponType::kScepter ||
+			weapon_type == WeaponType::kMace ||
+			weapon_type == WeaponType::kHammer ||
+			weapon_type == WeaponType::kSword ||
+			weapon_type == WeaponType::kKnife ||
+			weapon_type == WeaponType::kThrowing ||
+			weapon_type == WeaponType::kJavelin ||
+			weapon_type == WeaponType::kThrowingPot ||
+			weapon_type == WeaponType::kClaw1 ||
+			weapon_type == WeaponType::kClaw2 ||
+			weapon_type == WeaponType::kOrb ||
+			weapon_type == WeaponType::kAmaJav
+			)
+		{
+			is_onehanded = true;
+		}
+
+		return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool OneHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	int weapon_number = code_to_dwtxtfileno[info->code];
-	WeaponType weapon_type = (weapon_number == 0)
-		? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-	bool is_onehanded = false;
-
-	if (weapon_type == WeaponType::kAxe ||
-		weapon_type == WeaponType::kWand ||
-		weapon_type == WeaponType::kClub ||
-		weapon_type == WeaponType::kScepter ||
-		weapon_type == WeaponType::kMace ||
-		weapon_type == WeaponType::kHammer ||
-		weapon_type == WeaponType::kSword ||
-		weapon_type == WeaponType::kKnife ||
-		weapon_type == WeaponType::kThrowing ||
-		weapon_type == WeaponType::kJavelin ||
-		weapon_type == WeaponType::kThrowingPot ||
-		weapon_type == WeaponType::kClaw1 ||
-		weapon_type == WeaponType::kClaw2 ||
-		weapon_type == WeaponType::kOrb ||
-		weapon_type == WeaponType::kAmaJav
-
-		)
+	if (code_to_dwtxtfileno.find(info->code) != code_to_dwtxtfileno.end())
 	{
-		is_onehanded = true;
-	}
+		int weapon_number = code_to_dwtxtfileno[info->code];
+		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_onehanded = false;
 
-	return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+		if (weapon_type == WeaponType::kAxe ||
+			weapon_type == WeaponType::kWand ||
+			weapon_type == WeaponType::kClub ||
+			weapon_type == WeaponType::kScepter ||
+			weapon_type == WeaponType::kMace ||
+			weapon_type == WeaponType::kHammer ||
+			weapon_type == WeaponType::kSword ||
+			weapon_type == WeaponType::kKnife ||
+			weapon_type == WeaponType::kThrowing ||
+			weapon_type == WeaponType::kJavelin ||
+			weapon_type == WeaponType::kThrowingPot ||
+			weapon_type == WeaponType::kClaw1 ||
+			weapon_type == WeaponType::kClaw2 ||
+			weapon_type == WeaponType::kOrb ||
+			weapon_type == WeaponType::kAmaJav
+			)
+		{
+			is_onehanded = true;
+		}
+
+		return IntegerCompare(is_onehanded, (BYTE)EQUAL, 1);
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool TwoHandedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
-	WeaponType weapon_type = (weapon_number == 0)
-		? (uInfo->itemCode == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-	bool is_twohanded = false;
-
-	if (weapon_type == WeaponType::kAxe2H ||
-		weapon_type == WeaponType::kHammer2H ||
-		weapon_type == WeaponType::kSword2H ||
-		weapon_type == WeaponType::kSpear ||
-		weapon_type == WeaponType::kPole ||
-		weapon_type == WeaponType::kStaff ||
-		weapon_type == WeaponType::kBow ||
-		weapon_type == WeaponType::kCrossbow ||
-		weapon_type == WeaponType::kAmaBow ||
-		weapon_type == WeaponType::kAmaSpear
-
-		)
+	if (code_to_dwtxtfileno.find(uInfo->itemCode) != code_to_dwtxtfileno.end())
 	{
-		is_twohanded = true;
-	}
+		int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_twohanded = false;
 
-	return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+		if (weapon_type == WeaponType::kAxe2H ||
+			weapon_type == WeaponType::kHammer2H ||
+			weapon_type == WeaponType::kSword2H ||
+			weapon_type == WeaponType::kSpear ||
+			weapon_type == WeaponType::kPole ||
+			weapon_type == WeaponType::kStaff ||
+			weapon_type == WeaponType::kBow ||
+			weapon_type == WeaponType::kCrossbow ||
+			weapon_type == WeaponType::kAmaBow ||
+			weapon_type == WeaponType::kAmaSpear
+			)
+		{
+			is_twohanded = true;
+		}
+
+		return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool TwoHandedCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	int weapon_number = code_to_dwtxtfileno[info->code];
-	WeaponType weapon_type = (weapon_number == 0)
-		? (info->code == "hax") ? WeaponType::kAxe : WeaponType::kUnknown
-		: Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
-	bool is_twohanded = false;
-
-	if (weapon_type == WeaponType::kAxe2H ||
-		weapon_type == WeaponType::kHammer2H ||
-		weapon_type == WeaponType::kSword2H ||
-		weapon_type == WeaponType::kSpear ||
-		weapon_type == WeaponType::kPole ||
-		weapon_type == WeaponType::kStaff ||
-		weapon_type == WeaponType::kBow ||
-		weapon_type == WeaponType::kCrossbow ||
-		weapon_type == WeaponType::kAmaBow ||
-		weapon_type == WeaponType::kAmaSpear
-
-		)
+	if (code_to_dwtxtfileno.find(info->code) != code_to_dwtxtfileno.end())
 	{
-		is_twohanded = true;
-	}
+		int weapon_number = code_to_dwtxtfileno[info->code];
+		WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+		bool is_twohanded = false;
 
-	return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+		if (weapon_type == WeaponType::kAxe2H ||
+			weapon_type == WeaponType::kHammer2H ||
+			weapon_type == WeaponType::kSword2H ||
+			weapon_type == WeaponType::kSpear ||
+			weapon_type == WeaponType::kPole ||
+			weapon_type == WeaponType::kStaff ||
+			weapon_type == WeaponType::kBow ||
+			weapon_type == WeaponType::kCrossbow ||
+			weapon_type == WeaponType::kAmaBow ||
+			weapon_type == WeaponType::kAmaSpear
+			)
+		{
+			is_twohanded = true;
+		}
+
+		return IntegerCompare(is_twohanded, (BYTE)EQUAL, true);
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool GemmedCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2799,32 +3033,45 @@ bool SkillListCondition::EvaluateInternalFromPacket(ItemInfo* info,
 bool CharStatCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat1, stat2), operation, targetStat);
+	return IntegerCompare(D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat1, stat2), operation, targetStat, targetStat2);
 }
 
 bool CharStatCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat1, stat2), operation, targetStat);
+	return IntegerCompare(D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat1, stat2), operation, targetStat, targetStat2);
 }
 
 bool DifficultyCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(D2CLIENT_GetDifficulty(), operation, targetDiff);
+	return IntegerCompare(D2CLIENT_GetDifficulty(), operation, targetDiff, targetDiff2);
 }
 
 bool DifficultyCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(D2CLIENT_GetDifficulty(), operation, targetDiff);
+	return IntegerCompare(D2CLIENT_GetDifficulty(), operation, targetDiff, targetDiff2);
 }
 
 bool ItemStatCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2) {
-	return IntegerCompare(D2COMMON_GetUnitStat(uInfo->item, itemStat, itemStat2), operation, targetStat);
+	int newTarget = targetStat;
+	int newTarget2 = targetStat2;
+	if (itemStat == STAT_MAXHP || itemStat == STAT_MAXMANA)
+	{
+		newTarget *= 256;
+		newTarget2 *= 256;
+	}
+	// These stat values need to be grabbed differently, otherwise they just return 0
+	else if (itemStat == STAT_ENHANCEDDEFENSE || itemStat == STAT_ENHANCEDMAXIMUMDAMAGE || itemStat == STAT_ENHANCEDMINIMUMDAMAGE)
+	{
+		return IntegerCompare(GetStatFromList(uInfo, itemStat), operation, targetStat, targetStat2);
+	}
+	return IntegerCompare(D2COMMON_GetUnitStat(uInfo->item, itemStat, itemStat2), operation, newTarget, newTarget2);
+
 }
 
 bool ItemStatCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2835,36 +3082,36 @@ bool ItemStatCondition::EvaluateInternalFromPacket(ItemInfo* info,
 	switch (itemStat)
 	{
 	case STAT_SOCKETS:
-		return IntegerCompare(info->sockets, operation, targetStat);
+		return IntegerCompare(info->sockets, operation, targetStat, targetStat2);
 	case STAT_DEFENSE:
-		return IntegerCompare(GetDefense(info), operation, targetStat);
+		return IntegerCompare(GetDefense(info), operation, targetStat, targetStat2);
 	case STAT_NONCLASSSKILL:
 		for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++)
 		{
 			if (prop->stat == STAT_NONCLASSSKILL && prop->skill == itemStat2) { num += prop->value; }
 		}
-		return IntegerCompare(num, operation, targetStat);
+		return IntegerCompare(num, operation, targetStat, targetStat2);
 	case STAT_SINGLESKILL:
 		for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++)
 		{
 			if (prop->stat == STAT_SINGLESKILL && prop->skill == itemStat2) { num += prop->value; }
 		}
-		return IntegerCompare(num, operation, targetStat);
+		return IntegerCompare(num, operation, targetStat, targetStat2);
 	case STAT_CLASSSKILLS:
 		for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++)
 		{
 			if (prop->stat == STAT_CLASSSKILLS && prop->characterClass == itemStat2) { num += prop->value; }
 		}
-		return IntegerCompare(num, operation, targetStat);
+		return IntegerCompare(num, operation, targetStat, targetStat2);
 	case STAT_SKILLTAB:
 		for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++)
 		{
 			if (prop->stat == STAT_SKILLTAB && (prop->characterClass * 8 + prop->tab) == itemStat2) { num += prop->value; }
 		}
-		return IntegerCompare(num, operation, targetStat);
+		return IntegerCompare(num, operation, targetStat, targetStat2);
 	default:
 		for (vector<ItemProperty>::iterator prop = info->properties.begin(); prop < info->properties.end(); prop++) { if (prop->stat == itemStat) { num += prop->value; } }
-		return IntegerCompare(num, operation, targetStat);
+		return IntegerCompare(num, operation, targetStat, targetStat2);
 	}
 	return false;
 }
@@ -2873,7 +3120,7 @@ bool ItemPriceCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(D2COMMON_GetItemPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1), operation, targetStat);
+	return IntegerCompare(D2COMMON_GetItemPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1), operation, targetStat, targetStat2);
 }
 
 bool ItemPriceCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2892,10 +3139,10 @@ bool ResistAllCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	int lRes = D2COMMON_GetUnitStat(uInfo->item, STAT_LIGHTNINGRESIST, 0);
 	int cRes = D2COMMON_GetUnitStat(uInfo->item, STAT_COLDRESIST, 0);
 	int pRes = D2COMMON_GetUnitStat(uInfo->item, STAT_POISONRESIST, 0);
-	return (IntegerCompare(fRes, operation, targetStat) &&
-		IntegerCompare(lRes, operation, targetStat) &&
-		IntegerCompare(cRes, operation, targetStat) &&
-		IntegerCompare(pRes, operation, targetStat));
+	return (IntegerCompare(fRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(lRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(cRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(pRes, operation, targetStat, targetStat2));
 }
 
 bool ResistAllCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2910,10 +3157,10 @@ bool ResistAllCondition::EvaluateInternalFromPacket(ItemInfo* info,
 		else if (prop->stat == STAT_COLDRESIST) { cRes += prop->value; }
 		else if (prop->stat == STAT_POISONRESIST) { pRes += prop->value; }
 	}
-	return (IntegerCompare(fRes, operation, targetStat) &&
-		IntegerCompare(lRes, operation, targetStat) &&
-		IntegerCompare(cRes, operation, targetStat) &&
-		IntegerCompare(pRes, operation, targetStat));
+	return (IntegerCompare(fRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(lRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(cRes, operation, targetStat, targetStat2) &&
+		IntegerCompare(pRes, operation, targetStat, targetStat2));
 }
 
 void AddCondition::Init()
@@ -2966,6 +3213,36 @@ int GetDefense(ItemInfo* item)
 		}
 	}
 	return def;
+}
+
+int GetStatFromList(UnitItemInfo* uInfo, int itemStat)
+{
+	int value = 0;
+	StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+	int sockets = D2COMMON_GetUnitStat(uInfo->item, STAT_SOCKETS, 0);
+
+	if (pStatList)
+	{
+		value += D2COMMON_GetStatValueFromStatList(pStatList, itemStat, 0);
+	}
+
+	if (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD)
+	{
+		StatList* pStateStatList = D2COMMON_GetStateStatList(uInfo->item, 171);  // 171=runeword
+		if (pStateStatList)
+		{
+			value += D2COMMON_GetStatValueFromStatList(pStateStatList, itemStat, 0);
+		}
+	}
+
+	if (sockets)
+	{
+		for (UnitAny* sItem = uInfo->item->pInventory->pFirstItem; sItem; sItem = sItem->pItemData->pNextInvItem)
+		{
+			value += D2COMMON_GetUnitStat(sItem, itemStat, 0);
+		}
+	}
+	return value;
 }
 
 void HandleUnknownItemCode(char* code,

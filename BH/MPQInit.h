@@ -18,6 +18,8 @@
 
 extern unsigned int STAT_MAX;
 extern unsigned int SKILL_MAX;
+extern unsigned int PREFIX_MAX;
+extern unsigned int SUFFIX_MAX;
 
 // Item attributes from ItemTypes.txt and Weapon/Armor/Misc.txt
 struct ItemAttributes {
@@ -35,6 +37,8 @@ struct ItemAttributes {
 	unsigned int flags2;
 	BYTE qualityLevel;
 	BYTE magicLevel;
+	unsigned int maxac;
+	unsigned int cost;
 };
 
 // Properties from ItemStatCost.txt that we need for parsing incoming 0x9c packets, among other things
@@ -47,6 +51,14 @@ struct StatProperties {
 	BYTE op;
 	BYTE sendParamBits;
 	unsigned short ID;
+	unsigned int costAdd;
+	unsigned int costMultiply;
+};
+
+struct ItemAffixProperties {
+	unsigned int ID;
+	unsigned int costAdd;
+	unsigned int costMultiply;
 };
 
 struct CharStats {
@@ -58,6 +70,8 @@ extern std::unordered_map<std::string, StatProperties*> StatMap;
 extern std::vector<CharStats*> CharList;
 extern std::map<std::string, ItemAttributes*> ItemAttributeMap;
 extern std::map<std::string, InventoryLayout*> InventoryLayoutMap;
+extern std::vector<ItemAffixProperties*> AllPrefixList;
+extern std::vector<ItemAffixProperties*> AllSuffixList;
 
 
 #define STAT_NUMBER(name) (StatMap[name]->ID)

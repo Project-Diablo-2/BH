@@ -8,6 +8,7 @@
 #include "../Item/ItemDisplay.h"
 #include "../../AsyncDrawBuffer.h"
 #include "../Item/Item.h"
+#include "../../Modules/GameSettings/GameSettings.h"
 
 #pragma optimize( "", off)
 
@@ -24,8 +25,6 @@ void MapNotify::LoadConfig() {
 }
 
 void MapNotify::ReadConfig() {
-	BH::config->ReadKey("Reload Config", "VK_NUMPAD0", reloadConfig);
-	BH::config->ReadKey("Reload Config Ctrl", "VK_R", reloadConfigCtrl);
 }
 
 void MapNotify::OnLoad() {
@@ -33,8 +32,9 @@ void MapNotify::OnLoad() {
 }
 
 void MapNotify::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
+	GameSettings* settings = static_cast<GameSettings*>(BH::moduleManager->Get("gamesettings"));
 	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
-	if (key == reloadConfigCtrl && ctrlState || key == reloadConfig) {
+	if (key == settings->reloadConfigCtrl && ctrlState || key == settings->reloadConfig) {
 		*block = true;
 		if (up)
 			BH::ReloadConfig();

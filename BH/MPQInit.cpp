@@ -3,6 +3,8 @@
 
 unsigned int STAT_MAX;
 unsigned int SKILL_MAX;
+unsigned int PREFIX_MAX;
+unsigned int SUFFIX_MAX;
 bool initialized = false;
 
 std::vector<StatProperties*> AllStatList;
@@ -10,6 +12,8 @@ std::unordered_map<std::string, StatProperties*> StatMap;
 std::vector<CharStats*> CharList;
 std::map<std::string, ItemAttributes*> ItemAttributeMap;
 std::map<std::string, InventoryLayout*> InventoryLayoutMap;
+std::vector<ItemAffixProperties*> AllPrefixList;
+std::vector<ItemAffixProperties*> AllSuffixList;
 
 // These are the standard item attributes (if we can't read the patch mpq file)
 #pragma region DEFAULTS
@@ -293,8 +297,8 @@ ItemAttributes ItemAttributeList[] = {
 	{"Chipped Diamond", "gcw", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 65, 0},
 	{"Flawed Diamond", "gfw", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 66, 0},
 	{"Diamond", "gsw", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 68, 0},
-	{"Flawless Diamond", "glws", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 72, 0},
-	{"Perfect Diamond", "gpws", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 80, 0},
+	{"Flawless Diamond", "glw", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 72, 0},
+	{"Perfect Diamond", "gpw", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 80, 0},
 	{"Flawless Amethyst", "gzvs", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 40, 0},
 	{"Perfect Amethyst", "gpvs", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 48, 0},
 	{"Flawless Topaz", "glys", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 1032, 0},
@@ -306,8 +310,9 @@ ItemAttributes ItemAttributeList[] = {
 	{"Flawless Ruby", "glrs", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 264, 0},
 	{"Perfect Ruby", "gprs", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 272, 0},
 	{"Flawless Diamond", "glws", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 72, 0},
+	{"Perfect Diamond", "gpws", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 80, 0 },
 	{"Flawless Skull", "skls", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 2056, 0},
-	{"Perfect Skull", "skz", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 2064, 0},
+	{"Perfect Skull", "skzs", "Gem", 1, 1, 0, 0, 0, 0, 0, 0, 2064, 0},
 	{"Minor Healing Potion", "hp1", "Health Potion", 1, 1, 0, 1, 0, 0, 0, 0, 0, 0},
 	{"Light Healing Potion", "hp2", "Health Potion", 1, 1, 0, 1, 0, 0, 0, 0, 0, 0},
 	{"Healing Potion", "hp3", "Health Potion", 1, 1, 0, 1, 0, 0, 0, 0, 0, 0},
@@ -1131,6 +1136,8 @@ void InitializeMPQData() {
 				bits->saveAdd = (BYTE)std::strtoul((*d)["Save Add"].c_str(), &end, 10);
 				bits->saveParamBits = (BYTE)std::strtoul((*d)["Save Param Bits"].c_str(), &end, 10);
 				bits->op = (BYTE)std::strtoul((*d)["op"].c_str(), &end, 10);
+				bits->costAdd = (unsigned int)std::strtoul((*d)["Add"].c_str(), &end, 10);
+				bits->costMultiply = (unsigned int)std::strtoul((*d)["Multiply"].c_str(), &end, 10);
 				AllStatList.push_back(bits);
 				StatMap[bits->name] = bits;
 				lastID = (short)id;
@@ -1234,6 +1241,8 @@ void InitializeMPQData() {
 				attrs->flags2 = flags2;
 				attrs->qualityLevel = stoi((*d)["level"], nullptr, 10);
 				attrs->magicLevel = atoi((*d)["magic lvl"].c_str());
+				attrs->maxac = stoi((*d)["maxac"], nullptr, 10);
+				attrs->cost = stoi((*d)["cost"], nullptr, 10);
 				ItemAttributeMap[(*d)["code"]] = attrs;
 			}
 		}
@@ -1320,6 +1329,7 @@ void InitializeMPQData() {
 				attrs->flags2 = flags2;
 				attrs->qualityLevel = stoi((*d)["level"], nullptr, 10);
 				attrs->magicLevel = atoi((*d)["magic lvl"].c_str());
+				attrs->cost = stoi((*d)["cost"], nullptr, 10);
 				ItemAttributeMap[(*d)["code"]] = attrs;
 			}
 		}
@@ -1349,10 +1359,10 @@ void InitializeMPQData() {
 				else if (ancestorTypes.find("gem2") != ancestorTypes.end() || ancestorTypes.find("gsm2") != ancestorTypes.end()) {
 					flags2 |= ITEM_GROUP_REGULAR;
 				}
-				else if (ancestorTypes.find("gem3") != ancestorTypes.end() || ancestorTypes.find("gsm3") != ancestorTypes.end()) {
+				else if (ancestorTypes.find("ggm3") != ancestorTypes.end() || ancestorTypes.find("gsm3") != ancestorTypes.end()) {
 					flags2 |= ITEM_GROUP_FLAWLESS;
 				}
-				else if (ancestorTypes.find("gem4") != ancestorTypes.end() || ancestorTypes.find("gsm4") != ancestorTypes.end()) {
+				else if (ancestorTypes.find("ggm4") != ancestorTypes.end() || ancestorTypes.find("gsm4") != ancestorTypes.end()) {
 					flags2 |= ITEM_GROUP_PERFECT;
 				}
 				if (ancestorTypes.find("gema") != ancestorTypes.end() || ancestorTypes.find("ggma") != ancestorTypes.end()) {
@@ -1396,7 +1406,40 @@ void InitializeMPQData() {
 				attrs->flags2 = flags2;
 				attrs->qualityLevel = stoi((*d)["level"], nullptr, 10);
 				attrs->magicLevel = 0;
+				attrs->cost = stoi((*d)["cost"], nullptr, 10);
 				ItemAttributeMap[(*d)["code"]] = attrs;
+			}
+		}
+	}
+
+	if (MpqDataMap.find("magicprefix") != MpqDataMap.end()) {
+		unsigned int id = 1;
+		for (auto d = MpqDataMap["magicprefix"]->data.begin(); d < MpqDataMap["magicprefix"]->data.end(); d++) {
+			if ((*d)["add"].length() >= 0) {
+				ItemAffixProperties* prefix = new ItemAffixProperties();
+				prefix->ID = id;
+				prefix->costAdd = (unsigned int)std::strtoul((*d)["add"].c_str(), &end, 10);
+				prefix->costMultiply = (unsigned int)std::strtoul((*d)["multiply"].c_str(), &end, 10);
+				AllPrefixList.push_back(prefix);
+
+				PREFIX_MAX = id;
+				id += 1;
+			}
+		}
+	}
+
+	if (MpqDataMap.find("magicsuffix") != MpqDataMap.end()) {
+		unsigned int id = 1;
+		for (auto d = MpqDataMap["magicsuffix"]->data.begin(); d < MpqDataMap["magicsuffix"]->data.end(); d++) {
+			if ((*d)["add"].length() >= 0) {
+				ItemAffixProperties* suffix = new ItemAffixProperties();
+				suffix->ID = id;
+				suffix->costAdd = (unsigned int)std::strtoul((*d)["add"].c_str(), &end, 10);
+				suffix->costMultiply = (unsigned int)std::strtoul((*d)["multiply"].c_str(), &end, 10);
+				AllSuffixList.push_back(suffix);
+
+				SUFFIX_MAX = id;
+				id += 1;
 			}
 		}
 	}

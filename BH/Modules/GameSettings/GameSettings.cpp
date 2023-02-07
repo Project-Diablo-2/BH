@@ -31,6 +31,8 @@ void GameSettings::LoadConfig() {
 	BH::config->ReadKey("Show Players Gear", "VK_0", showPlayer);
 	BH::config->ReadKey("Resync Hotkey", "VK_9", resyncKey);
 	BH::config->ReadKey("Character Stats", "VK_8", advStatMenuKey);
+	BH::config->ReadKey("Reload Config", "VK_NUMPAD0", reloadConfig);
+	BH::config->ReadKey("Reload Config Ctrl", "VK_R", reloadConfigCtrl);
 }
 
 void GameSettings::LoadGeneralTab() {
@@ -59,6 +61,11 @@ void GameSettings::LoadGeneralTab() {
 	colored_text = new Drawing::Texthook(generalTab, x, (y), "Advanced Stat Display");
 	colored_text->SetColor(Gold);
 	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &advStatMenuKey, "");
+
+	y += 15;
+	colored_text = new Drawing::Texthook(generalTab, x, (y), "Reload Config");
+	colored_text->SetColor(Gold);
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &reloadConfig, "");
 
 	y += 15;
 	new Drawing::Checkhook(generalTab, x, y, &ScreenInfo::Toggles["Experience Meter"].state, "Experience Meter");
