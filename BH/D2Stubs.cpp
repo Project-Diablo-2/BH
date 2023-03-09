@@ -111,3 +111,36 @@ __declspec (naked) int __fastcall ITEMS_GetItemPropertiesString_STUB(int nStatFi
 		retn 32
 	}
 }
+
+__declspec(naked) MonSeqTxt* __stdcall D2COMMON_GetSequenceInfo_STUB(UnitAny* pUnit)
+{
+	__asm
+	{
+		mov EAX, [esp + 4]                                   // pUnit
+		call D2COMMON_GetSequenceInfo                        // 0x2E840
+		retn 4
+	}
+}
+
+__declspec(naked) int __stdcall D2COMMON_GetSequenceIndex_STUB(UnitAny* pUnit)
+{
+	__asm
+	{
+		push ESI
+		mov ESI, [esp + 8]                                   // param_1
+		call D2COMMON_GetSequenceIndex                       // 0x2E790
+		pop ESI
+		retn 4
+	}
+}
+
+__declspec(naked) int __stdcall D2COMMON_GetFrameMinAccr_STUB(int nIndex, UnitAny* pUnit)
+{
+	__asm
+	{
+		mov EAX, [esp + 4]                                   // nIndex
+		push[esp + 8]                                       // pUnit
+		call D2COMMON_GetFrameMinAccr                        // 0x323E0
+		retn 8
+	}
+}

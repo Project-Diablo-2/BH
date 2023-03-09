@@ -1286,6 +1286,15 @@ enum UNITFLAGEX
 
 #define ITEM_TYPE_ALLARMOR 50
 
+enum MinAccrIndex
+{
+	FRAMES_IAS,
+	FRAMES_FHR,
+	FRAMES_FCR,
+	FRAMES_FBR,
+	FRAMES_FRW
+};
+
 const int NUM_CORRUPTIONS = 90;
 
 const int CorruptionMods[][6] = {

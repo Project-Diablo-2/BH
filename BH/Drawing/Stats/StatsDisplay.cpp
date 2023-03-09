@@ -11,6 +11,7 @@
 #include "../Basic/Texthook/Texthook.h"
 #include "../../Modules/GameSettings/GameSettings.h"
 
+#include <set>
 
 using namespace Drawing;
 
@@ -55,22 +56,29 @@ std::map<DWORD, std::vector<int>> faster_cast_rate_frames = {
 	{ MERC_A5, { 0 } },
 };
 
-std::map<DWORD, std::vector<int>> increased_attack_speed_frames = {
-	{ CLASS_PAL, { 13 } },
-	{ CLASS_AMA, { 11 } },
-	{ CLASS_BAR, { 11 } },
-	{ CLASS_NEC, { 14 } },
-	{ CLASS_SOR, { 14 } },
-	{ CLASS_DRU, { 15 } },
-	{ CLASS_ASN, { 10 } },
-
-	{ MERC_A1, { 10 } },
+std::map<DWORD, std::set<int>> merc_attack_skills = {
+	{ MERC_A1, { 385, 386 } },
 
 	{ MERC_A2, { 10 } },
 
-	{ MERC_A3, { 10 } },
+	{ MERC_A3, {  } },
 
-	{ MERC_A5, { 10 } },
+	{ MERC_A5, { 144 } },
+
+};
+
+std::set<int> rollback_skills = {
+	26, 30, 106, 248, 255
+};
+
+std::map<DWORD, std::string> merc_skill_names = {
+	{ MERC_A1, "Fire/Cold Arrow" },
+
+	{ MERC_A2, "Jab" },
+
+	{ MERC_A3, "Fireball/Ice Blast/Lightning" },
+
+	{ MERC_A5, "Concentrate/Bash" },
 
 };
 
@@ -211,7 +219,7 @@ StatsDisplay::~StatsDisplay()
 
 void StatsDisplay::LoadConfig()
 {
-	int height = 342 + 8 * 5 + 16 * 10;
+	int height = 342 + 8 * 7 + 16 * 10;
 	customStats.clear();
 
 	BH::config->ReadToggle("Stats on Right", "None", false, Toggles["Stats on Right"]);
@@ -604,12 +612,34 @@ void StatsDisplay::OnDraw()
 
 		auto weapon_type = GetCurrentWeaponType(unit->pInventory);
 
-		Texthook::Draw(column1,
-			(y += 16),
-			None,
-			6,
-			Gold,
-			L"Breakpoints (FCR relative to Right Click Skill):");
+		char szSkillText[255] = "";
+		if (!isMerc)
+		{
+			Texthook::Draw(column1,
+				(y += 16),
+				None,
+				6,
+				Gold,
+				L"Breakpoints (relative to Right Click Skill):");
+		}
+		else
+		{
+			std::string sSkillText = "";
+			if (merc_skill_names.find(unit->dwTxtFileNo) != merc_skill_names.end())
+			{
+				sSkillText = merc_skill_names.at(unit->dwTxtFileNo);
+			}
+
+			sprintf(szSkillText, "%.255s", sSkillText.c_str());
+
+			Texthook::Draw(column1,
+				(y += 16),
+				None,
+				6,
+				Gold,
+				"Breakpoints (%s):",
+				szSkillText);
+		}
 
 
 		auto fcr_key = unit->dwTxtFileNo;
@@ -664,19 +694,9 @@ void StatsDisplay::OnDraw()
 			bp_string);
 
 
-		auto ias_key = unit->dwTxtFileNo;
-
-		/* Removed until finished
-		char bp_ias_string[255] = "";
-		GetBreakpointString(unit, STAT_ATTACKRATE, increased_attack_speed_frames[ias_key], (char*)&bp_ias_string);
-		Texthook::Draw(column1,
-					   ( y += 16 ),
-					   None,
-					   6,
-					   Gold,
-					   "IAS:ÿc0 %s",
-					   bp_ias_string);
-		*/
+		char ias_bp_string[255] = "IAS (Frames):ÿc0 ";
+		y += 16;
+		GetIASBreakpointString(unit, ias_bp_string, column1, &y);
 
 		y += 8;
 
@@ -730,6 +750,14 @@ void StatsDisplay::OnDraw()
 			L"Projectile Pierce:ÿc0 %d",
 			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_PIERCINGATTACK, 0)) +
 			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_PIERCE, 0)));
+		Texthook::Draw(column2,
+			y,
+			None,
+			6,
+			Gold,
+			L"HP/MP per Kill:ÿc1 %d ÿc0/ÿc3 %d",
+			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_LIFEAFTEREACHKILL, 0)),
+			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MANAAFTEREACHKILL, 0)));
 
 		int minFire = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MINIMUMFIREDAMAGE, 0));
 		int maxFire = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXIMUMFIREDAMAGE, 0));
@@ -956,6 +984,328 @@ void StatsDisplay::GetBreakpointString(UnitAny* unit,
 	bpString += std::to_string(bps[bps.size() - 1]);
 
 	sprintf(bpCharString, "%.255s", bpString.c_str());
+}
+
+void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
+	char* bpCharString, int x, int* pY)
+{
+	Skill* pRightSkill = D2COMMON_10507_UNITS_GetRightSkill(pUnit);
+	if (!pRightSkill && pUnit->dwType == UNIT_MONSTER)
+	{
+		// Mercenaries
+		if (pUnit->pInfo)
+		{
+			std::set<int> vMercSkills = merc_attack_skills.at(pUnit->dwTxtFileNo);
+			pRightSkill = pUnit->pInfo->pFirstSkill;
+			while (pRightSkill && pRightSkill->pSkillInfo && vMercSkills.find(pRightSkill->pSkillInfo->wSkillId) == vMercSkills.end())
+			{
+				pRightSkill = pRightSkill->pNextSkill;
+			}
+		}
+	}
+
+	if (pRightSkill)
+	{
+		int nFrameBonus = 0;
+		int nFrames = 0;
+		int nMinFrames = 0;
+		int nMaxFrames = 0;
+		int nAnimFrames = 0;
+		int nAnimSpeed = 256;
+		int nAnimAcceleration = 100;
+		int nMinAnimAcceleration = 15;
+		int nMaxAnimAcceleration = 175;
+		int nFrameMinAccr = 0;
+		int nAttackRate = 0;
+
+		int nMode = 0;
+		int nAnimType = pUnit->dwType;
+		int nUnitID = pUnit->dwTxtFileNo;
+		AnimDataRecord* pAnimData = NULL;
+
+		// Disable rollback skill calc for now until implemented
+		if (rollback_skills.find(pRightSkill->pSkillInfo->wSkillId) != rollback_skills.end())
+		{
+			Texthook::Draw(x,
+				*pY,
+				None,
+				6,
+				Gold,
+				"IAS (Frames): N/A (Work in Progress)");
+			return;
+		}
+
+		if (pRightSkill->mode == PLAYER_MODE_SEQUENCE)
+		{
+			int nSeqNum = D2COMMON_10030_SKILLS_GetSeqNumFromSkill(pUnit, pRightSkill);
+			int nSeqIndex = D2COMMON_GetSequenceIndex_STUB(pUnit);
+			if (&(p_D2COMMON_PlayerSequenceDataTable[nSeqNum]) == NULL)
+			{
+				Texthook::Draw(x,
+					*pY,
+					None,
+					6,
+					Gold,
+					"IAS (Frames): N/A");
+				return;
+			}
+
+			SequenceInfo* pSeqInfo = &(p_D2COMMON_PlayerSequenceDataTable[nSeqNum])[nSeqIndex];
+			nFrames = pSeqInfo->nFrameCount;
+			// This skill can't be used with current setup
+			if (nFrames == 0)
+			{
+				Texthook::Draw(x,
+					*pY,
+					None,
+					6,
+					Gold,
+					"IAS (Frames): N/A");
+				return;
+			}
+
+			nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
+			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
+			nAnimAcceleration = nFrameMinAccr + nAttackRate - 30;
+			nMinAnimAcceleration = nAttackRate - 30;
+			nMaxAnimAcceleration = 145;
+		}
+		else if (pUnit->dwType == UNIT_MONSTER && pRightSkill->mode == PLAYER_MODE_USESKILL2)
+		{
+			int nSeqNum = D2COMMON_10030_SKILLS_GetSeqNumFromSkill(pUnit, pRightSkill);
+			SequenceInfo* pMonSeqInfo = D2COMMON_10194_DATATBLS_GetMonSeqTableRecord(nSeqNum);
+			nFrames = pMonSeqInfo->nFrameCount;
+
+			nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
+			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
+			nAnimAcceleration = nFrameMinAccr + nAttackRate;
+			nMinAnimAcceleration = nAttackRate;
+			nMaxAnimAcceleration = 175;
+		}
+		else
+		{
+			nMode = pRightSkill->mode;
+			if (nMode == PLAYER_MODE_CAST)
+			{
+				Texthook::Draw(x,
+					*pY,
+					None,
+					6,
+					Gold,
+					"IAS (Frames): N/A");
+				return;
+			}
+
+			D2COMMON_10350_ConvertMode(pUnit, &nAnimType, &nUnitID, &nMode, (char*)"StatsDisplay.cpp", 1009);
+			pAnimData = D2COMMON_GetAnimDataRecord(pUnit, nUnitID, nMode, nAnimType, pUnit->pInventory);
+			if (!pAnimData)
+			{
+				Texthook::Draw(x,
+					*pY,
+					None,
+					6,
+					Gold,
+					"IAS (Frames): N/A");
+				return;
+			}
+
+			nFrames = pAnimData->dwFrames;
+			nAnimSpeed = pAnimData->dwAnimSpeed;
+			// This calculates EIAS from IAS
+			nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
+			// This is 100 + WSM + SIAS
+			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
+			nAnimAcceleration = nFrameMinAccr + nAttackRate;
+			nMinAnimAcceleration = nAttackRate;
+		}
+
+		if (D2COMMON_UnitCanDualWield(pUnit))
+		{
+			Inventory* pInventory = pUnit->pInventory;
+			UnitAny* pLeftWeapon = NULL;
+			UnitAny* pRightWeapon = NULL;
+			// In this case, pLeftWeapon == main hand weapon
+			if (pInventory != NULL)
+			{
+				pLeftWeapon = D2COMMON_GetLeftHandWeapon(pInventory);
+				if (pLeftWeapon != NULL)
+				{
+					int nBodyLoc = D2COMMON_ItemGetBodyLocation(pLeftWeapon);
+					pRightWeapon = D2COMMON_GetItemByBodyLoc(pInventory, ((nBodyLoc & 0xFF) == 4) + 4);
+				}
+
+				if (pLeftWeapon != NULL &&
+					D2COMMON_IsMatchingType(pLeftWeapon, 45) && // ITEM_TYPE_WEAPON
+					D2COMMON_ItemCanBeEquipped(pLeftWeapon) &&
+					D2COMMON_StatListGetOwner(pLeftWeapon, NULL) != NULL &&
+					pRightWeapon != NULL &&
+					D2COMMON_IsMatchingType(pRightWeapon, 45) && // ITEM_TYPE_WEAPON
+					D2COMMON_ItemCanBeEquipped(pRightWeapon) &&
+					D2COMMON_StatListGetOwner(pRightWeapon, NULL) != NULL)
+				{
+					int nLeftWeaponAttackRate = D2COMMON_GetUnitStat(pLeftWeapon, STAT_ATTACKRATE, 0);
+					int nRightWeaponAttackRate = D2COMMON_GetUnitStat(pRightWeapon, STAT_ATTACKRATE, 0);
+
+					if (pUnit && pUnit->dwType == UNIT_PLAYER)
+					{
+						nLeftWeaponAttackRate += D2COMMON_GetUnitStat(pLeftWeapon, STAT_IAS, 0);
+						nRightWeaponAttackRate += D2COMMON_GetUnitStat(pRightWeapon, STAT_IAS, 0);
+
+						D2COMMON_MergeStatList(pUnit, pLeftWeapon, 0);
+						D2COMMON_MergeStatList(pUnit, pRightWeapon, 0);
+
+						if (nLeftWeaponAttackRate > nRightWeaponAttackRate)
+						{
+							D2COMMON_MergeStatList(pUnit, pLeftWeapon, 1);
+						}
+						else
+						{
+							D2COMMON_MergeStatList(pUnit, pRightWeapon, 1);
+						}
+
+						int nMinAccrIAS = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
+						int nBaseIAS = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
+
+						nAnimAcceleration = nBaseIAS + nMinAccrIAS;
+						nMinAnimAcceleration = nBaseIAS;
+						if (pRightSkill->mode == PLAYER_MODE_SEQUENCE)
+						{
+							nAnimAcceleration -= 30;
+							nMinAnimAcceleration -= 30;
+						}
+					}
+				}
+			}
+		}
+
+		// Temp set skill mode to calc frame bonus
+		int nOldMode = pUnit->dwMode;
+		pUnit->dwMode = pRightSkill->mode;
+		nFrameBonus = D2COMMON_10031_UNITS_GetFrameBonus(pUnit);
+		pUnit->dwMode = nOldMode;
+
+		if (nAnimAcceleration < 15) nAnimAcceleration = 15;
+		if (nAnimAcceleration > nMaxAnimAcceleration) nAnimAcceleration = nMaxAnimAcceleration;
+		if (nAnimSpeed == 0) nAnimSpeed = 256;
+
+		nMinFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)((nAnimSpeed * nMaxAnimAcceleration) / 100))) - 1;
+		nMaxFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)((nAnimSpeed * nMinAnimAcceleration) / 100))) - 1;
+		nAnimFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)((nAnimSpeed * nAnimAcceleration) / 100))) - 1;
+
+		std::string bpString = bpCharString;
+		int nIASBP = 0;
+		double nBaseIAS = 0;
+		int nPreviousFrameBP = 0;
+		int nCurrentFrames = 0;
+
+		for (int i = nMinAnimAcceleration; i < nMaxAnimAcceleration; i++)
+		{
+			nBaseIAS = (double)i - (double)nMinAnimAcceleration;
+			nIASBP = ceil((120 * nBaseIAS) / (120 - nBaseIAS));
+			nCurrentFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)((nAnimSpeed * i) / 100))) - 1;
+			if (nCurrentFrames == nPreviousFrameBP) continue;
+
+			nPreviousFrameBP = nCurrentFrames;
+			if (nCurrentFrames == nAnimFrames)
+			{
+				bpString += "ÿc8";
+				bpString += std::to_string(nIASBP) + " (" + std::to_string(nCurrentFrames) + ")";
+				bpString += "ÿc0";
+			}
+			else
+			{
+				bpString += std::to_string(nIASBP);// +"(" + std::to_string(i) + ")";
+			}
+			bpString += " / ";
+		}
+
+		nBaseIAS = (double)nMaxAnimAcceleration - (double)nMinAnimAcceleration;
+		nIASBP = ceil((120 * nBaseIAS) / (120 - nBaseIAS));
+		nCurrentFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)((nAnimSpeed * nMaxAnimAcceleration) / 100))) - 1;
+		if (nCurrentFrames != nPreviousFrameBP)
+		{
+			if (nMinFrames == nAnimFrames) bpString += "ÿc8";
+			bpString += std::to_string(nIASBP);
+			if (nCurrentFrames == nAnimFrames)
+			{
+				bpString += " (" + std::to_string(nMinFrames) + ")";
+			}
+		}
+		else
+		{
+			if (bpString.length() > 3)
+			{
+				// Remove the trailing slash if there was no final BP
+				for (int j = 0; j < 3; j++) bpString.pop_back();
+			}
+		}
+
+		int nMaxLength = GetXSize() / 4 - 8;
+		int nLastSlash = bpString.substr(0, nMaxLength).find_last_of('/');
+		if (bpString.length() > nMaxLength && nLastSlash != -1)
+		{
+			sprintf(bpCharString, "%.255s", bpString.substr(0, nLastSlash + 1).c_str());
+			Texthook::Draw(x,
+				*pY,
+				None,
+				6,
+				Gold,
+				"%s",
+				bpCharString);
+
+			bpString = bpString.substr(nLastSlash + 1, bpString.length());
+			nLastSlash = bpString.substr(0, (nMaxLength - 16)).find_last_of('/');
+
+			// - 16 to account for spacing
+			while (bpString.length() > (nMaxLength - 16) && nLastSlash != -1)
+			{
+
+				*pY += 8;
+
+				sprintf(bpCharString, "%.255s", bpString.substr(0, nLastSlash + 1).c_str());
+				Texthook::Draw(x,
+					*pY,
+					None,
+					6,
+					White,
+					"             %s",
+					bpCharString);
+
+				bpString = bpString.substr(nLastSlash + 1, bpString.length());
+				nLastSlash = bpString.substr(0, (nMaxLength - 16)).find_last_of('/');
+			}
+
+			*pY += 8;
+			sprintf(bpCharString, "%.255s", bpString.c_str());
+			Texthook::Draw(x,
+				*pY,
+				None,
+				6,
+				White,
+				"             %s",
+				bpCharString);
+		}
+		else
+		{
+			sprintf(bpCharString, "%.255s", bpString.c_str());
+			Texthook::Draw(x,
+				*pY,
+				None,
+				6,
+				Gold,
+				"%s",
+				bpCharString);
+		}
+	}
+	else
+	{
+		Texthook::Draw(x,
+			*pY,
+			None,
+			6,
+			Gold,
+			"IAS (Frames): N/A");
+	}
 }
 
 WeaponType StatsDisplay::GetCurrentWeaponType(Inventory* inventory)
