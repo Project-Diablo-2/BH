@@ -998,8 +998,24 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	{
 		while (name.find("%" + replacements[n].key + "%") != string::npos)
 		{
-			if (bLimit && replacements[n].key == "NL") { name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, ""); }
-			else { name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, replacements[n].value); }
+			if (bLimit && replacements[n].key == "NL")
+			{
+				// Allow %NL% on identified, magic+ item names
+				if ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
+					(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0))
+				{
+					name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, replacements[n].value);
+				}
+				// Remove it on everything else
+				else
+				{
+					name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, "");
+				}
+			}
+			else
+			{
+				name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, replacements[n].value);
+			}
 		}
 	}
 	// Replace named stat output strings with their STAT# counterpart
