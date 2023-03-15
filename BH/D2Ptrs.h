@@ -109,6 +109,7 @@ FUNCPTR(D2CLIENT, GetCurrentInteractingNPC, UnitAny* __fastcall, (void), 0x46150
 FUNCPTR(D2CLIENT, GetSelectedUnit, UnitAny* __stdcall, (void), 0x51A80, 0x17280)
 FUNCPTR(D2CLIENT, GetCursorItem, UnitAny* __fastcall, (void), 0x16020, 0x144A0)
 FUNCPTR(D2CLIENT, GetMercUnit, UnitAny* __fastcall, (void), 0x97CD0, 0x9C0A0)
+FUNCPTR(D2CLIENT, ItemPacketBuildAction3_OldGround, void __stdcall, (px9c* pPacket), 0x86810)
 // FUNCPTR(D2CLIENT, UnitTestSelect, DWORD __stdcall, (UnitAny* pUnit, DWORD _1, DWORD _2, DWORD _3), 0x8D030) // unused but we need to use it
 
 FUNCPTR(D2CLIENT, SetSelectedUnit_I, void __fastcall, (UnitAny* pUnit), 0x51860, 0x17060)
@@ -315,6 +316,7 @@ ASMPTR(D2WIN, DrawTextBuffer, 0x12940, 0x134D0)
 
 ASMPTR(D2CLIENT, ParseStats_J, 0x54E10, 0x2CE40)
 ASMPTR(D2CLIENT, GetItemPropertiesString, 0x55B20);
+ASMPTR(D2CLIENT, ItemPacketBuildAction0_NewGround, 0x84BB0);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

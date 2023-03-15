@@ -44,6 +44,7 @@
  */
 
 #include "Item.h"
+#include "../../D2Helpers.h"
 #include "../../D2Ptrs.h"
 #include "../../D2Strings.h"
 #include "../../BH.h"
@@ -79,6 +80,9 @@ Patch* permShowItems3 = new Patch(Call, D2CLIENT, { 0x59483, 0x4EA13 }, (int)Per
 Patch* permShowItems4 = new Patch(Call, D2CLIENT, { 0x5908A, 0x4E61A }, (int)PermShowItemsPatch3_ASM, 6);
 Patch* permShowItems5 = new Patch(Call, D2CLIENT, { 0xA6BA3, 0x63443 }, (int)PermShowItemsPatch4_ASM, 6);
 
+Patch* newGroundIntercept = new Patch(Call, D2CLIENT, { 0xAE0DA }, (int)D2CLIENT_GetItemFromPacketIntercept_NewGround_STUB, 5);
+Patch* oldGroundIntercept = new Patch(Call, D2CLIENT, { 0xAE108 }, (int)GetItemFromPacket_OldGround, 5);
+
 using namespace Drawing;
 
 void Item::OnLoad() {
@@ -93,6 +97,9 @@ void Item::OnLoad() {
 	permShowItems3->Install();
 	permShowItems4->Install();
 	permShowItems5->Install();
+
+	newGroundIntercept->Install();
+	oldGroundIntercept->Install();
 
 	itemPropertiesPatch->Install();
 	itemPropertyStringDamagePatch->Install();
@@ -264,6 +271,8 @@ void Item::OnUnload() {
 	permShowItems3->Remove();
 	permShowItems4->Remove();
 	permShowItems5->Remove();
+	newGroundIntercept->Remove();
+	oldGroundIntercept->Remove();
 	ItemDisplay::UninitializeItemRules();
 }
 
@@ -371,6 +380,94 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* item)
 	MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, itemName.c_str(), itemName.length(), name, itemName.length());
 	name[itemName.length()] = 0;  // null-terminate the string since MultiByteToWideChar doesn't
 	delete[] szName;
+}
+
+// Path when an item first drops from a monster, chest, etc.
+void __stdcall GetItemFromPacket_NewGround(px9c* pPacket)
+{
+	D2CLIENT_GetItemFromPacket_NewGround_STUB(pPacket);
+	UnitAny* pItem = D2CLIENT_FindServerSideUnit(pPacket->nItemId, UNIT_ITEM);
+	UnitItemInfo uInfo;
+	if (CreateUnitItemInfo(&uInfo, pItem)) {
+		HandleUnknownItemCode(uInfo.itemCode, "from packet");
+	}
+	Item::ProcessItemPacketFilterRules(&uInfo, pPacket);
+
+	return;
+}
+
+// Path when an item that was previously dropped comes into view
+void __stdcall GetItemFromPacket_OldGround(px9c* pPacket)
+{
+	D2CLIENT_ItemPacketBuildAction3_OldGround(pPacket);
+	UnitAny* pItem = D2CLIENT_FindServerSideUnit(pPacket->nItemId, UNIT_ITEM);
+	UnitItemInfo uInfo;
+	if (CreateUnitItemInfo(&uInfo, pItem)) {
+		HandleUnknownItemCode(uInfo.itemCode, "from packet");
+	}
+	Item::ProcessItemPacketFilterRules(&uInfo, pPacket);
+
+	return;
+}
+
+void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
+{
+	if (Toggles["Advanced Item Display"].state) {
+		bool showOnMap = false;
+		auto color = UNDEFINED_COLOR;
+
+		// TODO: This loop appears to only be used by legacy "Item Drop" & "Item Close" notifications.
+		// Can delete after we get rid of them
+		for (vector<Rule*>::iterator it = MapRuleList.begin(); it != MapRuleList.end(); it++) {
+			// skip map and notification if ping level requirement is not met
+			int filterLevel = GetFilterLevel();
+			if (filterLevel != 0 && (*it)->action.pingLevel < filterLevel && (*it)->action.pingLevel != -1) continue;
+
+			if ((*it)->Evaluate(uInfo, NULL)) {
+				auto action_color = (*it)->action.notifyColor;
+				// never overwrite color with an undefined color. never overwrite a defined color with dead color.
+				if (action_color != UNDEFINED_COLOR && (action_color != DEAD_COLOR || color == UNDEFINED_COLOR))
+					color = action_color;
+				showOnMap = true;
+				// break unless %CONTINUE% is used
+				if ((*it)->action.stopProcessing) break;
+			}
+		}
+		//PrintText(1, "Item on ground: %s, %s, %s, %X", item.name.c_str(), item.code, item.attrs->category.c_str(), item.attrs->flags);
+		if (showOnMap && !(*BH::MiscToggles2)["Item Detailed Notifications"].state) {
+			if (color == UNDEFINED_COLOR) {
+				color = ItemColorFromQuality(uInfo->item->pItemData->dwQuality);
+			}
+			if ((*BH::MiscToggles2)["Item Drop Notifications"].state &&
+				pPacket->nAction == ITEM_ACTION_NEW_GROUND &&
+				color != DEAD_COLOR
+				) {
+				PrintText(color, "%s%s Dropped",
+					uInfo->attrs->name.c_str(),
+					(*BH::MiscToggles2)["Verbose Notifications"].state ? " \377c5drop" : ""
+				);
+			}
+			if ((*BH::MiscToggles2)["Item Close Notifications"].state &&
+				pPacket->nAction == ITEM_ACTION_OLD_GROUND &&
+				color != DEAD_COLOR
+				) {
+				PrintText(color, "%s%s",
+					uInfo->attrs->name.c_str(),
+					(*BH::MiscToggles2)["Verbose Notifications"].state ? " \377c5close" : ""
+				);
+			}
+		}
+		else if (!showOnMap) {
+			for (vector<Rule*>::iterator it = RuleList.begin(); it != RuleList.end(); it++) {
+				if ((*it)->Evaluate(uInfo, NULL)) {
+					if ((*it)->action.name.length() == 0 && Item::GetFilterLevel() > 0) {
+						uInfo->item->dwFlags2 |= UNITFLAGEX_INVISIBLE;
+					}
+					if ((*it)->action.stopProcessing) break;
+				}
+			}
+		}
+	}
 }
 
 void Item::OrigGetItemName(UnitAny* item, string& itemName, char* code)

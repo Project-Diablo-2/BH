@@ -301,6 +301,19 @@ struct px5e
 	BYTE nButton;	//0x01
 	DWORD dwUnitId; //0x02
 };
+
+/*
+	Incoming item data
+*/
+struct px9c
+{
+	BYTE nHeader;			//0x00
+	BYTE nAction;			//0x01
+	BYTE nPacketSize;		//0x02
+	BYTE nComponent;		//0x03
+	UINT nItemId;			//0x04
+	BYTE pBitstream[244];	//0x08
+};
 #pragma pack(pop)
 
 

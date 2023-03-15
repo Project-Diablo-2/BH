@@ -2307,7 +2307,11 @@ bool GoldCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return false; // can only evaluate this from packet data
+	if (uInfo->itemCode[0] == 'g' && uInfo->itemCode[1] == 'l' && uInfo->itemCode[2] == 'd')
+	{
+		return IntegerCompare(D2COMMON_GetUnitStat(uInfo->item, STAT_GOLD, 0), operation, goldAmount, goldAmount2);
+	}
+	return false;
 }
 
 bool GoldCondition::EvaluateInternalFromPacket(ItemInfo* info,
