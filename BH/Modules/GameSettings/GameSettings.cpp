@@ -22,7 +22,7 @@ void GameSettings::LoadConfig() {
 	BH::config->ReadToggle("Skill Bar Disable", "None", false, GameSettings::Toggles["Skill Bar Disable"]);
 	BH::config->ReadToggle("Buff Timers", "None", false, GameSettings::Toggles["Buff Timers"]);
 	BH::config->ReadToggle("Screenshake", "None", true, GameSettings::Toggles["Screenshake"]);
-	BH::config->ReadToggle("DPS", "None", true, GameSettings::Toggles["DPS"]);
+	BH::config->ReadToggle("DPS", "None", false, GameSettings::Toggles["DPS"]);
 
 	BH::config->ReadToggle("Developer Aura", "None", true, GameSettings::Toggles["Developer Aura"]);
 	BH::config->ReadToggle("99 Aura", "None", true, GameSettings::Toggles["99 Aura"]);
