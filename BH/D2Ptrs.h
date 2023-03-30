@@ -381,6 +381,30 @@ FUNCPTR(D2COMMON, IsTownByRoom, BOOL __stdcall, (Room1* pRoom1), -10057, -10691)
 FUNCPTR(D2COMMON, GetCursorItem, UnitAny* __stdcall, (Inventory* pInv), -11017);
 FUNCPTR(D2COMMON, ITEMS_GetRunesTxtRecordFromItem, RunesTxt* __stdcall, (UnitAny* pItem), -10918);
 
+FUNCPTR(D2COMMON, 10819_UNITS_UpdateUnitAnimRate, void __stdcall, (UnitAny* pUnit, char* szFile, int nLine), -10819);
+FUNCPTR(D2COMMON, 10031_UNITS_GetFrameBonus, int __stdcall, (UnitAny* pUnit), -10031);
+FUNCPTR(D2COMMON, 10595_UNITS_InitUnitMode, BOOL __stdcall, (UnitAny* pUnit), -10595);
+
+FUNCPTR(D2COMMON, 10507_UNITS_GetRightSkill, Skill* __stdcall, (UnitAny* pUnit), -10507);
+FUNCPTR(D2COMMON, 10030_SKILLS_GetSeqNumFromSkill, int __fastcall, (UnitAny* pUnit, Skill* pSkill), 0x4EC50);
+FUNCPTR(D2COMMON, 10194_DATATBLS_GetMonSeqTableRecord, SequenceInfo* __stdcall, (int nSequence), -10194);
+ASMPTR(D2COMMON, GetSequenceInfo, 0x2E840);
+ASMPTR(D2COMMON, GetSequenceIndex, 0x2E790);
+FUNCPTR(D2COMMON, GetAnimDataRecord, AnimDataRecord* __stdcall, (UnitAny* pUnit, int nClassId, int nMode, int nAnimType, Inventory* pInventory), 0x41F70);
+FUNCPTR(D2COMMON, 10350_ConvertMode, void __stdcall, (UnitAny* pUnit, int* pType, int* pClass, int* pMode, char* szFile, int nLine), -10350);
+
+FUNCPTR(D2COMMON, MergeStatList, void __stdcall, (UnitAny* pDestination, UnitAny* pSource, BOOL bA3), -10164);
+ASMPTR(D2COMMON, GetFrameMinAccr, 0x323E0);
+FUNCPTR(D2COMMON, 10639_GetAttackFramesRemaining, int __stdcall, (UnitAny* pUnit), -10639);
+
+FUNCPTR(D2COMMON, UnitCanDualWield, BOOL __stdcall, (UnitAny* pUnit), -10747);
+FUNCPTR(D2COMMON, GetLeftHandWeapon, UnitAny* __stdcall, (Inventory* pInventory), -10061);
+FUNCPTR(D2COMMON, ItemGetBodyLocation, int __stdcall, (UnitAny* pItem), -10417);
+FUNCPTR(D2COMMON, GetItemByBodyLoc, UnitAny* __stdcall, (Inventory* pInventory, int nBodyLoc), -11139);
+FUNCPTR(D2COMMON, ItemCanBeEquipped, BOOL __stdcall, (UnitAny* pItem), -11006);
+FUNCPTR(D2COMMON, StatListGetOwner, UnitAny* __stdcall, (UnitAny* pItem, BOOL* pDynamic), -11160);
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // D2Common Globals
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -390,6 +414,8 @@ VARPTR(D2COMMON, AutoMagicTxt, AutoMagicTxt*, 0x9FBC8, 0xA4CE4)
 
 VARPTR(D2COMMON, ArmorTxt, ItemsTxt*, 0x9FBA4, 0xA4CC0)
 VARPTR(D2COMMON, ArmorTxtRecords, DWORD, 0x9FBA8, 0xA4CC4)
+
+VARPTR(D2COMMON, PlayerSequenceDataTable, SequenceInfo*, 0x9CF40)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

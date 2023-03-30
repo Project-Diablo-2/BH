@@ -10,5 +10,8 @@ CellFile* __fastcall D2CLIENT_LoadUiImage(CHAR* szPath);
 DWORD __fastcall D2CLIENT_ClickParty_ASM(RosterUnit* RosterUnit, DWORD Mode);
 void __fastcall D2CLIENT_PlaySound(int SoundNo);
 int __fastcall ITEMS_GetItemPropertiesString_STUB(int nStatFilter2, UnitAny* pItem, wchar_t* strBuffer, int nBufferLen, int a5, int nLayer, int nStatFilter, int a8, int a9, wchar_t* strBuffer2);
+MonSeqTxt* __stdcall D2COMMON_GetSequenceInfo_STUB(UnitAny* pUnit);
+int __stdcall D2COMMON_GetSequenceIndex_STUB(UnitAny* pUnit);
+int __stdcall D2COMMON_GetFrameMinAccr_STUB(int nIndex, UnitAny* pUnit);
 void __stdcall D2CLIENT_GetItemFromPacket_NewGround_STUB(px9c* packet);
 void __stdcall D2CLIENT_GetItemFromPacketIntercept_NewGround_STUB();
