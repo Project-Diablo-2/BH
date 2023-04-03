@@ -341,6 +341,8 @@ FUNCPTR(D2COMMON, GetUnitState, int __stdcall, (UnitAny* pUnit, DWORD dwStateNo)
 FUNCPTR(D2COMMON, GetStateStatList, StatList* __stdcall, (UnitAny* pUnit, DWORD dwStateNo), -10871)
 FUNCPTR(D2COMMON, GetStatValueFromStatList, int __stdcall, (StatList* pStatList, int statId, WORD nLayer), -10680)
 
+FUNCPTR(D2COMMON, 10760_DATATBLS_GetInventoryGridInfo, void __stdcall, (int nInventoryTxtId, int bHigherRes, InventoryLayout* pInventoryGridInfo), -10760);
+
 FUNCPTR(D2COMMON, CheckUnitCollision, DWORD __stdcall, (UnitAny* pUnitA, UnitAny* pUnitB, DWORD dwBitMask), -10839, -10221)
 FUNCPTR(D2COMMON, GetRoomFromUnit, Room1* __stdcall, (UnitAny* ptUnit), -10331, -10846)
 FUNCPTR(D2COMMON, GetTargetUnitType, Path* __stdcall, (Path* pPath), -10392, -10704)

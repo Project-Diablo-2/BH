@@ -90,12 +90,17 @@
       <DataExecutionPrevention>false</DataExecutionPrevention>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /S /Q /F "$(OutDir)*.*" "$(DIABLO_DEBUG_FOLDER)\"</Command>
+      <Command>xcopy /Y /S /Q /F "$(OutDir)*.*" "$(DIABLO_DEBUG_FOLDER)\"
+powershell.exe -NoProfile -File "$(ProjectDir)..\..\scripts\CopyDataFolder.ps1"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

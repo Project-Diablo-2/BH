@@ -31,67 +31,42 @@ DWORD idBookId;
 DWORD unidItemId;
 
 void ItemMover::Init() {
-	// We should be able to get the layout from *p_D2CLIENT_StashLayout and friends,
-	// but doesn't seem to be working at the moment so use the mpq data.
+	InventoryLayout classicStashLayout = {};
+	InventoryLayout lodStashLayout = {};
+	InventoryLayout inventoryLayout = {};
+	InventoryLayout cubeLayout = {};
 
-	InventoryLayout* classicStashLayout;
-	InventoryLayout* lodStashLayout;
-	InventoryLayout* inventoryLayout;
-	InventoryLayout* cubeLayout;
-
-	// Pull screen sizing info from the mpq data
 	int screenWidth = *p_D2CLIENT_ScreenSizeX;
 	int screenHeight = *p_D2CLIENT_ScreenSizeY;
 	//PrintText(1, "Got screensize %d, %d", screenWidth, screenHeight);
 
+	BOOL bHighRes = 0;
 	if (screenWidth != 800 || screenHeight != 600) {
-		classicStashLayout = InventoryLayoutMap["Bank Page 1"];
-		lodStashLayout = InventoryLayoutMap["Big Bank Page 1"];
-		inventoryLayout = InventoryLayoutMap["Amazon"];  // all character types have the same layout
-		cubeLayout = InventoryLayoutMap["Transmogrify Box Page 1"];
-
-		INVENTORY_LEFT = ((inventoryLayout->Left - 320) + (*p_D2CLIENT_ScreenSizeX / 2));
-		INVENTORY_TOP = ((*p_D2CLIENT_ScreenSizeY / 2) - 240) + inventoryLayout->Top;
-		STASH_LEFT = ((*p_D2CLIENT_ScreenSizeX / 2) - 320) + lodStashLayout->Left;
-		if (((WORD)lodStashLayout->Top >> 15) == 1) {
-			LOD_STASH_TOP = ((*p_D2CLIENT_ScreenSizeY / 2) - 240) + ((WORD)lodStashLayout->Top - 0x10000);
-		}
-		else {
-			LOD_STASH_TOP = ((*p_D2CLIENT_ScreenSizeY / 2) - 240) + (WORD)lodStashLayout->Top;
-		}
-		if (((WORD)classicStashLayout->Top >> 15) == 1) {
-			CLASSIC_STASH_TOP = ((*p_D2CLIENT_ScreenSizeY / 2) - 240) + ((WORD)classicStashLayout->Top - 0x10000);
-		}
-		else {
-			CLASSIC_STASH_TOP = ((*p_D2CLIENT_ScreenSizeY / 2) - 240) + classicStashLayout->Top;
-		}
-		CUBE_LEFT = ((*p_D2CLIENT_ScreenSizeX / 2) - 320) + cubeLayout->Left;
-		CUBE_TOP = ((*p_D2CLIENT_ScreenSizeY / 2) - 240) + cubeLayout->Top;
-	}
-	else {
-		classicStashLayout = InventoryLayoutMap["Bank Page2"];
-		lodStashLayout = InventoryLayoutMap["Big Bank Page2"];
-		inventoryLayout = InventoryLayoutMap["Amazon2"];  // all character types have the same layout
-		cubeLayout = InventoryLayoutMap["Transmogrify Box2"];
-
-		INVENTORY_LEFT = inventoryLayout->Left;
-		INVENTORY_TOP = inventoryLayout->Top;
-		STASH_LEFT = lodStashLayout->Left;
-		LOD_STASH_TOP = lodStashLayout->Top;
-		CLASSIC_STASH_TOP = classicStashLayout->Top;
-		CUBE_LEFT = cubeLayout->Left;
-		CUBE_TOP = cubeLayout->Top;
+		bHighRes = 1;
 	}
 
-	CELL_SIZE = inventoryLayout->SlotPixelHeight;
+	D2COMMON_10760_DATATBLS_GetInventoryGridInfo(INVENTORY_TXT_STASH_CLASSIC, bHighRes, &classicStashLayout);
+	D2COMMON_10760_DATATBLS_GetInventoryGridInfo(INVENTORY_TXT_STASH_LOD, bHighRes, &lodStashLayout);
+	D2COMMON_10760_DATATBLS_GetInventoryGridInfo(INVENTORY_TXT_INVENTORY, bHighRes, &inventoryLayout);
+	D2COMMON_10760_DATATBLS_GetInventoryGridInfo(INVENTORY_TXT_CUBE, bHighRes, &cubeLayout);
 
-	INVENTORY_WIDTH = inventoryLayout->SlotWidth;
-	INVENTORY_HEIGHT = inventoryLayout->SlotHeight;
-	STASH_WIDTH = lodStashLayout->SlotWidth;
-	LOD_STASH_HEIGHT = lodStashLayout->SlotHeight;
-	CLASSIC_STASH_HEIGHT = classicStashLayout->SlotHeight;
-	CUBE_WIDTH = cubeLayout->SlotWidth;
-	CUBE_HEIGHT = cubeLayout->SlotHeight;
+	INVENTORY_LEFT = inventoryLayout.Left;
+	INVENTORY_TOP = inventoryLayout.Top;
+	STASH_LEFT = lodStashLayout.Left;
+	LOD_STASH_TOP = lodStashLayout.Top;
+	CLASSIC_STASH_TOP = classicStashLayout.Top;
+	CUBE_LEFT = cubeLayout.Left;
+	CUBE_TOP = cubeLayout.Top;
+
+	CELL_SIZE = inventoryLayout.SlotPixelHeight;
+
+	INVENTORY_WIDTH = inventoryLayout.SlotWidth;
+	INVENTORY_HEIGHT = inventoryLayout.SlotHeight;
+	STASH_WIDTH = lodStashLayout.SlotWidth;
+	LOD_STASH_HEIGHT = lodStashLayout.SlotHeight;
+	CLASSIC_STASH_HEIGHT = classicStashLayout.SlotHeight;
+	CUBE_WIDTH = cubeLayout.SlotWidth;
+	CUBE_HEIGHT = cubeLayout.SlotHeight;
 
 	if (!InventoryItems) {
 		InventoryItems = new UnitAny * [INVENTORY_WIDTH * INVENTORY_HEIGHT];
@@ -124,6 +99,10 @@ void ItemMover::Init() {
 
 bool ItemMover::LoadInventory(UnitAny* unit, int xpac, int source, int sourceX, int sourceY, bool shiftState, bool ctrlState, int stashUI, int invUI) {
 	bool returnValue = false;
+	if (!InventoryItems || !StashItems || !CubeItems)
+	{
+		return false;
+	}
 
 	memset(InventoryItems, 0, INVENTORY_WIDTH * INVENTORY_HEIGHT * sizeof(int));
 	memset(StashItems, 0, STASH_WIDTH * LOD_STASH_HEIGHT * sizeof(int));
