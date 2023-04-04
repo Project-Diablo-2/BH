@@ -40,9 +40,9 @@ void ItemMover::Init() {
 	int screenHeight = *p_D2CLIENT_ScreenSizeY;
 	//PrintText(1, "Got screensize %d, %d", screenWidth, screenHeight);
 
-	BOOL bHighRes = 0;
-	if (screenWidth != 800 || screenHeight != 600) {
-		bHighRes = 1;
+	BOOL bHighRes = 1;
+	if (screenWidth == 640 && screenHeight == 480) {
+		bHighRes = 0;
 	}
 
 	D2COMMON_10760_DATATBLS_GetInventoryGridInfo(INVENTORY_TXT_STASH_CLASSIC, bHighRes, &classicStashLayout);
