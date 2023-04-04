@@ -55,7 +55,7 @@ struct UnitItemInfo
 struct ItemInfo
 {
 	ItemAttributes* attrs;
-	char            code[4];
+	char            code[5];
 	//std::string packet;
 	std::string                name;
 	std::string                earName;
@@ -902,10 +902,10 @@ private:
 class FilterLevelCondition : public Condition
 {
 public:
-	FilterLevelCondition(BYTE op, 
+	FilterLevelCondition(BYTE op,
 		unsigned int target,
 		unsigned int target2)
-		: operation(op), 
+		: operation(op),
 		filterLevel(target),
 		filterLevel2(target2) {
 		conditionType = CT_Operand;

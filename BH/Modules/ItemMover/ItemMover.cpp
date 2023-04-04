@@ -804,6 +804,21 @@ void ParseItem(const unsigned char* data, ItemInfo* item, bool* success) {
 			}
 		}
 
+		for (std::size_t i = 0; i < 4; i++) {
+			item->code[i] = static_cast<char>(reader.read(8));
+		}
+		item->code[0] = item->code[0];
+		item->code[1] = item->code[1] != ' ' ? item->code[1] : 0;
+		item->code[2] = item->code[2] != ' ' ? item->code[2] : 0;
+		item->code[3] = item->code[3] != ' ' ? item->code[3] : 0;
+		item->code[4] = 0;
+
+		if (ItemAttributeMap.find(item->code) == ItemAttributeMap.end()) {
+			HandleUnknownItemCode(item->code, "from packet");
+			*success = false;
+			return;
+		}
+
 		if (item->ear) {
 			item->earClass = static_cast<BYTE>(reader.read(3));
 			item->earLevel = reader.read(7);
@@ -826,16 +841,6 @@ void ParseItem(const unsigned char* data, ItemInfo* item, bool* success) {
 			return;
 		}
 
-		for (std::size_t i = 0; i < 4; i++) {
-			item->code[i] = static_cast<char>(reader.read(8));
-		}
-		item->code[3] = 0;
-
-		if (ItemAttributeMap.find(item->code) == ItemAttributeMap.end()) {
-			HandleUnknownItemCode(item->code, "from packet");
-			*success = false;
-			return;
-		}
 		item->attrs = ItemAttributeMap[item->code];
 		item->name = item->attrs->name;
 		item->width = item->attrs->width;
