@@ -1030,8 +1030,16 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				{
 					value /= 256;
 				}
-				// These stat values need to be grabbed differently, otherwise they just return 0
-				else if (stat == STAT_ENHANCEDDEFENSE || stat == STAT_ENHANCEDMAXIMUMDAMAGE || stat == STAT_ENHANCEDMINIMUMDAMAGE)
+				// These stat values need to be grabbed differently otherwise they just:
+				else if (
+					stat == STAT_ENHANCEDDEFENSE ||				// return 0
+					stat == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
+					stat == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
+					stat == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
+					stat == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
+					stat == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
+					stat == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
+					)
 				{
 					value = GetStatFromList(uInfo, stat);
 				}
@@ -3065,8 +3073,16 @@ bool ItemStatCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		newTarget *= 256;
 		newTarget2 *= 256;
 	}
-	// These stat values need to be grabbed differently, otherwise they just return 0
-	else if (itemStat == STAT_ENHANCEDDEFENSE || itemStat == STAT_ENHANCEDMAXIMUMDAMAGE || itemStat == STAT_ENHANCEDMINIMUMDAMAGE)
+	// These stat values need to be grabbed differently otherwise they just:
+	else if (
+		itemStat == STAT_ENHANCEDDEFENSE ||				// return 0
+		itemStat == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
+		itemStat == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
+		itemStat == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
+		itemStat == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
+		itemStat == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
+		itemStat == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
+		)
 	{
 		return IntegerCompare(GetStatFromList(uInfo, itemStat), operation, targetStat, targetStat2);
 	}
