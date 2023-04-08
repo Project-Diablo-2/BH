@@ -425,10 +425,16 @@ struct SkillInfo {
 struct Skill {
 	SkillInfo* pSkillInfo;			//0x00
 	Skill* pNextSkill;				//0x04
-	DWORD _1[8];					//0x08
-	DWORD dwSkillLevel;				//0x28
-	DWORD _2[2];					//0x2C
-	DWORD dwFlags;					//0x30
+	int mode;						//0x08
+	DWORD flags;					//0x0C
+	DWORD _1[2];					//0x10
+	int params[4];					//0x18
+	DWORD skillLevel;				//0x28
+	DWORD skillLevelBonus;			//0x2C
+	DWORD quantity;					//0x30
+	int itemGUID;					//0x34
+	int charges;					//0x38
+	DWORD _2;						//0x3C
 };
 
 struct Info {
@@ -558,6 +564,43 @@ struct ObjectPath {
 	//Leaving rest undefined, use Path
 };
 
+struct MonSeqTxt
+{
+	WORD wSeq;
+	BYTE bMode;
+	BYTE bFrame;
+	BYTE bDir;
+	BYTE bEvent;
+};
+
+struct SequenceInfo
+{
+	MonSeqTxt* pSeqData;
+	int nFrameCount;
+	int nStartFrame;
+};
+
+struct AnimDataRecord
+{
+	char szAnimDataName[8];    //0x00
+	DWORD dwFrames;				//0x08
+	DWORD dwAnimSpeed;             //0x0C
+	BYTE dwAnimData[144];          //0x10
+};
+
+struct GfxData
+{
+	int nFrame;                  //0x00
+	DWORD __04[10];               //0x04
+	char* szName;               //0x2C
+	int nMaxFrames;               //0x30
+	CellFile* pCellFile;      //0x34
+	DWORD __38;                  //0x38
+	CellFile* pCurrentCell;   //0x3C
+	int nDirection;               //0x40
+	DWORD __44;                  //0x44
+};
+
 struct UnitAny {
 	DWORD dwType;					//0x00
 	DWORD dwTxtFileNo;				//0x04
@@ -582,14 +625,18 @@ struct UnitAny {
 		ItemPath* pItemPath;
 		ObjectPath* pObjectPath;
 	};								//0x2C
-	DWORD _3[5];					//0x30
+	MonSeqTxt* pSeqMode;			//0x30
+	int nSeqFrameCount;				//0x34 frame * 256
+	int nSeqFrame;					//0x38 frame * 256 remaining for seq
+	DWORD animSpeed;				//0x3C
+	DWORD eSeqMode;					//0x40
 	DWORD dwGfxFrame;				//0x44
 	DWORD dwFrameRemain;			//0x48
 	WORD wFrameRate;				//0x4C
-	WORD _4;						//0x4E
-	BYTE* pGfxUnk;					//0x50
-	DWORD* pGfxInfo;				//0x54
-	DWORD _5;						//0x58
+	WORD bActionFrame;				//0x4E
+	AnimDataRecord* pGfxAnimData;	//0x50
+	GfxData* pGfxInfo;				//0x54
+	void* pGfxInfo2;				//0x58
 	StatList* pStats;				//0x5C
 	Inventory* pInventory;			//0x60
 	Light* ptLight;					//0x64

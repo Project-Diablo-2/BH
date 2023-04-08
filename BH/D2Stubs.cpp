@@ -113,6 +113,39 @@ __declspec (naked) int __fastcall ITEMS_GetItemPropertiesString_STUB(int nStatFi
 	}
 }
 
+__declspec(naked) MonSeqTxt* __stdcall D2COMMON_GetSequenceInfo_STUB(UnitAny* pUnit)
+{
+	__asm
+	{
+		mov EAX, [esp + 4]                                   // pUnit
+		call D2COMMON_GetSequenceInfo                        // 0x2E840
+		retn 4
+	}
+}
+
+__declspec(naked) int __stdcall D2COMMON_GetSequenceIndex_STUB(UnitAny* pUnit)
+{
+	__asm
+	{
+		push ESI
+		mov ESI, [esp + 8]                                   // param_1
+		call D2COMMON_GetSequenceIndex                       // 0x2E790
+		pop ESI
+		retn 4
+	}
+}
+
+__declspec(naked) int __stdcall D2COMMON_GetFrameMinAccr_STUB(int nIndex, UnitAny* pUnit)
+{
+	__asm
+	{
+		mov EAX, [esp + 4]                                   // nIndex
+		push[esp + 8]                                       // pUnit
+		call D2COMMON_GetFrameMinAccr                        // 0x323E0
+		retn 8
+	}
+}
+
 __declspec(naked) void __stdcall D2CLIENT_GetItemFromPacket_NewGround_STUB(px9c* packet)
 {
 	__asm
@@ -120,8 +153,8 @@ __declspec(naked) void __stdcall D2CLIENT_GetItemFromPacket_NewGround_STUB(px9c*
 		mov EAX, [esp + 4]									// packet
 
 		call D2CLIENT_ItemPacketBuildAction0_NewGround		// 0x84BB0
-		retn 4
-	}
+    retn 4
+  }
 }
 
 __declspec(naked) void __stdcall D2CLIENT_GetItemFromPacketIntercept_NewGround_STUB()
@@ -132,5 +165,5 @@ __declspec(naked) void __stdcall D2CLIENT_GetItemFromPacketIntercept_NewGround_S
 
 		call GetItemFromPacket_NewGround					// 0x84BB0
 		retn
-	}
+  }
 }
