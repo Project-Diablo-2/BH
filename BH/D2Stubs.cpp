@@ -1,5 +1,6 @@
 ﻿#include <Windows.h>
 #include "D2Ptrs.h"
+#include "Modules/Item/Item.h"
 
 DWORD __declspec(naked) __fastcall D2CLIENT_GetUnitName_STUB(DWORD UnitAny)
 {
@@ -143,4 +144,26 @@ __declspec(naked) int __stdcall D2COMMON_GetFrameMinAccr_STUB(int nIndex, UnitAn
 		call D2COMMON_GetFrameMinAccr                        // 0x323E0
 		retn 8
 	}
+}
+
+__declspec(naked) void __stdcall D2CLIENT_GetItemFromPacket_NewGround_STUB(px9c* packet)
+{
+	__asm
+	{
+		mov EAX, [esp + 4]									// packet
+
+		call D2CLIENT_ItemPacketBuildAction0_NewGround		// 0x84BB0
+    retn 4
+  }
+}
+
+__declspec(naked) void __stdcall D2CLIENT_GetItemFromPacketIntercept_NewGround_STUB()
+{
+	__asm
+	{
+		push EAX											// packet
+
+		call GetItemFromPacket_NewGround					// 0x84BB0
+		retn
+  }
 }

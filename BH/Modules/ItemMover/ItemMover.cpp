@@ -600,67 +600,6 @@ void ItemMover::OnGamePacketRecv(BYTE* packet, bool* block) {
 			}
 			Unlock();
 		}
-
-		if ((*BH::MiscToggles2)["Advanced Item Display"].state) {
-			bool success = true;
-			ItemInfo item = {};
-			ParseItem((unsigned char*)packet, &item, &success);
-			//PrintText(1, "Item packet: %s, %s, %X, %d, %d", item.name.c_str(), item.code, item.attrs->flags, item.sockets, GetDefense(&item));
-			if ((item.action == ITEM_ACTION_NEW_GROUND || item.action == ITEM_ACTION_OLD_GROUND) && success) {
-				bool showOnMap = false;
-				auto color = UNDEFINED_COLOR;
-
-				for (vector<Rule*>::iterator it = MapRuleList.begin(); it != MapRuleList.end(); it++) {
-					// skip map and notification if ping level requirement is not met
-					int filterLevel = Item::GetFilterLevel();
-					if (filterLevel != 0 && (*it)->action.pingLevel < filterLevel && (*it)->action.pingLevel != -1) continue;
-
-					if ((*it)->Evaluate(NULL, &item)) {
-						auto action_color = (*it)->action.notifyColor;
-						// never overwrite color with an undefined color. never overwrite a defined color with dead color.
-						if (action_color != UNDEFINED_COLOR && (action_color != DEAD_COLOR || color == UNDEFINED_COLOR))
-							color = action_color;
-						showOnMap = true;
-						// break unless %CONTINUE% is used
-						if ((*it)->action.stopProcessing) break;
-					}
-				}
-				//PrintText(1, "Item on ground: %s, %s, %s, %X", item.name.c_str(), item.code, item.attrs->category.c_str(), item.attrs->flags);
-				if (showOnMap && !(*BH::MiscToggles2)["Item Detailed Notifications"].state) {
-					if (color == UNDEFINED_COLOR) {
-						color = ItemColorFromQuality(item.quality);
-					}
-					if ((*BH::MiscToggles2)["Item Drop Notifications"].state &&
-						item.action == ITEM_ACTION_NEW_GROUND &&
-						color != DEAD_COLOR
-						) {
-						PrintText(color, "%s%s Dropped",
-							item.name.c_str(),
-							(*BH::MiscToggles2)["Verbose Notifications"].state ? " \377c5drop" : ""
-						);
-					}
-					if ((*BH::MiscToggles2)["Item Close Notifications"].state &&
-						item.action == ITEM_ACTION_OLD_GROUND &&
-						color != DEAD_COLOR
-						) {
-						PrintText(color, "%s%s",
-							item.name.c_str(),
-							(*BH::MiscToggles2)["Verbose Notifications"].state ? " \377c5close" : ""
-						);
-					}
-				}
-				else if (!showOnMap) {
-					for (vector<Rule*>::iterator it = RuleList.begin(); it != RuleList.end(); it++) {
-						if ((*it)->Evaluate(NULL, &item)) {
-							if ((*it)->action.name.length() == 0 && Item::GetFilterLevel() > 0) {
-								*block = true;
-							}
-							if ((*it)->action.stopProcessing) break;
-						}
-					}
-				}
-			}
-		}
 		break;
 	}
 	case 0x9d:

@@ -13,3 +13,5 @@ int __fastcall ITEMS_GetItemPropertiesString_STUB(int nStatFilter2, UnitAny* pIt
 MonSeqTxt* __stdcall D2COMMON_GetSequenceInfo_STUB(UnitAny* pUnit);
 int __stdcall D2COMMON_GetSequenceIndex_STUB(UnitAny* pUnit);
 int __stdcall D2COMMON_GetFrameMinAccr_STUB(int nIndex, UnitAny* pUnit);
+void __stdcall D2CLIENT_GetItemFromPacket_NewGround_STUB(px9c* packet);
+void __stdcall D2CLIENT_GetItemFromPacketIntercept_NewGround_STUB();

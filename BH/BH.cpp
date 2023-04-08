@@ -219,6 +219,19 @@ bool BH::ReloadConfig() {
 		lootFilter->Parse();
 		moduleManager->ReloadConfig();
 		statsDisplay->LoadConfig();
+
+		// Remove nodraw flag from items when filter is reloaded. This is primarily just a QoL feature.
+		// Otherwise you'd have to reload the filter + leave and rejoin the area for hidden items to be visible again
+		UnitAny* player = D2CLIENT_GetPlayerUnit();
+		if (player && player->pAct && player->pPath->pRoom1->pRoom2->pLevel->dwLevelNo != 0) {
+			for (Room1* room1 = player->pAct->pRoom1; room1; room1 = room1->pRoomNext) {
+				for (UnitAny* unit = room1->pUnitFirst; unit; unit = unit->pListNext) {
+					if (unit->dwType == UNIT_ITEM && (unit->dwFlags2 & UNITFLAGEX_INVISIBLE)) {
+						unit->dwFlags2 &= ~UNITFLAGEX_INVISIBLE;
+					}
+				}
+			}
+		}
 	}
 	return true;
 }

@@ -50,6 +50,7 @@
 #include "../../Drawing.h"
 
 struct UnitAny;
+struct UnitItemInfo;
 
 class Item : public Module {
 private:
@@ -87,6 +88,8 @@ public:
 	static BOOL PermShowItemsPatch2();
 	static BOOL PermShowItemsPatch3();
 
+	static void ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket);
+
 	static UnitAny* GetViewUnit();
 	static UnitAny* GetViewUnitAndDrawBox();
 
@@ -104,8 +107,10 @@ void PermShowItemsPatch1_ASM();
 void PermShowItemsPatch2_ASM();
 void PermShowItemsPatch3_ASM();
 void PermShowItemsPatch4_ASM();
-struct UnitItemInfo;
+
 int CreateUnitItemInfo(UnitItemInfo* uInfo, UnitAny* item);
+void __stdcall GetItemFromPacket_NewGround(px9c* packet);
+void __stdcall GetItemFromPacket_OldGround(px9c* packet);
 int ItemGetCorruptor(UnitAny* pItem);
 BOOL StatIsCorrupted(int nStat, int nCorruptor);
 
