@@ -230,11 +230,11 @@ bool ItemMover::FindDestination(UnitAny* unit, UnitAny* pItem, int xpac, int des
 		bool first_y = true;
 		// test once for stacked items
 		ItemsTxt* pItemsTxt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
-		if (destination != STORAGE_NULL && pItemsTxt->bstackable)
+		if (pItem->pItemData && pItem->pItemData->dwQuality == ITEM_QUALITY_NORMAL && destination != STORAGE_NULL && pItemsTxt->bstackable)
 		{
 			int nQuantity = D2COMMON_GetUnitStat(pItem, STAT_AMMOQUANTITY, 0);
 			for (UnitAny* pInvItem = unit->pInventory->pFirstItem; pInvItem; pInvItem = pInvItem->pItemData->pNextInvItem) {
-				if (pInvItem->dwTxtFileNo == pItem->dwTxtFileNo)
+				if (pInvItem->dwTxtFileNo == pItem->dwTxtFileNo && pInvItem->pItemData && pInvItem->pItemData->dwQuality == ITEM_QUALITY_NORMAL)
 				{
 					if (pInvItem->pItemData->ItemLocation == destination)
 					{
