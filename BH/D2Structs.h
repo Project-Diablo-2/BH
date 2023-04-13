@@ -418,12 +418,8 @@ struct Light {
 	int* pnStaticMap;				//0x30
 };
 
-struct SkillInfo {
-	WORD wSkillId;					//0x00
-};
-
 struct Skill {
-	SkillInfo* pSkillInfo;			//0x00
+	SkillsTxt* pSkillInfo;			//0x00
 	Skill* pNextSkill;				//0x04
 	int mode;						//0x08
 	DWORD flags;					//0x0C
