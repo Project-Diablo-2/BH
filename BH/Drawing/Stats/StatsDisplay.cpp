@@ -36,6 +36,7 @@ std::map<DWORD, std::vector<int>> faster_hit_recovery_frames = {
 	{ MERC_A1, { 6, 13, 20, 32, 52, 86, 174, 600 } },
 	{ MERC_A2, { 5, 9, 14, 20, 30, 42, 60, 86, 142, 280 } },
 	{ MERC_A3, { 5, 8, 13, 18, 24, 32, 46, 63, 86, 133, 232, 600 } },
+	{ MERC_A4, { 9, 20, 42, 86, 280 } },
 	{ MERC_A5, { 7, 15, 27, 48, 86, 200 } },
 };
 
@@ -53,6 +54,7 @@ std::map<DWORD, std::vector<int>> faster_cast_rate_frames = {
 	{ MERC_A1, { 0 } },
 	{ MERC_A2, { 0 } },
 	{ MERC_A3, { 8, 15, 26, 39, 58, 86, 138 } },
+	{ MERC_A4, { 9, 18, 30, 48, 75, 125 } },
 	{ MERC_A5, { 0 } },
 };
 
@@ -63,8 +65,9 @@ std::map<DWORD, std::set<int>> merc_attack_skills = {
 
 	{ MERC_A3, {  } },
 
-	{ MERC_A5, { 144 } },
+	{ MERC_A4, {  } },
 
+	{ MERC_A5, { 144 } },
 };
 
 std::set<int> rollback_skills = {
@@ -77,6 +80,8 @@ std::map<DWORD, std::string> merc_skill_names = {
 	{ MERC_A2, "Jab" },
 
 	{ MERC_A3, "Fireball/Ice Blast/Lightning" },
+
+	{ MERC_A4, "Holy Nova/Bone Spear" },
 
 	{ MERC_A5, "Concentrate/Bash" },
 
