@@ -388,10 +388,14 @@ void __stdcall GetItemFromPacket_NewGround(px9c* pPacket)
 	D2CLIENT_GetItemFromPacket_NewGround_STUB(pPacket);
 	UnitAny* pItem = D2CLIENT_FindServerSideUnit(pPacket->nItemId, UNIT_ITEM);
 	UnitItemInfo uInfo;
-	if (CreateUnitItemInfo(&uInfo, pItem)) {
+	if (!CreateUnitItemInfo(&uInfo, pItem))
+	{
+		Item::ProcessItemPacketFilterRules(&uInfo, pPacket);
+	}
+	else
+	{
 		HandleUnknownItemCode(uInfo.itemCode, "from packet");
 	}
-	Item::ProcessItemPacketFilterRules(&uInfo, pPacket);
 
 	return;
 }
@@ -402,10 +406,14 @@ void __stdcall GetItemFromPacket_OldGround(px9c* pPacket)
 	D2CLIENT_ItemPacketBuildAction3_OldGround(pPacket);
 	UnitAny* pItem = D2CLIENT_FindServerSideUnit(pPacket->nItemId, UNIT_ITEM);
 	UnitItemInfo uInfo;
-	if (CreateUnitItemInfo(&uInfo, pItem)) {
+	if (!CreateUnitItemInfo(&uInfo, pItem))
+	{
+		Item::ProcessItemPacketFilterRules(&uInfo, pPacket);
+	}
+	else
+	{
 		HandleUnknownItemCode(uInfo.itemCode, "from packet");
 	}
-	Item::ProcessItemPacketFilterRules(&uInfo, pPacket);
 
 	return;
 }
