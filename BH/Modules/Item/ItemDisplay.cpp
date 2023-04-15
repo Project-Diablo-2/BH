@@ -393,6 +393,7 @@ std::map<std::string, int> maptiers = {
 	{"t2m", 2},
 	{"t3m", 3},
 	{"t4m", 4},
+	{"t5m", 5},
 };
 
 enum Operation
