@@ -509,16 +509,16 @@ class MapTierCondition : public Condition
 {
 public:
 	MapTierCondition(BYTE op,
-		BYTE mtier,
-		BYTE mtier2) : mapTier(mtier),
+		int mtier,
+		int mtier2) : mapTier(mtier),
 		mapTier2(mtier2),
 		operation(op) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE operation;
-	BYTE mapTier;
-	BYTE mapTier2;
+	int mapTier;
+	int mapTier2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -921,11 +921,11 @@ private:
 class ItemStatCondition : public Condition
 {
 public:
-	ItemStatCondition(unsigned int stat,
-		unsigned int stat2,
+	ItemStatCondition(int stat,
+		int stat2,
 		BYTE         op,
-		unsigned int target,
-		unsigned int target2)
+		int target,
+		int target2)
 		: itemStat(stat),
 		itemStat2(stat2),
 		operation(op),
@@ -934,11 +934,11 @@ public:
 		conditionType = CT_Operand;
 	};
 private:
-	unsigned int itemStat;
-	unsigned int itemStat2;
+	int itemStat;
+	int itemStat2;
 	BYTE         operation;
-	unsigned int targetStat;
-	unsigned int targetStat2;
+	int targetStat;
+	int targetStat2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);

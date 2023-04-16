@@ -1868,10 +1868,10 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new ItemStatCondition(STAT_FASTERBLOCK, 0, operation, value, value2));
 		break;
 	case COND_LIFE:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXHP, 0, operation, value * 256, value2 * 256));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXHP, 0, operation, value, value2));
 		break;
 	case COND_MANA:
-		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXMANA, 0, operation, value * 256, value2 * 256));
+		Condition::AddOperand(conditions, new ItemStatCondition(STAT_MAXMANA, 0, operation, value, value2));
 		break;
 	case COND_QTY:
 		Condition::AddOperand(conditions, new ItemStatCondition(STAT_AMMOQUANTITY, 0, operation, value, value2));
@@ -2415,7 +2415,12 @@ bool MapTierCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(maptiers.at(uInfo->attrs->category), operation, mapTier, mapTier2);
+	int value = -1;
+	if (maptiers.find(uInfo->attrs->category) != maptiers.end())
+	{
+		value = maptiers.at(uInfo->attrs->category);
+	}
+	return IntegerCompare(value, operation, mapTier, mapTier2);
 }
 
 bool MapTierCondition::EvaluateInternalFromPacket(ItemInfo* info,
@@ -2669,6 +2674,15 @@ bool EDCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		// Normal %ED will have the same value for STAT_ENHANCEDMAXIMUMDAMAGE and STAT_ENHANCEDMINIMUMDAMAGE
 		stat = STAT_ENHANCEDMAXIMUMDAMAGE;
 	}
+	DWORD     value = 0;
+	Stat      aStatList[256] = { NULL };
+	StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+	if (pStatList)
+	{
+		DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
+		for (UINT i = 0; i < dwStats; i++) { if (aStatList[i].wStatIndex == stat && aStatList[i].wSubIndex == 0) { value += aStatList[i].dwStatValue; } }
+	}
+
 	return IntegerCompare(GetStatFromList(uInfo, stat), operation, targetED, targetED2);
 }
 
