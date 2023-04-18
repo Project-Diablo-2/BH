@@ -59,7 +59,7 @@ std::map<DWORD, std::vector<int>> faster_cast_rate_frames = {
 };
 
 std::map<DWORD, std::set<int>> merc_attack_skills = {
-	{ MERC_A1, { 385, 386 } },
+	{ MERC_A1, { 385, 386, 545 } },
 
 	{ MERC_A2, { 10 } },
 
