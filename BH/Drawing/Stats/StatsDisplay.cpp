@@ -1036,20 +1036,8 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		int nUnitID = pUnit->dwTxtFileNo;
 		AnimDataRecord* pAnimData = NULL;
 
-		if (pRightSkill->mode == PLAYER_MODE_SEQUENCE || pRightSkill->pSkillInfo->bSeqNum == 19)
+		if (pRightSkill->mode == PLAYER_MODE_SEQUENCE)
 		{
-			// Hide Dragon Talon until we have their frames worked out
-			if (pRightSkill->pSkillInfo->bSeqNum == 19)
-			{
-				Texthook::Draw(x,
-					*pY,
-					None,
-					6,
-					Gold,
-					"IAS (Frames): N/A (Work in Progress)");
-				return;
-			}
-
 			int nSeqNum = D2COMMON_10030_SKILLS_GetSeqNumFromSkill(pUnit, pRightSkill);
 			int nSeqIndex = D2COMMON_GetSequenceIndex_STUB(pUnit);
 			if (&(p_D2COMMON_PlayerSequenceDataTable[nSeqNum]) == NULL)
@@ -1173,7 +1161,6 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 			}
 			nTotalHits = D2COMMON_10786_SKILLS_EvaluateSkillFormula(pUnit, pRightSkill->pSkillInfo->dwCalc1, pRightSkill->pSkillInfo->wSkillId, pRightSkill->skillLevel);
 
-			// TODO: need to figure out how action frames work with the Dragon Talon sequence
 			if (pAnimData)
 			{
 				for (int i = 0; i < nFrames; ++i)
