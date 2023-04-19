@@ -1069,7 +1069,6 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
 			nAnimAcceleration = nFrameMinAccr + nAttackRate - 30;
 			nMinAnimAcceleration = nAttackRate - 30;
-			nMaxAnimAcceleration = 145;
 		}
 		else if (pUnit->dwType == UNIT_MONSTER && pRightSkill->mode == NPC_MODE_SEQUENCE)
 		{
@@ -1081,7 +1080,6 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
 			nAnimAcceleration = nFrameMinAccr + nAttackRate;
 			nMinAnimAcceleration = nAttackRate;
-			nMaxAnimAcceleration = 175;
 		}
 		else
 		{
