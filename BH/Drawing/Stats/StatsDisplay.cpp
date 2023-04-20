@@ -75,7 +75,7 @@ std::set<int> rollback_skills = {
 };
 
 std::map<DWORD, std::string> merc_skill_names = {
-	{ MERC_A1, "Fire/Cold Arrow" },
+	{ MERC_A1, "Fire/Cold/Magic Arrow" },
 
 	{ MERC_A2, "Jab" },
 
