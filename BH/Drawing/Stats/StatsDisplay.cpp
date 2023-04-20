@@ -1064,6 +1064,16 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 					"IAS (Frames): N/A");
 				return;
 			}
+			if (pSeqInfo->pSeqData->bMode == PLAYER_MODE_CAST)
+			{
+				Texthook::Draw(x,
+					*pY,
+					None,
+					6,
+					Gold,
+					"IAS (Frames): N/A");
+				return;
+			}
 
 			nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
 			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
