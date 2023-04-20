@@ -1189,6 +1189,37 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				statVal);
 		}
 	}
+	else if (name.find("%ED%") != string::npos)
+	{
+		std::regex  stat_reg("%ED%", std::regex_constants::ECMAScript);
+		std::smatch stat_match;
+
+		while (std::regex_search(name, stat_match, stat_reg))
+		{
+			// Either enhanced defense or enhanced damage depending on item type
+			WORD stat;
+			if (uInfo->attrs->flags & ITEM_GROUP_ALLARMOR) { stat = STAT_ENHANCEDDEFENSE; }
+			else
+			{
+				// Normal %ED will have the same value for STAT_ENHANCEDMAXIMUMDAMAGE and STAT_ENHANCEDMINIMUMDAMAGE
+				stat = STAT_ENHANCEDMAXIMUMDAMAGE;
+			}
+			DWORD     value = 0;
+			Stat      aStatList[256] = { NULL };
+			StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+			if (pStatList)
+			{
+				DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
+				for (UINT i = 0; i < dwStats; i++) { if (aStatList[i].wStatIndex == stat && aStatList[i].wSubIndex == 0) { value += aStatList[i].dwStatValue; } }
+			}
+			sprintf_s(statVal, "%d", value);
+
+			name.replace(
+				stat_match.prefix().length(),
+				stat_match[0].length(),
+				statVal);
+		}
+	}
 
 	if (bLimit)
 	{
@@ -2683,7 +2714,7 @@ bool EDCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		for (UINT i = 0; i < dwStats; i++) { if (aStatList[i].wStatIndex == stat && aStatList[i].wSubIndex == 0) { value += aStatList[i].dwStatValue; } }
 	}
 
-	return IntegerCompare(GetStatFromList(uInfo, stat), operation, targetED, targetED2);
+	return IntegerCompare(value, operation, targetED, targetED2);
 }
 
 bool EDCondition::EvaluateInternalFromPacket(ItemInfo* info,
