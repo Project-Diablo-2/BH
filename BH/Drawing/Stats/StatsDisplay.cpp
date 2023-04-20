@@ -1022,23 +1022,19 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		int nMaxAnimAcceleration = 175;
 		int nFrameMinAccr = 0;
 		int nAttackRate = 0;
+		int nAnimRate = 0;
+		int nMinAnimRate = 0;
+		int nMaxAnimRate = 0;
 
+		int nSkillRollback = 0;
+		int nTotalHits = 0;
+		int nActionFrame = 0;
+
+		int nSkillId = pRightSkill->pSkillInfo->wSkillId;
 		int nMode = 0;
 		int nAnimType = pUnit->dwType;
 		int nUnitID = pUnit->dwTxtFileNo;
 		AnimDataRecord* pAnimData = NULL;
-
-		// Disable rollback skill calc for now until implemented
-		if (rollback_skills.find(pRightSkill->pSkillInfo->wSkillId) != rollback_skills.end())
-		{
-			Texthook::Draw(x,
-				*pY,
-				None,
-				6,
-				Gold,
-				"IAS (Frames): N/A (Work in Progress)");
-			return;
-		}
 
 		if (pRightSkill->mode == PLAYER_MODE_SEQUENCE)
 		{
@@ -1073,9 +1069,8 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
 			nAnimAcceleration = nFrameMinAccr + nAttackRate - 30;
 			nMinAnimAcceleration = nAttackRate - 30;
-			nMaxAnimAcceleration = 145;
 		}
-		else if (pUnit->dwType == UNIT_MONSTER && pRightSkill->mode == PLAYER_MODE_USESKILL2)
+		else if (pUnit->dwType == UNIT_MONSTER && pRightSkill->mode == NPC_MODE_SEQUENCE)
 		{
 			int nSeqNum = D2COMMON_10030_SKILLS_GetSeqNumFromSkill(pUnit, pRightSkill);
 			SequenceInfo* pMonSeqInfo = D2COMMON_10194_DATATBLS_GetMonSeqTableRecord(nSeqNum);
@@ -1085,12 +1080,12 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
 			nAnimAcceleration = nFrameMinAccr + nAttackRate;
 			nMinAnimAcceleration = nAttackRate;
-			nMaxAnimAcceleration = 175;
 		}
 		else
 		{
 			nMode = pRightSkill->mode;
-			if (nMode == PLAYER_MODE_CAST)
+			// Ignore spells. Ignore auras/Force Move
+			if (nMode == PLAYER_MODE_CAST || nMode == PLAYER_MODE_RUN)
 			{
 				Texthook::Draw(x,
 					*pY,
@@ -1113,6 +1108,17 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 					"IAS (Frames): N/A");
 				return;
 			}
+			// Hide Werewolf & Werebear until we have their frames worked out
+			if (nUnitID == 430 || nUnitID == 431)
+			{
+				Texthook::Draw(x,
+					*pY,
+					None,
+					6,
+					Gold,
+					"IAS (Frames): N/A (Work in Progress)");
+				return;
+			}
 
 			nFrames = pAnimData->dwFrames;
 			nAnimSpeed = pAnimData->dwAnimSpeed;
@@ -1122,6 +1128,48 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
 			nAnimAcceleration = nFrameMinAccr + nAttackRate;
 			nMinAnimAcceleration = nAttackRate;
+		}
+
+
+		if (rollback_skills.find(nSkillId) != rollback_skills.end())
+		{
+			switch (pRightSkill->pSkillInfo->wSkillId)
+			{
+			case 26: // Strafe
+			{
+				nSkillRollback = pRightSkill->pSkillInfo->dwParam6;
+				break;
+			}
+			case 30:  // Fend
+			case 106: // Zeal
+			case 248: // Fury
+			{
+				nSkillRollback = pRightSkill->pSkillInfo->dwParam2;
+				break;
+			}
+			case 255: // Dragon Talon
+			{
+				nSkillRollback = 100; // Hardcoded, not in skillstxt
+				break;
+			}
+			default:
+			{
+				break;
+			}
+			}
+			nTotalHits = D2COMMON_10786_SKILLS_EvaluateSkillFormula(pUnit, pRightSkill->pSkillInfo->dwCalc1, pRightSkill->pSkillInfo->wSkillId, pRightSkill->skillLevel);
+
+			if (pAnimData)
+			{
+				for (int i = 0; i < nFrames; ++i)
+				{
+					if (pAnimData->dwAnimData[i])
+					{
+						nActionFrame = i;
+						break;
+					}
+				}
+			}
 		}
 
 		if (D2COMMON_UnitCanDualWield(pUnit))
@@ -1193,9 +1241,27 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		if (nAnimAcceleration > nMaxAnimAcceleration) nAnimAcceleration = nMaxAnimAcceleration;
 		if (nAnimSpeed == 0) nAnimSpeed = 256;
 
-		nMinFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)((nAnimSpeed * nMaxAnimAcceleration) / 100))) - 1;
-		nMaxFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)((nAnimSpeed * nMinAnimAcceleration) / 100))) - 1;
-		nAnimFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)((nAnimSpeed * nAnimAcceleration) / 100))) - 1;
+		nMinAnimRate = ((nAnimSpeed * nMaxAnimAcceleration) / 100);
+		nMaxAnimRate = ((nAnimSpeed * nMinAnimAcceleration) / 100);
+		nAnimRate = ((nAnimSpeed * nAnimAcceleration) / 100);
+
+		nMinFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)nMinAnimRate)) - 1;
+		nMaxFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)nMaxAnimRate)) - 1;
+		nAnimFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)nAnimRate)) - 1;
+
+		std::vector<int> nMinActionFrames(nTotalHits);
+		std::vector<int> nMaxActionFrames(nTotalHits);
+		std::vector<int> nAnimActionFrames(nTotalHits);
+
+		std::vector<int> nCurrentActionFrame(nTotalHits);
+		std::vector<int> nPreviousActionFrame(nTotalHits);
+
+		if (rollback_skills.find(nSkillId) != rollback_skills.end())
+		{
+			nMinActionFrames = GetRollbackSkillFrames(nMinActionFrames, nActionFrame, nFrames, nFrameBonus, nMinAnimRate, nSkillRollback);
+			nMaxActionFrames = GetRollbackSkillFrames(nMaxActionFrames, nActionFrame, nFrames, nFrameBonus, nMaxAnimRate, nSkillRollback);
+			nAnimActionFrames = GetRollbackSkillFrames(nAnimActionFrames, nActionFrame, nFrames, nFrameBonus, nAnimRate, nSkillRollback);
+		}
 
 		std::string bpString = bpCharString;
 		int nIASBP = 0;
@@ -1207,11 +1273,33 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		{
 			nBaseIAS = (double)i - (double)nMinAnimAcceleration;
 			nIASBP = ceil((120 * nBaseIAS) / (120 - nBaseIAS));
-			nCurrentFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)((nAnimSpeed * i) / 100))) - 1;
-			if (nCurrentFrames == nPreviousFrameBP) continue;
+			nAnimRate = (nAnimSpeed * i) / 100;
 
-			nPreviousFrameBP = nCurrentFrames;
-			if (nCurrentFrames == nAnimFrames)
+			if (rollback_skills.find(nSkillId) != rollback_skills.end())
+			{
+				nCurrentActionFrame = GetRollbackSkillFrames(nCurrentActionFrame, nActionFrame, nFrames, nFrameBonus, nAnimRate, nSkillRollback);
+				if (nCurrentActionFrame == nPreviousActionFrame) continue;
+				nPreviousActionFrame = nCurrentActionFrame;
+			}
+			else
+			{
+				nCurrentFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)nAnimRate)) - 1;
+				if (nCurrentFrames == nPreviousFrameBP) continue;
+				nPreviousFrameBP = nCurrentFrames;
+			}
+
+			if (rollback_skills.find(nSkillId) != rollback_skills.end() && nCurrentActionFrame == nAnimActionFrames)
+			{
+				bpString += "ÿc8";
+				bpString += std::to_string(nIASBP) + " (";
+				for (int i = 0; i < nCurrentActionFrame.size() - 1; i++)
+				{
+					bpString += std::to_string(nCurrentActionFrame[i]) + "|";
+				}
+				bpString += std::to_string(nCurrentActionFrame.back()) + ")";
+				bpString += "ÿc0";
+			}
+			else if (nCurrentFrames == nAnimFrames)
 			{
 				bpString += "ÿc8";
 				bpString += std::to_string(nIASBP) + " (" + std::to_string(nCurrentFrames) + ")";
@@ -1226,8 +1314,24 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 
 		nBaseIAS = (double)nMaxAnimAcceleration - (double)nMinAnimAcceleration;
 		nIASBP = ceil((120 * nBaseIAS) / (120 - nBaseIAS));
+		// TODO: nCurrentFrames here appears to be identical to nMinFrames. Is this a mistake? Should this be something else?
 		nCurrentFrames = ceil(((((double)nFrames - (double)nFrameBonus) * 256) / (double)((nAnimSpeed * nMaxAnimAcceleration) / 100))) - 1;
-		if (nCurrentFrames != nPreviousFrameBP)
+
+		if (rollback_skills.find(nSkillId) != rollback_skills.end() && nMinActionFrames != nPreviousActionFrame)
+		{
+			if (nMinActionFrames == nAnimActionFrames) bpString += "ÿc8";
+			bpString += std::to_string(nIASBP);
+			if (nMinActionFrames == nAnimActionFrames)
+			{
+				bpString += " (";
+				for (int i = 0; i < nMinActionFrames.size() - 1; i++)
+				{
+					bpString += std::to_string(nMinActionFrames[i]) + "|";
+				}
+				bpString += std::to_string(nMinActionFrames.back()) + ")";
+			}
+		}
+		else if (nCurrentFrames != nPreviousFrameBP && nPreviousFrameBP != 0)
 		{
 			if (nMinFrames == nAnimFrames) bpString += "ÿc8";
 			bpString += std::to_string(nIASBP);
@@ -1311,6 +1415,44 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 			Gold,
 			"IAS (Frames): N/A");
 	}
+}
+
+std::vector<int> StatsDisplay::GetRollbackSkillFrames(std::vector<int> nAnimFrames, int nActionFrame, int nTotalFrames, int nFrameBonus, int nAnimRate, int nSkillRollback)
+{
+	int nRollbackBase = 0;
+	int nRollbackStartFrame = 0;
+	int nTotalHits = nAnimFrames.size();
+	std::vector<int> nActionFrames256(nTotalHits);
+
+	// Calculate the first action frame
+	nActionFrames256[0] = (nFrameBonus * 256) + ceil((((double)nActionFrame - (double)nFrameBonus) * 256) / (double)nAnimRate) * nAnimRate;
+	for (int i = 1; i <= nTotalHits - 1; i++)
+	{
+		nRollbackBase = ((nActionFrames256[i - 1]) >> 8) * (100 - nSkillRollback) / 100;  // Rollback the skill to n frame number
+		nRollbackStartFrame = (nRollbackBase * 256) + nAnimRate;  // The starting frame for the next action
+		nActionFrames256[i] = (nRollbackBase * 256) + ceil((((double)nActionFrame - (double)nRollbackBase) * 256) / (double)nAnimRate) * nAnimRate;  // The following action frame
+
+		// Get frame values for middle frame actions
+		nAnimFrames[i] = 1;
+		while (nRollbackStartFrame < nActionFrames256[i])
+		{
+			nRollbackStartFrame += nAnimRate;
+			nAnimFrames[i] += 1;
+		}
+	}
+	// Calculate the last frame:
+	nActionFrames256.back() = ((nRollbackBase * 256) + ceil((((double)nTotalFrames - (double)nRollbackBase) * 256) / (double)nAnimRate) * nAnimRate) - (nAnimRate * 2);
+
+	// Get frame value for last frame action
+	while (nRollbackStartFrame < nActionFrames256.back())
+	{
+		nRollbackStartFrame += nAnimRate;
+		nAnimFrames.back() += 1;
+	}
+	// Get frame value for the first frame action
+	nAnimFrames[0] = ceil((nActionFrames256[0] - (nFrameBonus * 256)) / (double)nAnimRate) + 1;
+
+	return nAnimFrames;
 }
 
 WeaponType StatsDisplay::GetCurrentWeaponType(Inventory* inventory)
