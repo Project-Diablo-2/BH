@@ -16,7 +16,16 @@
 	{"LRES", STAT_LIGHTNINGRESIST},	\
 	{"PRES", STAT_POISONRESIST},	\
 	{"MINDMG", STAT_MINIMUMDAMAGE},	\
-	{"MAXDMG", STAT_MAXIMUMDAMAGE},
+	{"MAXDMG", STAT_MAXIMUMDAMAGE}, \
+	{"EDEF", STAT_ENHANCEDDEFENSE},	\
+	{"EDAM", STAT_ENHANCEDMAXIMUMDAMAGE}, \
+	{"FCR", STAT_FASTERCAST},		\
+	{"AR", STAT_ATTACKRATING},		\
+	{"STAT3", STAT_VITALITY},		\
+	{"STAT60", STAT_LIFELEECH},		\
+	{"STAT62", STAT_MANALEECH},		\
+	{"REPLIFE", STAT_REPLENISHLIFE},
+
 #define MAX_NAME_SIZE 56
 // For ignoring size
 std::vector<std::string> colorreps =
@@ -3268,7 +3277,21 @@ bool AddCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	{
 		int tmpVal = D2COMMON_GetUnitStat(uInfo->item, stats[i], 0);
 		if (stats[i] == STAT_MAXHP || stats[i] == STAT_MAXMANA)
+		{
 			tmpVal /= 256;
+		}
+		else if (
+			stats[i] == STAT_ENHANCEDDEFENSE ||				// return 0
+			stats[i] == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
+			stats[i] == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
+			stats[i] == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
+			stats[i] == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
+			stats[i] == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
+			stats[i] == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
+			)
+		{
+			tmpVal = GetStatFromList(uInfo, stats[i]);
+		}
 		value += tmpVal;
 	}
 
