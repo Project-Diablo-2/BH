@@ -1247,6 +1247,7 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		nFrameBonus = D2COMMON_10031_UNITS_GetFrameBonus(pUnit);
 		pUnit->dwMode = nOldMode;
 
+		if (nMinAnimAcceleration > 175) nMinAnimAcceleration = 174;  // 174 so we go through the for loop once
 		if (nAnimAcceleration < 15) nAnimAcceleration = 15;
 		if (nAnimAcceleration > nMaxAnimAcceleration) nAnimAcceleration = nMaxAnimAcceleration;
 		if (nAnimSpeed == 0) nAnimSpeed = 256;
