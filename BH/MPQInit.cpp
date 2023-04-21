@@ -1443,6 +1443,8 @@ void InitializeMPQData() {
 			}
 		}
 	}
+	PREFIX_MAX -= 1;  // Don't count the "Expansion" row
+	SUFFIX_MAX -= 1;  // TODO: Replace this garbage with D2COMMON funcs (and this entire file for that matter)
 
 	// TODO: Read skills.txt to find this value
 	SKILL_MAX = 510;

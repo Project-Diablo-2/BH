@@ -2526,15 +2526,15 @@ bool MagicPrefixCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		return false;
 	}
 
-	if ((itemData->wPrefix[0] > 0) ? IntegerCompare(itemData->wPrefix[0], operation, prefixID1, prefixID2) : false)
+	if ((itemData->wPrefix[0] - (int)SUFFIX_MAX > 0) ? IntegerCompare(itemData->wPrefix[0] - (int)SUFFIX_MAX, operation, prefixID1, prefixID2) : false)
 	{
 		return true;
 	}
-	if ((itemData->wPrefix[1] > 0) ? IntegerCompare(itemData->wPrefix[1], operation, prefixID1, prefixID2) : false)
+	if ((itemData->wPrefix[1] - (int)SUFFIX_MAX > 0) ? IntegerCompare(itemData->wPrefix[1] - (int)SUFFIX_MAX, operation, prefixID1, prefixID2) : false)
 	{
 		return true;
 	}
-	if ((itemData->wPrefix[2] > 0) ? IntegerCompare(itemData->wPrefix[2], operation, prefixID1, prefixID2) : false)
+	if ((itemData->wPrefix[2] - (int)SUFFIX_MAX > 0) ? IntegerCompare(itemData->wPrefix[2] - (int)SUFFIX_MAX, operation, prefixID1, prefixID2) : false)
 	{
 		return true;
 	}
@@ -2644,7 +2644,7 @@ bool AutomodCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		return false;
 	}
 
-	return IntegerCompare(itemData->wAutoPrefix, operation, automodID, automodID2);
+	return IntegerCompare(itemData->wAutoPrefix - (int)PREFIX_MAX - (int)SUFFIX_MAX, operation, automodID, automodID2);
 }
 
 bool AutomodCondition::EvaluateInternalFromPacket(ItemInfo* info,
