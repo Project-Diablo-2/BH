@@ -1132,11 +1132,15 @@ enum QuestFlags {
 #define NPCID_Gheed                             147                        //Act 1
 #define NPCID_Charsi                            154                        //Act 1
 #define NPCID_Greiz                             198                        //Act 2
+#define NPCID_Elzix                             199                        //Act 2
 #define NPCID_Drognan                           177                        //Act 2
 #define NPCID_Fara                              178                        //Act 2
+#define NPCID_Lysander                          202                        //Act 2
 #define NPCID_Cain2                             244                        //Act 2
 #define NPCID_Meshif1                           210                        //Act 2
 #define NPCID_Cain3                             245                        //Act 3
+#define NPCID_Hratli                            253                        //Act 3
+#define NPCID_Alkor                             254                        //Act 3
 #define NPCID_Ormus                             255                        //Act 3
 #define NPCID_Asheara                           252                        //Act 3
 #define NPCID_Cain4                             246                        //Act 4

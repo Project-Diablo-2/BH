@@ -2891,9 +2891,27 @@ bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg2)
 {
 	bool is_shop = false;
-	if (uInfo->item->pItemData->pOwnerInventory)
+	if (uInfo->item->pItemData &&
+		uInfo->item->pItemData->pOwnerInventory &&
+		uInfo->item->pItemData->pOwnerInventory->pOwner)
 	{
-		if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId > 1 && uInfo->item->pItemData->pOwnerInventory->dwOwnerId != D2CLIENT_GetPlayerUnit()->dwUnitId)
+		auto wNpcId = uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo;
+		if (wNpcId == NPCID_Akara	||	// Act 1
+			wNpcId == NPCID_Gheed	||	// Act 1
+			wNpcId == NPCID_Charsi	||	// Act 1
+			wNpcId == NPCID_Elzix	||	// Act 2
+			wNpcId == NPCID_Drognan	||	// Act 2
+			wNpcId == NPCID_Fara	||	// Act 2
+			wNpcId == NPCID_Lysander ||	// Act 2
+			wNpcId == NPCID_Hratli	||	// Act 3
+			wNpcId == NPCID_Akara	||	// Act 3
+			wNpcId == NPCID_Ormus	||	// Act 3
+			wNpcId == NPCID_Asheara	||	// Act 3
+			wNpcId == NPCID_Jamella	||	// Act 4
+			wNpcId == NPCID_Halbu	||	// Act 4
+			wNpcId == NPCID_Larzuk	||	// Act 5
+			wNpcId == NPCID_Malah	||	// Act 5
+			wNpcId == NPCID_Anya)		// Act 5
 		{
 			is_shop = true;
 		}
