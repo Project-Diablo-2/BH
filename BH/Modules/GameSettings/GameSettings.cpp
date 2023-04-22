@@ -225,6 +225,7 @@ void GameSettings::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 			selectedUnit->dwType == 0 ||					// Player
 			selectedUnit->dwTxtFileNo == 291 ||		// Iron Golem
 			selectedUnit->dwTxtFileNo == 357 ||		// Valkerie
+			selectedUnit->dwTxtFileNo == 417 ||		// Shadow Warrior
 			selectedUnit->dwTxtFileNo == 418)) {	// Shadow Master
 			Item::viewingUnit = selectedUnit;
 			if (!D2CLIENT_GetUIState(0x01))
