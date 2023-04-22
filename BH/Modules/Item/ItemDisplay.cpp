@@ -917,7 +917,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 {
 	char origName[512], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4] = "0";
 	char gemtype[16] = "", gemlevel[16] = "", sellValue[16] = "", statVal[16] = "", qty[4] = "";
-	char lvlreq[4], wpnspd[4], rangeadder[4], allres[4];
+	char lvlreq[4], wpnspd[4], rangeadder[4], allres[4], ed[4];
 
 	UnitAny* item = uInfo->item;
 	ItemsTxt* txt = D2COMMON_GetItemText(item->dwTxtFileNo);
@@ -945,6 +945,22 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		minres = min(min(fRes, lRes), min(cRes, pRes));
 	}
 	sprintf_s(allres, "%d", minres);
+
+	// Either enhanced defense or enhanced damage depending on item type
+	WORD stat;
+	if (uInfo->attrs->flags & ITEM_GROUP_ALLARMOR) { stat = STAT_ENHANCEDDEFENSE; }
+	else
+	{
+		// Normal %ED will have the same value for STAT_ENHANCEDMAXIMUMDAMAGE and STAT_ENHANCEDMINIMUMDAMAGE
+		stat = STAT_ENHANCEDMAXIMUMDAMAGE;
+	}
+	DWORD     value = 0;
+	StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+	if (pStatList)
+	{
+		value += D2COMMON_GetStatValueFromStatList(pStatList, stat, 0);
+	}
+	sprintf_s(ed, "%d", value);
 
 	sprintf_s(sockets, "%d", D2COMMON_GetUnitStat(item, STAT_SOCKETS, 0));
 	sprintf_s(ilvl, "%d", item->pItemData->dwItemLevel);
@@ -1000,6 +1016,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		{ "PRICE", sellValue },
 		{ "QTY", qty },
 		{ "RES", allres},
+		{ "ED", ed},
 		COLOR_REPLACEMENTS
 	};
 	int nColorCodesSize = 0;
@@ -1192,37 +1209,6 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				auto value = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat, 0);
 				sprintf_s(statVal, "%d", value);
 			}
-			name.replace(
-				stat_match.prefix().length(),
-				stat_match[0].length(),
-				statVal);
-		}
-	}
-	else if (name.find("%ED%") != string::npos)
-	{
-		std::regex  stat_reg("%ED%", std::regex_constants::ECMAScript);
-		std::smatch stat_match;
-
-		while (std::regex_search(name, stat_match, stat_reg))
-		{
-			// Either enhanced defense or enhanced damage depending on item type
-			WORD stat;
-			if (uInfo->attrs->flags & ITEM_GROUP_ALLARMOR) { stat = STAT_ENHANCEDDEFENSE; }
-			else
-			{
-				// Normal %ED will have the same value for STAT_ENHANCEDMAXIMUMDAMAGE and STAT_ENHANCEDMINIMUMDAMAGE
-				stat = STAT_ENHANCEDMAXIMUMDAMAGE;
-			}
-			DWORD     value = 0;
-			Stat      aStatList[256] = { NULL };
-			StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
-			if (pStatList)
-			{
-				DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
-				for (UINT i = 0; i < dwStats; i++) { if (aStatList[i].wStatIndex == stat && aStatList[i].wSubIndex == 0) { value += aStatList[i].dwStatValue; } }
-			}
-			sprintf_s(statVal, "%d", value);
-
 			name.replace(
 				stat_match.prefix().length(),
 				stat_match[0].length(),
@@ -2715,12 +2701,10 @@ bool EDCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		stat = STAT_ENHANCEDMAXIMUMDAMAGE;
 	}
 	DWORD     value = 0;
-	Stat      aStatList[256] = { NULL };
 	StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
 	if (pStatList)
 	{
-		DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
-		for (UINT i = 0; i < dwStats; i++) { if (aStatList[i].wStatIndex == stat && aStatList[i].wSubIndex == 0) { value += aStatList[i].dwStatValue; } }
+		// value += D2COMMON_GetStatValueFromStatList(pStatList, stat, 0);
 	}
 
 	return IntegerCompare(value, operation, targetED, targetED2);
