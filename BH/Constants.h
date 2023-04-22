@@ -632,6 +632,10 @@ enum TextColor {
 #define STAT_MAP_MON_DROPCHARMS			497
 #define STAT_MAP_GLOB_EXTRABOSS			498
 
+#define STAT_DEEP_WOUNDS				501
+
+#define STAT_CURSE_EFFECTIVENESS		504
+
 ///////////////////////////////////////////////////
 // Unit Enchantments
 ///////////////////////////////////////////////////

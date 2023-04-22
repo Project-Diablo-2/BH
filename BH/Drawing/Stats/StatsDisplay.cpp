@@ -198,7 +198,7 @@ StatsDisplay* StatsDisplay::display;
 StatsDisplay::StatsDisplay(std::string name)
 {
 	int yPos = 10;
-	int width = 274;
+	int width = 300;
 
 	InitializeCriticalSection(&crit);
 	SetY(yPos);
@@ -435,8 +435,9 @@ void StatsDisplay::OnDraw()
 			None,
 			6,
 			Gold,
-			L"Curse Resist: %d%%",
-			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_CURSERESISTANCE, 0)) + penalty);
+			L"Curse Resist:ÿc8 %d /ÿc0 50 ÿc4Length:ÿc0 %d%%",
+			static_cast<int>(min(D2COMMON_GetUnitStat(unit, STAT_CURSE_EFFECTIVENESS, 0), 50)),
+			static_cast<int>(max(100 - D2COMMON_GetUnitStat(unit, STAT_CURSERESISTANCE, 0), 25)));
 		y += 8;
 
 		int fAbsorb = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_FIREABSORB, 0));
@@ -717,8 +718,9 @@ void StatsDisplay::OnDraw()
 			None,
 			6,
 			Gold,
-			L"Open Wounds: ÿc0%d",
-			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_OPENWOUNDS, 0)));
+			L"Open Wounds: ÿc0%d%%/+%d",
+			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_OPENWOUNDS, 0)),
+			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_DEEP_WOUNDS, 0)));
 		Texthook::Draw(column1,
 			(y += 16),
 			None,
@@ -1035,6 +1037,53 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		int nAnimType = pUnit->dwType;
 		int nUnitID = pUnit->dwTxtFileNo;
 		AnimDataRecord* pAnimData = NULL;
+
+		// Whirlwind has hardcoded frames
+		if (nSkillId == 151 || nSkillId == 380)
+		{
+			int WWNextHitDelay = pRightSkill->pSkillInfo->dwParam3;
+			if (D2COMMON_UnitCanDualWield(pUnit))
+			{
+				Inventory* pInventory = pUnit->pInventory;
+				UnitAny* pLeftWeapon = NULL;
+				UnitAny* pRightWeapon = NULL;
+				// In this case, pLeftWeapon == main hand weapon
+				if (pInventory != NULL)
+				{
+					pLeftWeapon = D2COMMON_GetLeftHandWeapon(pInventory);
+					if (pLeftWeapon != NULL)
+					{
+						int nBodyLoc = D2COMMON_ItemGetBodyLocation(pLeftWeapon);
+						pRightWeapon = D2COMMON_GetItemByBodyLoc(pInventory, ((nBodyLoc & 0xFF) == 4) + 4);
+					}
+				}
+
+				if (pLeftWeapon && pRightWeapon)
+				{
+					BOOL bIsPvp = FALSE;
+					if (pUnit && pUnit->pPath && pUnit->pPath->pRoom1 && pUnit->pPath->pRoom1->pRoom2 && pUnit->pPath->pRoom1->pRoom2->pLevel)
+					{
+						int nLevelId = pUnit->pPath->pRoom1->pRoom2->pLevel->dwLevelNo;
+						bIsPvp = (nLevelId == 157 || nLevelId == 159 || nLevelId == 166);
+					}
+
+					// Remove DW penalty in pvp
+					if (!bIsPvp)
+					{
+						WWNextHitDelay += 1;
+					}
+				}
+			}
+
+			Texthook::Draw(x,
+				*pY,
+				None,
+				6,
+				Gold,
+				"IAS (Frames):ÿc8 0 (%d)",
+				WWNextHitDelay);
+			return;
+		}
 
 		if (pRightSkill->mode == PLAYER_MODE_SEQUENCE)
 		{
