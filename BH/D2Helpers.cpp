@@ -351,3 +351,13 @@ DWORD GetPlayerArea() {
 		return 0;
 	return player->pPath->pRoom1->pRoom2->pLevel->dwLevelNo;
 }
+
+int32_t __fastcall UTILITY_CalcPercent(int32_t nValue, double nPercent, uint32_t nBase)
+{
+	double dResult = (double)((double)nValue * nPercent) / (double)(max(nBase, 1));
+	if (dResult > INT_MAX)
+	{
+		return INT_MAX;
+	}
+	return (int32_t)dResult;
+}

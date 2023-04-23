@@ -768,17 +768,32 @@ void StatsDisplay::OnDraw()
 
 		int minFire = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MINIMUMFIREDAMAGE, 0));
 		int maxFire = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXIMUMFIREDAMAGE, 0));
+		int fireMastery = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_FIREMASTERY, 0));
+		minFire = minFire + UTILITY_CalcPercent(minFire, fireMastery, 100);
+		maxFire = maxFire + UTILITY_CalcPercent(maxFire, fireMastery, 100);
 		int minLight = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MINIMUMLIGHTNINGDAMAGE, 0));
 		int maxLight = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXIMUMLIGHTNINGDAMAGE, 0));
+		int lightMastery = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_LIGHTNINGMASTERY, 0));
+		minLight = minLight + UTILITY_CalcPercent(minLight, lightMastery, 100);
+		maxLight = maxLight + UTILITY_CalcPercent(maxLight, lightMastery, 100);
 		int minCold = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MINIMUMCOLDDAMAGE, 0));
 		int maxCold = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXIMUMCOLDDAMAGE, 0));
+		int coldMastery = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_COLDMASTERY, 0));
+		minCold = minCold + UTILITY_CalcPercent(minCold, coldMastery, 100);
+		maxCold = maxCold + UTILITY_CalcPercent(maxCold, coldMastery, 100);
 		int minPoison = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MINIMUMPOISONDAMAGE, 0));
 		int maxPoison = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXIMUMPOISONDAMAGE, 0));
+		int poisonMastery = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_POISONMASTERY, 0));
+		minPoison = minPoison + UTILITY_CalcPercent(minPoison, poisonMastery, 100);
+		maxPoison = maxPoison + UTILITY_CalcPercent(maxPoison, poisonMastery, 100);
 		int poisonLength = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_POISONDAMAGELENGTH, 0));
 		int poisonLengthOverride = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_SKILLPOISONOVERRIDELEN, 0));
 		if (poisonLengthOverride > 0) { poisonLength = poisonLengthOverride; }
 		int minMagic = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MINIMUMMAGICALDAMAGE, 0));
 		int maxMagic = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXIMUMMAGICALDAMAGE, 0));
+		int magicMastery = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_PASSIVEMAGICDMGMASTERY, 0));
+		minMagic = minMagic + UTILITY_CalcPercent(minMagic, magicMastery, 100);
+		maxMagic = maxMagic + UTILITY_CalcPercent(maxMagic, magicMastery, 100);
 		int addedPhys = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_ADDSDAMAGE, 0));
 		y += 8;
 		Texthook::Draw(column1,
