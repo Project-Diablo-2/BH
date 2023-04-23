@@ -78,7 +78,7 @@ void MapNotify::OnDraw() {
 						int filterLevel = Item::GetFilterLevel();
 						if (filterLevel != 0 && (*it)->action.pingLevel < filterLevel && (*it)->action.pingLevel != -1) continue;
 
-						if ((*it)->Evaluate(&uInfo, NULL)) {
+						if ((*it)->Evaluate(&uInfo)) {
 							if ((unit->dwFlags & UNITFLAG_REVEALED) == 0x0
 								&& (*BH::MiscToggles2)["Item Detailed Notifications"].state) {
 								if ((*BH::MiscToggles2)["Item Close Notifications"].state || (dwFlags & ITEM_NEW)) {

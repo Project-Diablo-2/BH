@@ -431,7 +431,7 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 			int filterLevel = GetFilterLevel();
 			if (filterLevel != 0 && (*it)->action.pingLevel < filterLevel && (*it)->action.pingLevel != -1) continue;
 
-			if ((*it)->Evaluate(uInfo, NULL)) {
+			if ((*it)->Evaluate(uInfo)) {
 				auto action_color = (*it)->action.notifyColor;
 				// never overwrite color with an undefined color. never overwrite a defined color with dead color.
 				if (action_color != UNDEFINED_COLOR && (action_color != DEAD_COLOR || color == UNDEFINED_COLOR))
@@ -467,7 +467,7 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 		}
 		else if (!showOnMap) {
 			for (vector<Rule*>::iterator it = RuleList.begin(); it != RuleList.end(); it++) {
-				if ((*it)->Evaluate(uInfo, NULL)) {
+				if ((*it)->Evaluate(uInfo)) {
 					if ((*it)->action.name.length() == 0 && Item::GetFilterLevel() > 0) {
 						uInfo->item->dwFlags2 |= UNITFLAGEX_INVISIBLE;
 					}
