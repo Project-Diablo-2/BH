@@ -95,6 +95,3 @@ public:
 	void OnGameExit();
 };
 
-
-void ParseItem(const unsigned char* data, ItemInfo* ii, bool* success);
-bool ProcessStat(unsigned int statId, BitReader& reader, ItemProperty& itemProp);

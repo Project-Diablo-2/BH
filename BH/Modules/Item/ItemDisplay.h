@@ -1175,7 +1175,6 @@ namespace ItemDisplay
 	void UninitializeItemRules();
 }
 
-StatProperties* GetStatProperties(unsigned int stat);
 void            BuildAction(string* str,
 	Action* act);
 int ParsePingLevel(Action* act, const string& reg_string);

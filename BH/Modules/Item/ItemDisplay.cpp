@@ -3367,4 +3367,3 @@ void HandleUnknownItemCode(char* code,
 	}
 }
 
-StatProperties* GetStatProperties(unsigned int stat) { return AllStatList.at(stat); }
