@@ -2704,7 +2704,7 @@ bool EDCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
 	if (pStatList)
 	{
-		// value += D2COMMON_GetStatValueFromStatList(pStatList, stat, 0);
+		value += D2COMMON_GetStatValueFromStatList(pStatList, stat, 0);
 	}
 
 	return IntegerCompare(value, operation, targetED, targetED2);
