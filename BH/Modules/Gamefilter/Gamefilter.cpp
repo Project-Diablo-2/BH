@@ -25,6 +25,7 @@ void Gamefilter::OnLoad() {
 	}
 	refreshTime = 1501;
 	BH::config->ReadInt("GameListRefresh", refreshTime);
+	if (refreshTime < 1500) { refreshTime = 1500; }
 
 	showDiff = &bools["Show Difficulty"];
 	*showDiff = true;
