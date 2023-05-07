@@ -205,6 +205,11 @@ void UI::SetMinimized(bool newState) {
 };
 
 bool UI::OnLeftClick(bool up, unsigned int mouseX, unsigned int mouseY) {
+	// Prevent clicks while in the main menu
+	if (!D2CLIENT_GetUIState(UI_GAME))
+	{
+		return false;
+	}
 	if (IsMinimized()) {
 		int n = 0;
 		for (list<UI*>::iterator it = Minimized.begin(); it != Minimized.end(); it++, n++)
@@ -280,6 +285,11 @@ bool UI::OnLeftClick(bool up, unsigned int mouseX, unsigned int mouseY) {
 }
 
 bool UI::OnRightClick(bool up, unsigned int mouseX, unsigned int mouseY) {
+	// Prevent clicks while in the main menu
+	if (!D2CLIENT_GetUIState(UI_GAME))
+	{
+		return false;
+	}
 	if (InTitle(mouseX, mouseY) && !IsMinimized()) {
 		if (up) 
 			SetMinimized(true);
