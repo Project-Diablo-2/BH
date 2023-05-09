@@ -18,18 +18,6 @@
 
 
 extern unsigned int SKILL_MAX;
-extern unsigned int PREFIX_MAX;
-extern unsigned int SUFFIX_MAX;
-
-
-
-
-
-struct ItemAffixProperties {
-	unsigned int ID;
-	unsigned int costAdd;
-	unsigned int costMultiply;
-};
 
 
 
@@ -37,8 +25,11 @@ struct ItemAffixProperties {
 
 
 
-extern std::vector<ItemAffixProperties*> AllPrefixList;
-extern std::vector<ItemAffixProperties*> AllSuffixList;
+
+
+
+
+
 
 
 

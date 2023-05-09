@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <regex>
 #include "../../RuleLookupCache.h"
+#include "item.h"
 
 #define EXCEPTION_INVALID_STAT			1
 #define EXCEPTION_INVALID_OPERATION		2

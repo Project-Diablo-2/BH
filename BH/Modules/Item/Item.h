@@ -126,6 +126,7 @@ std::string GetTxtItemCode(ItemsTxt* pItemsTxt);
 void GetWeaponAttributes();
 void GetArmorAttributes();
 void GetMiscAttributes();
+void GetAffixOffsets();
 
 // Item attributes from ItemTypes.txt and Weapon/Armor/Misc.txt
 struct ItemAttributes {
@@ -165,6 +166,8 @@ void FindAncestorTypes(WORD type, std::set<WORD>& ancestors, std::map<WORD, WORD
 unsigned int AssignClassFlags(WORD type, std::set<WORD>& ancestors, unsigned int flags);
 
 extern unsigned int STAT_MAX;
+extern unsigned int PREFIX_OFFSET;
+extern unsigned int AUTOMOD_OFFSET;
 
 extern std::vector<StatProperties*> AllStatList;
 extern std::vector<CharStats*> CharList;

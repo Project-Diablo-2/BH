@@ -3,16 +3,14 @@
 
 
 unsigned int SKILL_MAX;
-unsigned int PREFIX_MAX;
-unsigned int SUFFIX_MAX;
+
 bool initialized = false;
 
 
 
 
 
-std::vector<ItemAffixProperties*> AllPrefixList;
-std::vector<ItemAffixProperties*> AllSuffixList;
+
 
 // These are the standard item attributes (if we can't read the patch mpq file)
 #pragma region DEFAULTS
@@ -1099,40 +1097,6 @@ void InitializeMPQData() {
 	char* end;
 	short lastID = -1;
 
-
-	if (MpqDataMap.find("magicprefix") != MpqDataMap.end()) {
-		unsigned int id = 1;
-		for (auto d = MpqDataMap["magicprefix"]->data.begin(); d < MpqDataMap["magicprefix"]->data.end(); d++) {
-			if ((*d)["add"].length() >= 0) {
-				ItemAffixProperties* prefix = new ItemAffixProperties();
-				prefix->ID = id;
-				prefix->costAdd = (unsigned int)std::strtoul((*d)["add"].c_str(), &end, 10);
-				prefix->costMultiply = (unsigned int)std::strtoul((*d)["multiply"].c_str(), &end, 10);
-				AllPrefixList.push_back(prefix);
-
-				PREFIX_MAX = id;
-				id += 1;
-			}
-		}
-	}
-
-	if (MpqDataMap.find("magicsuffix") != MpqDataMap.end()) {
-		unsigned int id = 1;
-		for (auto d = MpqDataMap["magicsuffix"]->data.begin(); d < MpqDataMap["magicsuffix"]->data.end(); d++) {
-			if ((*d)["add"].length() >= 0) {
-				ItemAffixProperties* suffix = new ItemAffixProperties();
-				suffix->ID = id;
-				suffix->costAdd = (unsigned int)std::strtoul((*d)["add"].c_str(), &end, 10);
-				suffix->costMultiply = (unsigned int)std::strtoul((*d)["multiply"].c_str(), &end, 10);
-				AllSuffixList.push_back(suffix);
-
-				SUFFIX_MAX = id;
-				id += 1;
-			}
-		}
-	}
-	PREFIX_MAX -= 1;  // Don't count the "Expansion" row
-	SUFFIX_MAX -= 1;  // TODO: Replace this garbage with D2COMMON funcs (and this entire file for that matter)
 
 	// TODO: Read skills.txt to find this value
 	SKILL_MAX = 510;

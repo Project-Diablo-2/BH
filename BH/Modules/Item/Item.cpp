@@ -62,6 +62,8 @@ RunesTxt* GetRunewordTxtById(int rwId);
 void FixDecimalString(wchar_t* s, int n);
 
 unsigned int STAT_MAX;
+unsigned int PREFIX_OFFSET;
+unsigned int AUTOMOD_OFFSET;
 
 std::map<WORD, BYTE> throwableMap;
 std::map<WORD, BYTE> bodyLocMap;
@@ -518,6 +520,13 @@ void GetMiscAttributes()
 	}
 }
 
+void GetAffixOffsets()
+{
+	D2MagicAffixDataTbl* pMagicAffixInfo = D2COMMON_10492_DATATBLS_GetMagicAffixDataTables();
+	PREFIX_OFFSET = ((int)pMagicAffixInfo->pMagicPrefix - (int)pMagicAffixInfo->pMagicAffixTxt) / sizeof(AutoMagicTxt);
+	AUTOMOD_OFFSET = ((int)pMagicAffixInfo->pAutoMagic - (int)pMagicAffixInfo->pMagicAffixTxt) / sizeof(AutoMagicTxt);
+}
+
 void Item::OnGameJoin() {
 	// reset the item name cache upon joining games
 	// (GUIDs not unique across games)
@@ -529,6 +538,7 @@ void Item::OnGameJoin() {
 	GetWeaponAttributes();
 	GetArmorAttributes();
 	GetMiscAttributes();
+	GetAffixOffsets();
 }
 
 void Item::LoadConfig() {
