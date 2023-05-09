@@ -48,6 +48,8 @@
 #include "../../Constants.h"
 #include "../../Config.h"
 #include "../../Drawing.h"
+#include "../../D2Structs.h"
+#include <set>
 
 struct UnitAny;
 struct UnitItemInfo;
@@ -116,3 +118,11 @@ BOOL StatIsCorrupted(int nStat, int nCorruptor);
 
 // reset all rule lookup caches
 void ResetCaches();
+
+void GetCharStats();
+
+struct CharStats {
+	int toHitFactor;
+};
+
+extern std::vector<CharStats*> CharList;

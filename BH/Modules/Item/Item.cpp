@@ -61,6 +61,8 @@ RunesTxt* GetRunewordTxtById(int rwId);
 
 void FixDecimalString(wchar_t* s, int n);
 
+std::vector<CharStats*> CharList;
+
 map<std::string, Toggle> Item::Toggles;
 unsigned int Item::filterLevelSetting;
 UnitAny* Item::viewingUnit;
@@ -123,10 +125,27 @@ void ResetCaches() {
 	map_action_cache.ResetCache();
 }
 
+void GetCharStats()
+{
+	DWORD dwCharsStatsRecs = (*p_D2COMMON_sgptDataTable)->dwCharsStatsRecs;
+	for (auto d = 0; d < dwCharsStatsRecs; d++)
+	{
+		CharStatsTxt* pCharStatsTxt = &(*p_D2COMMON_sgptDataTable)->pCharStatsTxt[d];
+		if (pCharStatsTxt->dwToHitFactor > 0)
+		{
+			CharStats* bits = new CharStats();
+			bits->toHitFactor = pCharStatsTxt->dwToHitFactor;
+			CharList.push_back(bits);
+		}
+	}
+}
+
 void Item::OnGameJoin() {
 	// reset the item name cache upon joining games
 	// (GUIDs not unique across games)
 	ResetCaches();
+
+	GetCharStats();
 }
 
 void Item::LoadConfig() {
