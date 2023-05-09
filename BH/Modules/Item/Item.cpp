@@ -62,6 +62,7 @@ RunesTxt* GetRunewordTxtById(int rwId);
 void FixDecimalString(wchar_t* s, int n);
 
 unsigned int STAT_MAX;
+unsigned int SKILL_MAX;
 unsigned int PREFIX_OFFSET;
 unsigned int AUTOMOD_OFFSET;
 
@@ -520,6 +521,11 @@ void GetMiscAttributes()
 	}
 }
 
+void GetTotalSkills()
+{
+	SKILL_MAX = (*p_D2COMMON_sgptDataTable)->dwSkillsRecs;
+}
+
 void GetAffixOffsets()
 {
 	D2MagicAffixDataTbl* pMagicAffixInfo = D2COMMON_10492_DATATBLS_GetMagicAffixDataTables();
@@ -538,6 +544,7 @@ void Item::OnGameJoin() {
 	GetWeaponAttributes();
 	GetArmorAttributes();
 	GetMiscAttributes();
+	GetTotalSkills();
 	GetAffixOffsets();
 }
 

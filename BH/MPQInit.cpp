@@ -2,7 +2,7 @@
 #include "MPQReader.h"
 
 
-unsigned int SKILL_MAX;
+
 
 bool initialized = false;
 
@@ -1098,8 +1098,6 @@ void InitializeMPQData() {
 	short lastID = -1;
 
 
-	// TODO: Read skills.txt to find this value
-	SKILL_MAX = 510;
 
 	initialized = true;
 }

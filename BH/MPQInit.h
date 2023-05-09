@@ -17,7 +17,6 @@
  */
 
 
-extern unsigned int SKILL_MAX;
 
 
 
