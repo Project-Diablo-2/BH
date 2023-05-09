@@ -128,6 +128,7 @@ void GetArmorAttributes();
 void GetMiscAttributes();
 void GetTotalSkills();
 void GetAffixOffsets();
+bool IsInitialized();
 
 // Item attributes from ItemTypes.txt and Weapon/Armor/Misc.txt
 struct ItemAttributes {

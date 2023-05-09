@@ -32,5 +32,5 @@
 
 
 
-bool IsInitialized();
+
 void InitializeMPQData();

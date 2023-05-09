@@ -61,6 +61,7 @@ RunesTxt* GetRunewordTxtById(int rwId);
 
 void FixDecimalString(wchar_t* s, int n);
 
+bool initialized = false;
 unsigned int STAT_MAX;
 unsigned int SKILL_MAX;
 unsigned int PREFIX_OFFSET;
@@ -135,6 +136,10 @@ void ResetCaches() {
 	item_desc_cache.ResetCache();
 	item_name_cache.ResetCache();
 	map_action_cache.ResetCache();
+}
+
+bool IsInitialized() {
+	return initialized;
 }
 
 void GetCharStats()
@@ -538,14 +543,18 @@ void Item::OnGameJoin() {
 	// (GUIDs not unique across games)
 	ResetCaches();
 
-	GetCharStats();
-	GetItemStats();
-	GetItemTypeMaps();
-	GetWeaponAttributes();
-	GetArmorAttributes();
-	GetMiscAttributes();
-	GetTotalSkills();
-	GetAffixOffsets();
+	if (!initialized)
+	{
+		GetCharStats();
+		GetItemStats();
+		GetItemTypeMaps();
+		GetWeaponAttributes();
+		GetArmorAttributes();
+		GetMiscAttributes();
+		GetTotalSkills();
+		GetAffixOffsets();
+		initialized = true;
+	}
 }
 
 void Item::LoadConfig() {

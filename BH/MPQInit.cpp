@@ -4,7 +4,7 @@
 
 
 
-bool initialized = false;
+
 
 
 
@@ -1086,18 +1086,12 @@ StatProperties StatPropertiesList[] = {
 };
 #pragma endregion
 
-bool IsInitialized() {
-	return initialized;
-}
 
 // If we find the temp file with MPQ info, use it; otherwise, fall back on the hardcoded lists.
 void InitializeMPQData() {
-	if (initialized) return;
 
 	char* end;
 	short lastID = -1;
 
 
-
-	initialized = true;
 }
