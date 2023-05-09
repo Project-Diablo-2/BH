@@ -121,6 +121,11 @@ void ResetCaches();
 
 void GetCharStats();
 void GetItemStats();
+void GetItemTypeMaps();
+std::string GetTxtItemCode(ItemsTxt* pItemsTxt);
+void GetWeaponAttributes();
+void GetArmorAttributes();
+void GetMiscAttributes();
 
 // Item attributes from ItemTypes.txt and Weapon/Armor/Misc.txt
 struct ItemAttributes {
@@ -156,7 +161,11 @@ struct CharStats {
 	int toHitFactor;
 };
 
+void FindAncestorTypes(WORD type, std::set<WORD>& ancestors, std::map<WORD, WORD>& map1, std::map<WORD, WORD>& map2);
+unsigned int AssignClassFlags(WORD type, std::set<WORD>& ancestors, unsigned int flags);
+
 extern unsigned int STAT_MAX;
 
 extern std::vector<StatProperties*> AllStatList;
 extern std::vector<CharStats*> CharList;
+extern std::map<std::string, ItemAttributes*> ItemAttributeMap;

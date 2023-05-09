@@ -21,25 +21,7 @@ extern unsigned int SKILL_MAX;
 extern unsigned int PREFIX_MAX;
 extern unsigned int SUFFIX_MAX;
 
-// Item attributes from ItemTypes.txt and Weapon/Armor/Misc.txt
-struct ItemAttributes {
-	std::string name;
-	char code[5];
-	std::string category;
-	BYTE width;
-	BYTE height;
-	BYTE stackable;
-	BYTE useable;
-	BYTE throwable;
-	BYTE itemLevel;		// 1=normal, 2=exceptional, 3=elite
-	BYTE unusedFlags;
-	unsigned int flags;
-	unsigned int flags2;
-	BYTE qualityLevel;
-	BYTE magicLevel;
-	unsigned int maxac;
-	unsigned int cost;
-};
+
 
 
 
@@ -53,7 +35,7 @@ struct ItemAffixProperties {
 
 
 
-extern std::map<std::string, ItemAttributes*> ItemAttributeMap;
+
 
 extern std::vector<ItemAffixProperties*> AllPrefixList;
 extern std::vector<ItemAffixProperties*> AllSuffixList;
