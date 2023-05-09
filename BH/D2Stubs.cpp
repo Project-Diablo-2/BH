@@ -75,19 +75,29 @@ DWORD __declspec(naked) __fastcall D2CLIENT_ClickParty_ASM(RosterUnit* RosterUni
 	}
 }
 
-void __declspec(naked) __fastcall D2CLIENT_PlaySound(int SoundNo)
+__declspec(naked) int __stdcall D2CLIENT_PlaySound_STUB(int nSound, UnitAny* pUnit, int nTriggerFrame, int param_4, int param_5)
 {
 	__asm
 	{
-		push ebx
-		mov ebx, ecx
-		push 0
-		push 0
-		push 0
-		push 0
-		call D2CLIENT_PlaySound_I
-		pop ebx;
-		ret
+		push EBX
+		mov EBX, [esp + 8]                                   // nSound
+		push[esp + 24]                                      // param_5
+		push[esp + 24]                                      // param_4
+		push[esp + 24]                                      // nTriggerFrame
+		push[esp + 24]                                      // pUnit
+		call D2CLIENT_PlaySound                              // 0x88A70
+		pop EBX
+		retn 20
+	}
+}
+
+__declspec(naked) void __stdcall D2CLIENT_PlayItemDropSounds_STUB(UnitAny* pUnit)
+{
+	__asm
+	{
+		mov EAX, [esp + 4]                                   // pUnit
+		call D2CLIENT_PlayItemDropSounds                     // 0x827C0
+		retn 4
 	}
 }
 

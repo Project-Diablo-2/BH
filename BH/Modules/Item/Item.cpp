@@ -80,6 +80,9 @@ Patch* permShowItems3 = new Patch(Call, D2CLIENT, { 0x59483, 0x4EA13 }, (int)Per
 Patch* permShowItems4 = new Patch(Call, D2CLIENT, { 0x5908A, 0x4E61A }, (int)PermShowItemsPatch3_ASM, 6);
 Patch* permShowItems5 = new Patch(Call, D2CLIENT, { 0xA6BA3, 0x63443 }, (int)PermShowItemsPatch4_ASM, 6);
 
+// Don't play item drop sounds for new items. We'll play them later, if necessary
+Patch* itemDropSoundIntercept1 = new Patch(NOP, D2CLIENT, { 0x84C38 }, 0, 5);
+
 Patch* newGroundIntercept = new Patch(Call, D2CLIENT, { 0xAE0DA }, (int)D2CLIENT_GetItemFromPacketIntercept_NewGround_STUB, 5);
 Patch* oldGroundIntercept = new Patch(Call, D2CLIENT, { 0xAE108 }, (int)GetItemFromPacket_OldGround, 5);
 
@@ -97,6 +100,8 @@ void Item::OnLoad() {
 	permShowItems3->Install();
 	permShowItems4->Install();
 	permShowItems5->Install();
+
+	itemDropSoundIntercept1->Install();
 
 	newGroundIntercept->Install();
 	oldGroundIntercept->Install();
@@ -271,6 +276,7 @@ void Item::OnUnload() {
 	permShowItems3->Remove();
 	permShowItems4->Remove();
 	permShowItems5->Remove();
+	itemDropSoundIntercept1->Remove();
 	newGroundIntercept->Remove();
 	oldGroundIntercept->Remove();
 	ItemDisplay::UninitializeItemRules();
@@ -391,6 +397,10 @@ void __stdcall GetItemFromPacket_NewGround(px9c* pPacket)
 	if (!CreateUnitItemInfo(&uInfo, pItem))
 	{
 		Item::ProcessItemPacketFilterRules(&uInfo, pPacket);
+		if (!(pItem->dwFlags2 & UNITFLAGEX_INVISIBLE))
+		{
+			D2CLIENT_PlayItemDropSounds_STUB(pItem);
+		}
 	}
 	else
 	{
