@@ -120,9 +120,43 @@ BOOL StatIsCorrupted(int nStat, int nCorruptor);
 void ResetCaches();
 
 void GetCharStats();
+void GetItemStats();
+
+// Item attributes from ItemTypes.txt and Weapon/Armor/Misc.txt
+struct ItemAttributes {
+	std::string name;			// Only used in Item Drop/Item Close Notifications. Can delete
+	char code[5];				// Delete. Already exists in UnitItemInfo
+	std::string category;
+	BYTE width;					// Delete. Inventory related, which is unnecessary
+	BYTE height;				// Delete. Inventory related, which is unnecessary
+	BYTE stackable;
+	BYTE useable;
+	BYTE throwable;
+	BYTE itemLevel;		// 1=normal, 2=exceptional, 3=elite		// Delete. Unused and already exists in flags
+	BYTE unusedFlags;			// Delete. (why does this exist?)
+	unsigned int flags;			// Rename to baseFlags
+	//unsigned int weaponFlags;
+	//unsigned int armorFlags;
+	unsigned int flags2;		// Rename to miscFlags
+	BYTE qualityLevel;
+	BYTE magicLevel;
+	unsigned int maxac;			// Delete. Was going to use for PRICE but dont need it
+	unsigned int cost;			// Delete. Was going to use for PRICE but dont need it
+};
+
+// Properties from ItemStatCost.txt
+struct StatProperties {
+	std::string name;
+	//std::string localizedName;
+	ItemStatCostTxt* pItemStatCostTxt;
+	unsigned short statId;
+};
 
 struct CharStats {
 	int toHitFactor;
 };
 
+extern unsigned int STAT_MAX;
+
+extern std::vector<StatProperties*> AllStatList;
 extern std::vector<CharStats*> CharList;

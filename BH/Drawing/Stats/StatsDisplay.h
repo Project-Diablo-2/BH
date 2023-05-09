@@ -15,6 +15,7 @@
 struct DisplayedStat
 {
 	std::string name;
+	int			id;
 	int         value;
 	bool        useValue;
 };

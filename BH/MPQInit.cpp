@@ -1,14 +1,13 @@
 ﻿#include "MPQInit.h"
 #include "MPQReader.h"
 
-unsigned int STAT_MAX;
+
 unsigned int SKILL_MAX;
 unsigned int PREFIX_MAX;
 unsigned int SUFFIX_MAX;
 bool initialized = false;
 
-std::vector<StatProperties*> AllStatList;
-std::unordered_map<std::string, StatProperties*> StatMap;
+
 
 std::map<std::string, ItemAttributes*> ItemAttributeMap;
 std::map<std::string, InventoryLayout*> InventoryLayoutMap;
@@ -1099,41 +1098,6 @@ void InitializeMPQData() {
 
 	char* end;
 	short lastID = -1;
-
-	if (MpqDataMap.find("itemstatcost") != MpqDataMap.end()) {
-		for (auto d = MpqDataMap["itemstatcost"]->data.begin(); d < MpqDataMap["itemstatcost"]->data.end(); d++) {
-			if ((*d)["ID"].length() > 0) {
-				unsigned short id = (unsigned short)std::strtoul((*d)["ID"].c_str(), &end, 10);
-				if (id > STAT_MAX) {
-					STAT_MAX = id;
-				}
-
-				for (int missing = lastID + 1; missing < id; missing++) {
-					StatProperties* mbits = new StatProperties();
-					mbits->name.assign("missing_id");
-					mbits->ID = missing;
-					mbits->sendParamBits = mbits->saveBits = mbits->saveAdd = mbits->saveParamBits = mbits->op = 0;
-					AllStatList.push_back(mbits);
-					StatMap[mbits->name] = mbits;
-				}
-
-				StatProperties* bits = new StatProperties();
-				bits->name = (*d)["Stat"];
-				std::transform(bits->name.begin(), bits->name.end(), bits->name.begin(), tolower);
-				bits->ID = id;
-				bits->sendParamBits = (BYTE)std::strtoul((*d)["Send Param Bits"].c_str(), &end, 10);
-				bits->saveBits = (BYTE)std::strtoul((*d)["Save Bits"].c_str(), &end, 10);
-				bits->saveAdd = (BYTE)std::strtoul((*d)["Save Add"].c_str(), &end, 10);
-				bits->saveParamBits = (BYTE)std::strtoul((*d)["Save Param Bits"].c_str(), &end, 10);
-				bits->op = (BYTE)std::strtoul((*d)["op"].c_str(), &end, 10);
-				bits->costAdd = (unsigned int)std::strtoul((*d)["Add"].c_str(), &end, 10);
-				bits->costMultiply = (unsigned int)std::strtoul((*d)["Multiply"].c_str(), &end, 10);
-				AllStatList.push_back(bits);
-				StatMap[bits->name] = bits;
-				lastID = (short)id;
-			}
-		}
-	}
 
 	if (MpqDataMap.find("inventory") != MpqDataMap.end()) {
 		for (auto d = MpqDataMap["inventory"]->data.begin(); d < MpqDataMap["inventory"]->data.end(); d++) {

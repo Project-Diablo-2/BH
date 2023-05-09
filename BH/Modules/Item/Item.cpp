@@ -61,6 +61,9 @@ RunesTxt* GetRunewordTxtById(int rwId);
 
 void FixDecimalString(wchar_t* s, int n);
 
+unsigned int STAT_MAX;
+
+std::vector<StatProperties*> AllStatList;
 std::vector<CharStats*> CharList;
 
 map<std::string, Toggle> Item::Toggles;
@@ -140,12 +143,27 @@ void GetCharStats()
 	}
 }
 
+void GetItemStats()
+{
+	STAT_MAX = (*p_D2COMMON_sgptDataTable)->dwItemStatCostRecs;
+	for (auto id = 0; id < STAT_MAX; id++)
+	{
+		StatProperties* bits = new StatProperties();
+		bits->pItemStatCostTxt = &(*p_D2COMMON_sgptDataTable)->pItemStatCostTxt[id];
+		bits->statId = id;
+		char* statString = UnicodeToAnsi(GetTblEntryByIndex(bits->pItemStatCostTxt->wDescStrPos, TBLOFFSET_STRING));
+		bits->name = statString;
+		AllStatList.push_back(bits);
+	}
+}
+
 void Item::OnGameJoin() {
 	// reset the item name cache upon joining games
 	// (GUIDs not unique across games)
 	ResetCaches();
 
 	GetCharStats();
+	GetItemStats();
 }
 
 void Item::LoadConfig() {

@@ -16,7 +16,7 @@
  * read the MPQ archive.
  */
 
-extern unsigned int STAT_MAX;
+
 extern unsigned int SKILL_MAX;
 extern unsigned int PREFIX_MAX;
 extern unsigned int SUFFIX_MAX;
@@ -41,19 +41,7 @@ struct ItemAttributes {
 	unsigned int cost;
 };
 
-// Properties from ItemStatCost.txt that we need for parsing incoming 0x9c packets, among other things
-struct StatProperties {
-	std::string name;
-	//std::string localizedName;
-	BYTE saveBits;
-	BYTE saveParamBits;
-	BYTE saveAdd;
-	BYTE op;
-	BYTE sendParamBits;
-	unsigned short ID;
-	unsigned int costAdd;
-	unsigned int costMultiply;
-};
+
 
 struct ItemAffixProperties {
 	unsigned int ID;
@@ -63,8 +51,7 @@ struct ItemAffixProperties {
 
 
 
-extern std::vector<StatProperties*> AllStatList;
-extern std::unordered_map<std::string, StatProperties*> StatMap;
+
 
 extern std::map<std::string, ItemAttributes*> ItemAttributeMap;
 extern std::map<std::string, InventoryLayout*> InventoryLayoutMap;
@@ -72,7 +59,6 @@ extern std::vector<ItemAffixProperties*> AllPrefixList;
 extern std::vector<ItemAffixProperties*> AllSuffixList;
 
 
-#define STAT_NUMBER(name) (StatMap[name]->ID)
 
 bool IsInitialized();
 void InitializeMPQData();
