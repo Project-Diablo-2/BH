@@ -54,7 +54,7 @@ struct ItemAffixProperties {
 
 
 extern std::map<std::string, ItemAttributes*> ItemAttributeMap;
-extern std::map<std::string, InventoryLayout*> InventoryLayoutMap;
+
 extern std::vector<ItemAffixProperties*> AllPrefixList;
 extern std::vector<ItemAffixProperties*> AllSuffixList;
 
