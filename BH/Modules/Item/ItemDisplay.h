@@ -18,30 +18,6 @@
 #define DEAD_COLOR        0xdead
 #define UNDEFINED_COLOR   0xbeef
 
-// Properties that can appear on an item from incoming packets
-struct ItemProperty
-{
-	unsigned int stat;
-	long         value;
-
-	unsigned int minimum;
-	unsigned int maximum;
-	unsigned int length;
-
-	unsigned int level;
-	unsigned int characterClass;
-	unsigned int skill;
-	unsigned int tab;
-
-	unsigned int monster;
-
-	unsigned int charges;
-	unsigned int maximumCharges;
-
-	unsigned int skillChance;
-
-	unsigned int perLevel;
-};
 
 // Collection of item data from the internal UnitAny structure
 struct UnitItemInfo
@@ -49,75 +25,6 @@ struct UnitItemInfo
 	UnitAny* item;
 	char            itemCode[5];
 	ItemAttributes* attrs;
-};
-
-// Item data obtained from an incoming 0x9c packet
-struct ItemInfo
-{
-	ItemAttributes* attrs;
-	char            code[5];
-	//std::string packet;
-	std::string                name;
-	std::string                earName;
-	std::string                personalizedName;
-	unsigned int               id;
-	unsigned int               x;
-	unsigned int               y;
-	unsigned int               amount;
-	unsigned int               prefix;
-	unsigned int               suffix;
-	unsigned int               setCode;
-	unsigned int               uniqueCode;
-	unsigned int               runewordId;
-	unsigned int               defense;
-	unsigned int               action;
-	unsigned int               category;
-	unsigned int               version;
-	unsigned int               directory;
-	unsigned int               container;
-	unsigned int               earLevel;
-	unsigned int               width;
-	unsigned int               height;
-	unsigned int               quality;
-	unsigned int               graphic;
-	unsigned int               color;
-	unsigned int               superiority;
-	unsigned int               runewordParameter;
-	unsigned int               maxDurability;
-	unsigned int               durability;
-	BYTE                       usedSockets;
-	BYTE                       level;
-	BYTE                       earClass;
-	BYTE                       sockets;
-	bool                       equipped;
-	bool                       inSocket;
-	bool                       identified;		// ITEM_IDENTIFIED
-	bool                       switchedIn;		// ITEM_SWITCHIN
-	bool                       switchedOut;		// ITEM_SWITCHOUT
-	bool                       broken;			// ITEM_BROKEN
-	bool                       potion;
-	bool                       hasSockets;		// ITEM_HASSOCKETS
-	bool                       inStore;			// ITEM_NEW
-	bool                       notInSocket;
-	bool                       ear;				// ITEM_ISEAR
-	bool                       startItem;		// ITEM_STARTITEM
-	bool                       simpleItem;		// ITEM_COMPACTSAVE
-	bool                       ethereal;		// ITEM_ETHEREAL
-	bool                       personalized;	// ITEM_PERSONALIZED
-	bool                       gambling;
-	bool                       runeword;		// ITEM_RUNEWORD
-	bool                       ground;
-	bool                       unspecifiedDirectory;
-	bool                       isGold;
-	bool                       hasGraphic;
-	bool                       hasColor;
-	bool                       isArmor;
-	bool                       isWeapon;
-	bool                       indestructible;
-	std::vector<unsigned long> prefixes;
-	std::vector<unsigned long> suffixes;
-	std::vector<ItemProperty>  properties;
-	bool                       operator<(ItemInfo const& other) const;
 };
 
 ItemAttributes                    ItemAttributeList[];
@@ -156,19 +63,12 @@ public:
 		Condition* cond);
 
 	bool Evaluate(UnitItemInfo* uInfo,
-		ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 
 	BYTE conditionType;
 private:
 	virtual bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2) {
-		return false;
-	}
-
-	virtual bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2) {
 		return false;
@@ -183,9 +83,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class FalseCondition : public Condition
@@ -194,9 +91,6 @@ public:
 	FalseCondition() { conditionType = CT_Operand; };
 private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -209,9 +103,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class LeftParen : public Condition
@@ -220,9 +111,6 @@ public:
 	LeftParen() { conditionType = CT_LeftParen; };
 private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -235,9 +123,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class AndOperator : public Condition
@@ -248,9 +133,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class OrOperator : public Condition
@@ -259,9 +141,6 @@ public:
 	OrOperator() { conditionType = CT_BinaryOperator; };
 private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -283,9 +162,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class FlagsCondition : public Condition
@@ -295,9 +171,6 @@ public:
 private:
 	unsigned int flag;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -311,9 +184,6 @@ private:
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class NonMagicalCondition : public Condition
@@ -322,9 +192,6 @@ public:
 	NonMagicalCondition() { conditionType = CT_Operand; };
 private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -346,9 +213,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class GemTypeCondition : public Condition
@@ -366,9 +230,6 @@ private:
 	BYTE gemType;
 	BYTE gemType2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -390,9 +251,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class GoldCondition : public Condition
@@ -410,9 +268,6 @@ private:
 	unsigned int goldAmount;
 	unsigned int goldAmount2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -434,9 +289,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class QualityLevelCondition : public Condition
@@ -454,9 +306,6 @@ private:
 	BYTE qualityLevel;
 	BYTE qualityLevel2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -478,9 +327,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class MapIdCondition : public Condition
@@ -498,9 +344,6 @@ private:
 	BYTE mapId;
 	BYTE mapId2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -522,9 +365,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class CraftLevelCondition : public Condition
@@ -542,9 +382,6 @@ private:
 	BYTE craftLevel;
 	BYTE craftLevel2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -566,9 +403,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class MagicPrefixCondition : public Condition
@@ -586,9 +420,6 @@ private:
 	unsigned int prefixID1;
 	unsigned int prefixID2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -610,9 +441,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class CharacterClassCondition : public Condition
@@ -627,9 +455,6 @@ private:
 	BYTE operation;
 	BYTE characterClass;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -651,9 +476,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class ItemGroupCondition : public Condition
@@ -663,9 +485,6 @@ public:
 private:
 	unsigned int itemGroup;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -687,10 +506,6 @@ private:
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateED(unsigned int flags);
 };
 
 class DurabilityCondition : public Condition
@@ -708,9 +523,6 @@ private:
 	unsigned int targetDurability;
 	unsigned int targetDurability2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -735,9 +547,6 @@ private:
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class FoolsCondition : public Condition
@@ -746,9 +555,6 @@ public:
 	FoolsCondition() { conditionType = CT_Operand; };
 private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -761,9 +567,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class ShopCondition : public Condition
@@ -772,9 +575,6 @@ public:
 	ShopCondition() { conditionType = CT_Operand; };
 private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -787,9 +587,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class TwoHandedCondition : public Condition
@@ -800,9 +597,6 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class GemmedCondition : public Condition
@@ -811,9 +605,6 @@ public:
 	GemmedCondition() { conditionType = CT_Operand; };
 private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -842,9 +633,6 @@ private:
 	bool                     EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class CharStatCondition : public Condition
@@ -871,9 +659,6 @@ private:
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class DifficultyCondition : public Condition
@@ -894,9 +679,6 @@ private:
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class FilterLevelCondition : public Condition
@@ -915,7 +697,6 @@ private:
 	unsigned int filterLevel;
 	unsigned int filterLevel2;
 	bool EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info, Condition* arg1, Condition* arg2);
 };
 
 class ItemStatCondition : public Condition
@@ -942,9 +723,6 @@ private:
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class ItemPriceCondition : public Condition
@@ -965,9 +743,6 @@ private:
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
-		Condition* arg1,
-		Condition* arg2);
 };
 
 class ResistAllCondition : public Condition
@@ -985,9 +760,6 @@ private:
 	unsigned int targetStat;
 	unsigned int targetStat2;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -1012,9 +784,6 @@ private:
 	string         key;
 	void           Init();
 	bool           EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-	bool EvaluateInternalFromPacket(ItemInfo* info,
 		Condition* arg1,
 		Condition* arg2);
 };
@@ -1079,8 +848,7 @@ struct Rule
 
 	// TODO: Should this really be defined in the header? This will force it to be inlined AFAIK. -ybd
 	// Evaluate conditions which are in Reverse Polish Notation
-	bool Evaluate(UnitItemInfo* uInfo,
-		ItemInfo* info)
+	bool Evaluate(UnitItemInfo* uInfo)
 	{
 		if (conditions.size() == 0)
 		{
@@ -1112,11 +880,11 @@ struct Rule
 						arg2 = conditionStack.back();
 						conditionStack.pop_back();
 					}
-					if (input->Evaluate(uInfo, info, arg1, arg2)) { conditionStack.push_back(trueCondition); }
+					if (input->Evaluate(uInfo, arg1, arg2)) { conditionStack.push_back(trueCondition); }
 					else { conditionStack.push_back(falseCondition); }
 				}
 			}
-			if (conditionStack.size() == 1) { retval = conditionStack[0]->Evaluate(uInfo, info, NULL, NULL); }
+			if (conditionStack.size() == 1) { retval = conditionStack[0]->Evaluate(uInfo, NULL, NULL); }
 			else { retval = false; }
 		}
 		catch (...) { retval = false; }
@@ -1175,7 +943,6 @@ namespace ItemDisplay
 	void UninitializeItemRules();
 }
 
-StatProperties* GetStatProperties(unsigned int stat);
 void            BuildAction(string* str,
 	Action* act);
 int ParsePingLevel(Action* act, const string& reg_string);
@@ -1198,7 +965,6 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	string& name,
 	const string& action_name,
 	BOOL          bLimit);
-int  GetDefense(ItemInfo* item);
 BYTE GetAffixLevel(BYTE ilvl,
 	BYTE qlvl,
 	BYTE mlvl);
