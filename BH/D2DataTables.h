@@ -105,6 +105,25 @@ struct ItemsTxtStat
 	int dwMax;			          //0x0C
 };
 
+struct RareAffixTxt
+{
+	DWORD unk0x00[3];					//0x00
+	WORD wStringId;						//0x0C
+	WORD wVersion;						//0x0E
+	WORD wIType[7];						//0x10
+	WORD wEType[4];						//0x1E
+	char szName[32];					//0x26
+	WORD pad0x46;						//0x46
+};
+
+struct RareAffixDataTbl							//sgptDataTable + 0xD14
+{
+	int nRareAffixTxtRecordCount;					//0x00
+	RareAffixTxt* pRareAffixTxt;					//0x04
+	RareAffixTxt* pRareSuffix;					//0x08
+	RareAffixTxt* pRarePrefix;					//0x0C
+};
+
 /*
 	 Valid for Automagic.txt, MagicSuffix.txt, MagicPrefix.txt
 	 */
@@ -146,7 +165,8 @@ struct D2MagicAffixDataTbl						//sgptDataTable + 0xEC8
 struct UniqueItemsTxt
 {
 	WORD _1;	                  //0x00
-	char szName[34];              //0x02
+	char szName[32];              //0x02
+	WORD wTblIndex;				  //0x22
 	DWORD dwVersion;              //0x24
 	union
 	{
@@ -180,7 +200,8 @@ struct SetItemsTxt
 		DWORD dwCode;
 		char szCode[4];
 	};							   //0x28
-	DWORD _2;	                   //0x2C
+	WORD nSetId;				   //0x2C
+	WORD nSetItems;				   //0x2E
 	WORD wLvl;                     //0x30
 	WORD wLvlReq;                  //0x32
 	DWORD dwRarity;                //0x34
@@ -196,6 +217,22 @@ struct SetItemsTxt
 	BYTE nAddFunc;                 //0x87
 	ItemsTxtStat hStats[9];        //0x88
 	ItemsTxtStat hGreenStats[10];   //0x118
+};
+
+struct SetsTxt
+{
+	WORD wSetId;						//0x00
+	WORD wStringId;						//0x02
+	WORD wVersion;						//0x04
+	WORD pad0x06;						//0x06
+	DWORD unk0x08;						//0x08
+	int nSetItems;						//0x0C
+	ItemsTxtStat pBoni2[2];				//0x10
+	ItemsTxtStat pBoni3[2];				//0x30
+	ItemsTxtStat pBoni4[2];				//0x50
+	ItemsTxtStat pBoni5[2];				//0x70
+	ItemsTxtStat pFBoni[8];				//0x90
+	SetItemsTxt* pSetItem[6];			//0x110
 };
 
 struct RunesTxt
@@ -1752,7 +1789,7 @@ struct sgptDataTable {
 	DWORD	dwItemsTypeNesting;		//0xC00
 	BYTE* pItemsTypeNesting;		//0xC04
 	BYTE* pSets;					//0xC08
-	BYTE* pSetsTxt;				//0xC0C
+	SetsTxt* pSetsTxt;				//0xC0C
 	DWORD	dwSetsRecs;				//0xC10
 	BYTE* pSetItems;				//0xC14
 	SetItemsTxt* pSetItemsTxt;		//0xC18

@@ -26,7 +26,7 @@ private:
 	Drawing::UITab* settingsTab;
 	std::vector<std::string> options;
 
-	static void fillStats(JSONArray* statsArray, JSONObject* itemDef, UnitAny* pItem, std::string codeKey, std::string paramKey, std::string minKey, std::string maxKey, int maxProps);
+	static void fillStats(JSONArray* statsArray, ItemsTxtStat *itemDef, UnitAny* pItem, int maxProps);
 public:
 	static map<std::string, Toggle> Toggles;
 	static map<std::string, std::unique_ptr<Mustache::AMustacheTemplate>> MustacheTemplates;
@@ -49,7 +49,7 @@ public:
 
 void ItemDesc_Interception();
 
-std::function<JSONObject* (UnitAny*, JSONObject*, JSONObject*, JSONElement*, int, int)> STAT_FUNCTIONS[];
+std::function<JSONObject* (UnitAny*, ItemsTxtStat, ItemStatCostTxt*, int)> STAT_FUNCTIONS[];
 char* QUALITY_NAMES[];
 IdNamePair NODE_PAGES[];
 IdNamePair CLASS_NAMES[];

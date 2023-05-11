@@ -1,11 +1,10 @@
 ﻿#include "StashExport.h"
+#include "../../D2Helpers.h"
 #include "../../D2Ptrs.h"
 #include "../../BH.h"
 #include "../../D2Stubs.h"
 #include "../Item/ItemDisplay.h"
 #include "../Item/Item.h"
-#include "../../TableReader.h"
-#include "../../MPQInit.h"
 #include "../../Constants.h"
 #include <algorithm>
 
@@ -92,14 +91,31 @@ JSONObject* StashExport::getStatEntry(WORD statId, WORD statId2, DWORD statVal, 
 	switch (statId) {
 	case STAT_SINGLESKILL:
 	case STAT_NONCLASSSKILL: {
-		auto sk = Tables::Skills.binarySearch("Id", statId2);
-		if (sk) {
-			entry->set("name", NAMEOF(statId));
-			entry->set("skill", sk->getString("skill"));
+		SkillsTxt* pSkillsTxt = &(*p_D2COMMON_sgptDataTable)->pSkillsTxt[statId2];
+		SkillDescTxt* pSkillDescTxt = &(*p_D2COMMON_sgptDataTable)->pSkillDescTxt[pSkillsTxt->wSkillDesc];
+		if (pSkillsTxt && pSkillDescTxt)
+		{
+			std::string skillName = UnicodeToAnsi(GetTblEntryByIndex(pSkillDescTxt->wStrName, TBLOFFSET_STRING));
+			// Format skill bonus and skill name onto stat
+			std::string name = string_format("+%d to %s", (int)statVal, skillName.c_str());
+			entry->set("name", name);
+			entry->set("skill", skillName);
 			entry->set("value", (int)statVal);
 		}
 	}
-						   break;
+		break;
+	case STAT_AURA: {
+		SkillsTxt* pSkillsTxt = &(*p_D2COMMON_sgptDataTable)->pSkillsTxt[statId2];
+		SkillDescTxt* pSkillDescTxt = &(*p_D2COMMON_sgptDataTable)->pSkillDescTxt[pSkillsTxt->wSkillDesc];
+		if (pSkillsTxt && pSkillDescTxt)
+		{
+			std::string skillName = UnicodeToAnsi(GetTblEntryByIndex(pSkillDescTxt->wStrName, TBLOFFSET_STRING));
+			// Format aura level and skill name onto stat
+			std::string name = string_format(NAMEOF(statId), (int)statVal, skillName.c_str());
+			entry->set("name", name);
+		}
+	}
+		break;
 	case STAT_SKILLTAB:
 		for (int j = 0; j < 21; j++) {
 			if (SKILL_TABS[j].id == statId2) {
@@ -122,12 +138,15 @@ JSONObject* StashExport::getStatEntry(WORD statId, WORD statId2, DWORD statVal, 
 	case STAT_CHARGED: {
 		int level = statId2 & 0x3F;
 		statId2 >>= 6;	// skill Id needs to be bit-shifted
-		auto sk = Tables::Skills.binarySearch("Id", statId2);
-		if (sk) {
-			entry->set("name", NAMEOF(statId));
-			entry->set("skill", sk->getString("skill"));
-			entry->set("curCharges", lo);
-			entry->set("maxCharges", hi);
+		SkillsTxt* pSkillsTxt = &(*p_D2COMMON_sgptDataTable)->pSkillsTxt[statId2];
+		SkillDescTxt* pSkillDescTxt = &(*p_D2COMMON_sgptDataTable)->pSkillDescTxt[pSkillsTxt->wSkillDesc];
+		if (pSkillsTxt && pSkillDescTxt)
+		{
+			std::string skillName = UnicodeToAnsi(GetTblEntryByIndex(pSkillDescTxt->wStrName, TBLOFFSET_STRING));
+			// Format current/max charges onto stat
+			std::string charges = string_format(NAMEOF(statId), lo, hi);
+			entry->set("skill", skillName);
+			entry->set("charges", charges);
 			entry->set("level", level);
 		}
 	}
@@ -136,15 +155,20 @@ JSONObject* StashExport::getStatEntry(WORD statId, WORD statId2, DWORD statVal, 
 	case STAT_SKILLONHIT:
 	case STAT_SKILLONKILL:
 	case STAT_SKILLONLEVELUP:
+	case STAT_SKILLONCAST:
 	case STAT_SKILLONSTRIKING:
 	case STAT_SKILLWHENSTRUCK: {
 		int level = statId2 & 0x3F;
 		statId2 >>= 6;	// skill Id needs to be bit-shifted
-		auto sk = Tables::Skills.binarySearch("Id", statId2);
-		if (sk) {
-			entry->set("name", NAMEOF(statId));
-			entry->set("skill", sk->getString("skill"));
-			entry->set("chance%", lo);
+		SkillsTxt* pSkillsTxt = &(*p_D2COMMON_sgptDataTable)->pSkillsTxt[statId2];
+		SkillDescTxt* pSkillDescTxt = &(*p_D2COMMON_sgptDataTable)->pSkillDescTxt[pSkillsTxt->wSkillDesc];
+		if (pSkillsTxt && pSkillDescTxt)
+		{
+			std::string skillName = UnicodeToAnsi(GetTblEntryByIndex(pSkillDescTxt->wStrName, TBLOFFSET_STRING));
+			// Format skill chance, skill level, and skill name onto stat
+			std::string name = string_format(NAMEOF(statId), lo, level, skillName.c_str());
+			entry->set("name", name);
+			entry->set("chance", lo);
 			entry->set("level", level);
 		}
 	}
@@ -172,39 +196,50 @@ JSONObject* StashExport::getStatEntry(WORD statId, WORD statId2, DWORD statVal, 
 	return entry;
 }
 
-void StashExport::fillStats(JSONArray* statsArray, JSONObject* itemDef, UnitAny* pItem, std::string codeKey, std::string paramKey, std::string minKey, std::string maxKey, int maxProps) {
-	for (int rs = 1; rs < maxProps; rs++) {
-		std::string code = string_format(codeKey, rs);
-		std::string par = string_format(paramKey, rs);
-		std::string min = string_format(minKey, rs);
-		std::string max = string_format(maxKey, rs);
-		auto skProps = Tables::Properties.findEntry("code", itemDef->getString(code));
-		if (!skProps) { break; }
-		for (int sk = 1; sk < 8; sk++) {
-			char buf[6];
-			sprintf_s(buf, "stat%d", sk);
-			std::string funcKey = string_format("func%d", sk);
-			auto skDef = Tables::ItemStatCost.findEntry("Stat", skProps->getString(buf));
-			if (!skDef) { break; }
-			int func = (int)skProps->getNumber(funcKey);
+void StashExport::fillStats(JSONArray* statsArray, ItemsTxtStat *itemDef, UnitAny* pItem, int maxProps)
+{
+	for (int prop = 0; prop < maxProps; prop++)
+	{
+		if (itemDef[prop].dwProp == -1) { break; }
+
+		ItemsTxtStat itemStats = itemDef[prop];
+		PropertiesTxt* pPropertiesTxt = &(*p_D2COMMON_sgptDataTable)->pPropertiesTxt[itemDef[prop].dwProp];
+		if (!pPropertiesTxt) { break; }
+		
+		for (int stat = 0; stat < 8; stat++)
+		{
+			int func = pPropertiesTxt->nFunc[stat];
+			// 'dmg%' doesn't have a stat because.. reasons
+			if (func != 7 && pPropertiesTxt->wStat[stat] == 0xFFFF) { break; }
 
 			auto statFunc = STAT_FUNCTIONS[1];
 			if (func < MAX_FUNCTION) {
 				statFunc = STAT_FUNCTIONS[func];
 			}
 
-			auto entry = statFunc(pItem, skProps, skDef, itemDef->get(par), (int)itemDef->getNumber(min), (int)itemDef->getNumber(max));
-			statsArray->add(entry);
-			if (entry && Toggles["Condense Stats"].state) {
-				auto desc = skProps->getString("*desc");
-				if (desc.length() > 0) {
-					entry->set("name", desc);
-				}
-				else {
-					entry->set("name", itemDef->getString(code));
-				}
+			ItemStatCostTxt* pItemStatCostTxt = &(*p_D2COMMON_sgptDataTable)->pItemStatCostTxt[pPropertiesTxt->wStat[stat]];
+			if (!pItemStatCostTxt) { break; }
+
+			int statParam = 0;
+			switch (func)
+			{
+			case 21:
+				statParam = pPropertiesTxt->wVal[prop];
+				break;
+			default:
+				statParam = itemStats.dwPar;
 				break;
 			}
+
+			auto entry = statFunc(pItem, itemStats, pItemStatCostTxt, statParam);
+			statsArray->add(entry);
+			// TODO: the *desc column is only available in the txt files so "Condense Stats" no longer has a purpose
+			// Delete me and all other "Condense Stats" switches
+			//if (entry && Toggles["Condense Stats"].state) {
+			//	entry->set("name", UnicodeToAnsi(GetTblEntryByIndex(pItemStatCostTxt->wDescStrPos, TBLOFFSET_STRING)));
+			//	break;
+			//}
+			
 		}
 	}
 }
@@ -291,41 +326,46 @@ void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
 		}
 							   break;
 		case ITEM_QUALITY_UNIQUE: {
-			JSONObject* unDef = Tables::UniqueItems.entryAt(pItem->pItemData->dwFileIndex);
-			if (unDef) {
-				std::string name = unDef->getString("index");
+			UniqueItemsTxt* pUniqueItemsTxt = &(*p_D2COMMON_sgptDataTable)->pUniqueItemsTxt[pItem->pItemData->dwFileIndex];
+			if (pUniqueItemsTxt)
+			{
+				std::string name = pUniqueItemsTxt->szName;
 				// Remove hardcoded color
 				if (name.size() > 3 && name.substr(0, 2) == "ÿc") {
 					name = name.substr(3, name.size() - 3);
 				}
 				pBuffer->set("name", name);
-				fillStats(statsObject, unDef, pItem, "prop%d", "par%d", "min%d", "max%d", 13);
+				fillStats(statsObject, pUniqueItemsTxt->hStats, pItem, 12);
 			}
 		}
 								break;
 		case ITEM_QUALITY_SET: {
-			JSONObject* setDef = Tables::SetItems.entryAt(pItem->pItemData->dwFileIndex);
-			if (setDef) {
-				std::string name = setDef->getString("index");
+			SetItemsTxt* pSetItemsTxt = &(*p_D2COMMON_sgptDataTable)->pSetItemsTxt[pItem->pItemData->dwFileIndex];
+			SetsTxt* pSetsTxt = &(*p_D2COMMON_sgptDataTable)->pSetsTxt[pSetItemsTxt->nSetId];
+			if (pSetItemsTxt && pSetsTxt)
+			{
+				std::string itemName = pSetItemsTxt->szName;
+				std::string setName = UnicodeToAnsi(GetTblEntryByIndex(pSetsTxt->wStringId, TBLOFFSET_STRING));
 				// Remove hardcoded color
-				if (name.size() > 3 && name.substr(0, 2) == "ÿc") {
-					name = name.substr(3, name.size() - 3);
+				if (itemName.size() > 3 && itemName.substr(0, 2) == "ÿc") {
+					itemName = itemName.substr(3, itemName.size() - 3);
 				}
-				pBuffer->set("set", setDef->getString("set"));
-				pBuffer->set("name", name);
-				fillStats(statsObject, setDef, pItem, "prop%d", "par%d", "min%d", "max%d", 13);
+				pBuffer->set("set", setName);
+				pBuffer->set("name", itemName);
+				fillStats(statsObject, pSetItemsTxt->hStats, pItem, 9);
 			}
 		}
 							 break;
 		case ITEM_QUALITY_CRAFT:
 		case ITEM_QUALITY_RARE: {
-			// -155 because that is how big the suffix table is? ... also -1 from that
-			JSONObject* rarePrefix = Tables::RarePrefix.entryAt(pItem->pItemData->wRarePrefix - 156);
-			// zero based vs 1 based?; or the table just doesn't have the header row
-			JSONObject* rareSuffix = Tables::RareSuffix.entryAt(pItem->pItemData->wRareSuffix - 1);
+			RareAffixTxt* rarePrefix = D2COMMON_10365_DATATBLS_GetRareAffixTxtRecord(pItem->pItemData->wRarePrefix);
+			RareAffixTxt* rareSuffix = D2COMMON_10365_DATATBLS_GetRareAffixTxtRecord(pItem->pItemData->wRareSuffix);
 
-			if (rarePrefix && rareSuffix) {
-				pBuffer->set("name", rarePrefix->getString("name") + " " + rareSuffix->getString("name"));
+			if (rarePrefix && rareSuffix)
+			{
+				std::string rarePrefixName = UnicodeToAnsi(GetTblEntryByIndex(rarePrefix->wStringId, TBLOFFSET_STRING));
+				std::string rareSuffixName = UnicodeToAnsi(GetTblEntryByIndex(rareSuffix->wStringId, TBLOFFSET_STRING));
+				pBuffer->set("name", rarePrefixName + " " + rareSuffixName);
 			}
 		}
 							  break;
@@ -339,9 +379,9 @@ void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
 			pBuffer->set("runeword", rwName);
 
 			RunesTxt* pRune = D2COMMON_ITEMS_GetRunesTxtRecordFromItem(pItem);
-			JSONObject* rwDef = Tables::Runewords.findEntry("Name", pRune->szName);
-			if (rwDef) {
-				fillStats(statsObject, rwDef, pItem, "T1Code%d", "T1Param%d", "T1Min%d", "T1Max%d", 8);
+			if (pRune)
+			{
+				fillStats(statsObject, pRune->hStats, pItem, 7);
 			}
 		}
 		//else { //if (pItem->pItemData->dwQuality != ITEM_QUALITY_UNIQUE &&
@@ -421,8 +461,8 @@ void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
 void StashExport::WriteStash() {
 	BnetData* pInfo = (*p_D2LAUNCH_BnData);
 
-	if (!Tables::isInitialized()) {
-		PrintText(1, "Waiting for MPQ Data to finish loading...");
+	if (!IsInitialized()) {
+		PrintText(1, "Initializing...");
 		return;
 	}
 
@@ -498,8 +538,8 @@ void StashExport::WriteStash() {
 }
 
 void StashExport::CopyItemJSONToClipboard() {
-	if (!Tables::isInitialized()) {
-		PrintText(1, "Waiting for MPQ Data to finish loading...");
+	if (!IsInitialized()) {
+		PrintText(1, "Initializing...");
 		return;
 	}
 
@@ -573,153 +613,172 @@ void StashExport::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 	}
 }
 
-static JSONObject* INVALID_FUNCTION(UnitAny* pItem, JSONObject* skProp, JSONObject* skDef, JSONElement* param, int min, int max) {
+static JSONObject* INVALID_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
+{
 	return nullptr;
 }
 
-static JSONObject* DEFAULT_FUNCTION(UnitAny* pItem, JSONObject* skProp, JSONObject* skDef, JSONElement* param, int min, int max) {
-	auto id2 = param ? param->toInt() : 0;
-	int statId = (int)skDef->getNumber("ID");
+static JSONObject* DEFAULT_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
+{
+	auto statLayer = param ? param : 0;
+	int statId = pItemStatCostTxt->wStat;
 	StatList* pStatList = D2COMMON_GetStatList(pItem, 0, STAT_MAX);
-	int statVal = D2COMMON_GetStatValueFromStatList(pStatList, statId, 0);
-	//int statVal = D2COMMON_GetUnitStat(pItem, (int)skDef->getNumber("ID"), id2);
+	int statVal = D2COMMON_GetStatValueFromStatList(pStatList, statId, statLayer);
+
+	if (checkFlag(pItem, ITEM_RUNEWORD))
+	{
+		StatList* pStatList = D2COMMON_GetStateStatList(pItem, 171);  // 171=runeword
+		statVal += D2COMMON_GetStatValueFromStatList(pStatList, statId, statLayer);
+	}
+
 	if (statVal) {
 		auto entry = StashExport::getStatEntry(
-			(int)skDef->getNumber("ID"),
-			id2,
+			statId,
+			statLayer,
 			statVal,
-			min,
-			max);
+			itemStats.dwMin,
+			itemStats.dwMax);
 		return entry;
 	}
 
 	return nullptr;
 }
 
-static JSONObject* DAMAGE_PERCENT_FUNCTION(UnitAny* pItem, JSONObject* skProp, JSONObject* skDef, JSONElement* param, int min, int max) {
+static JSONObject* DAMAGE_PERCENT_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
+{
 	auto entry = new JSONObject();
-	std::string name = "dmg%";
+	std::string name = "% Enhanced Damage";
 	StatList* pStatList = D2COMMON_GetStatList(pItem, 0x00, STAT_MAX);
-	StatList* pStatList2 = D2COMMON_GetStatList(pItem, 0xAB, STAT_MAX);
-	int statVal1 = D2COMMON_GetStatValueFromStatList(pStatList, STAT_ENHANCEDMINIMUMDAMAGE, 0);
-	int statVal2 = D2COMMON_GetStatValueFromStatList(pStatList2, STAT_ENHANCEDMINIMUMDAMAGE, 0);
-	int statVal = statVal1 + statVal2;
+	int statVal = D2COMMON_GetStatValueFromStatList(pStatList, STAT_ENHANCEDMINIMUMDAMAGE, 0);
+	if (checkFlag(pItem, ITEM_RUNEWORD))
+	{
+		StatList* pStatList = D2COMMON_GetStateStatList(pItem, 171);  // 171=runeword
+		statVal += D2COMMON_GetStatValueFromStatList(pStatList, STAT_ENHANCEDMINIMUMDAMAGE, param);
+	}
+
 	entry->set("name", name);
 	entry->set("value", statVal);
 	auto range = new JSONObject();
-	range->set("min", (int)min);
-	range->set("max", (int)max);
+	range->set("min", (int)itemStats.dwMin);
+	range->set("max", (int)itemStats.dwMax);
 	entry->set("range", range);
 	return entry;
 }
 
-static JSONObject* DAMAGE_RANGE_FUNCTION(UnitAny* pItem, JSONObject* skProp, JSONObject* skDef, JSONElement* param, int min, int max) {
+static JSONObject* DAMAGE_RANGE_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
+{
 	if (StashExport::Toggles["Include Fixed Stats"].state) {
 		auto entry = new JSONObject();
-		entry->set("name", NAMEOF((int)skDef->getNumber("ID")));
-		entry->set("min", min);
-		entry->set("max", max);
+		entry->set("name", NAMEOF(pItemStatCostTxt->wStat));
+		entry->set("min", itemStats.dwMin);
+		entry->set("max", itemStats.dwMax);
 		return entry;
 	}
 
 	return nullptr;
 }
 
-static JSONObject* SKILL_ON_X_FUNCTION(UnitAny* pItem, JSONObject* skProp, JSONObject* skDef, JSONElement* param, int min, int max) {
-	if (StashExport::Toggles["Include Fixed Stats"].state) {
-		auto entry = new JSONObject();
-		std::string skill;
-		auto id = param ? param->toInt() : 0;
-		if (id) {
-			auto sk = Tables::Skills.binarySearch("Id", id);
-			if (sk) {
-				skill = sk->getString("skill");
-			}
-		}
-		else {
-			skill = param->toString();
-		}
-
-		entry->set("name", NAMEOF((int)skDef->getNumber("ID")));
-		entry->set("skill", skill);
-		entry->set("chance%", min);
-		entry->set("level", max);
-		return entry;
-	}
-
-	return nullptr;
-}
-
-static JSONObject* CLASS_SKILL_FUNCTION(UnitAny* pItem, JSONObject* skProp, JSONObject* skDef, JSONElement* param, int min, int max) {
-	return DEFAULT_FUNCTION(pItem, skProp, skDef, skProp->get("val1"), min, max);
-}
-
-static JSONObject* SKILL_TAB_FUNCTION(UnitAny* pItem, JSONObject* skProp, JSONObject* skDef, JSONElement* param, int min, int max) {
-	auto id2 = param ? param->toInt() : 0;
-	auto elem = JSONNumber(id2);
-	return DEFAULT_FUNCTION(pItem, skProp, skDef, &elem, min, max);
-}
-
-static JSONObject* SKILL_FUNCTION(UnitAny* pItem, JSONObject* skProp, JSONObject* skDef, JSONElement* param, int min, int max) {
-	auto id = param ? param->toInt() : 0;
-	if (!id) {
-		auto sk = Tables::Skills.findEntry("skill", param->toString());
-		if (sk) id = (int)sk->getNumber("Id");
-	}
-
-	auto elem = JSONNumber(id);
-	return DEFAULT_FUNCTION(pItem, skProp, skDef, &elem, min, max);
-}
-
-static JSONObject* CHARGED_FUNCTION(UnitAny* pItem, JSONObject* skProp, JSONObject* skDef, JSONElement* param, int min, int max) {
+static JSONObject* SKILL_ON_X_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
+{
 	if (StashExport::Toggles["Include Fixed Stats"].state) {
 		auto entry = new JSONObject();
 		std::string skill;
-		auto id = param ? param->toInt() : 0;
-		if (id) {
-			auto sk = Tables::Skills.binarySearch("Id", id);
-			if (sk) {
-				skill = sk->getString("skill");
+		auto skillId = param ? param : 0;
+		if (skillId) {
+			SkillsTxt* pSkillsTxt = &(*p_D2COMMON_sgptDataTable)->pSkillsTxt[skillId];
+			SkillDescTxt* pSkillDescTxt = &(*p_D2COMMON_sgptDataTable)->pSkillDescTxt[pSkillsTxt->wSkillDesc];
+			if (pSkillsTxt && pSkillDescTxt)
+			{
+				skill = UnicodeToAnsi(GetTblEntryByIndex(pSkillDescTxt->wStrName, TBLOFFSET_STRING));
 			}
 		}
-		else {
-			skill = param->toString();
-		}
 
-		entry->set("name", NAMEOF((int)skDef->getNumber("ID")));
+		entry->set("name", NAMEOF(pItemStatCostTxt->wStat));
 		entry->set("skill", skill);
-		entry->set("charges", min);
-		entry->set("level", max);
+		entry->set("chance%", itemStats.dwMin);
+		entry->set("level", itemStats.dwMax);
 		return entry;
 	}
 
 	return nullptr;
 }
 
-std::function<JSONObject* (UnitAny*, JSONObject*, JSONObject*, JSONElement*, int, int)> STAT_FUNCTIONS[] = {
-	&INVALID_FUNCTION,	// Invalid function
-	&DEFAULT_FUNCTION,	// Func 1
-	&DEFAULT_FUNCTION,	// Func 2
-	&DEFAULT_FUNCTION,	// Func 3
-	&DEFAULT_FUNCTION,	// Func 4
-	&DEFAULT_FUNCTION,	// Func 5
-	&DEFAULT_FUNCTION,	// Func 6
+// TODO: All of these were pretty much the same as DEFAULT_FUNCTION so they didnt really need to be updated
+// Keeping them temporarily just to be 100% sure they aren't necessary
+//static JSONObject* CLASS_SKILL_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
+//{
+//	return DEFAULT_FUNCTION(pItem, skProp, skDef, skProp->get("val1"), min, max);
+//}
+//
+//static JSONObject* SKILL_TAB_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
+//{
+//	auto id2 = param ? param->toInt() : 0;
+//	auto elem = JSONNumber(id2);
+//	return DEFAULT_FUNCTION(pItem, skProp, skDef, &elem, min, max);
+//}
+//
+//static JSONObject* SKILL_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
+//{
+//	auto skillId = param ? param : 0;
+//	if (!id) {
+//		auto sk = Tables::Skills.findEntry("skill", param->toString());
+//		if (sk) id = (int)sk->getNumber("Id");
+//	}
+//
+//	auto elem = JSONNumber(id);
+//	return DEFAULT_FUNCTION(pItem, skProp, skDef, &elem, min, max);
+//}
+
+static JSONObject* CHARGED_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
+{
+	if (StashExport::Toggles["Include Fixed Stats"].state) {
+		auto entry = new JSONObject();
+		std::string skill;
+		auto skillId = param ? param : 0;
+		if (skillId)
+		{
+			SkillsTxt* pSkillsTxt = &(*p_D2COMMON_sgptDataTable)->pSkillsTxt[skillId];
+			SkillDescTxt* pSkillDescTxt = &(*p_D2COMMON_sgptDataTable)->pSkillDescTxt[pSkillsTxt->wSkillDesc];
+			if (pSkillsTxt && pSkillDescTxt)
+			{
+				skill = UnicodeToAnsi(GetTblEntryByIndex(pSkillDescTxt->wStrName, TBLOFFSET_STRING));
+			}
+		}
+
+		entry->set("name", NAMEOF(pItemStatCostTxt->wStat));
+		entry->set("skill", skill);
+		entry->set("charges", itemStats.dwMin);
+		entry->set("level", itemStats.dwMax);
+		return entry;
+	}
+
+	return nullptr;
+}
+
+std::function<JSONObject* (UnitAny*, ItemsTxtStat, ItemStatCostTxt*, int)> STAT_FUNCTIONS[] = {
+	&INVALID_FUNCTION,			// Invalid function
+	&DEFAULT_FUNCTION,			// Func 1
+	&DEFAULT_FUNCTION,			// Func 2
+	&DEFAULT_FUNCTION,			// Func 3
+	&DEFAULT_FUNCTION,			// Func 4
+	&DEFAULT_FUNCTION,			// Func 5
+	&DEFAULT_FUNCTION,			// Func 6
 	&DAMAGE_PERCENT_FUNCTION,	// Func 7
-	&DEFAULT_FUNCTION,	// Func 8
-	&DEFAULT_FUNCTION,	// Func 9
-	&SKILL_TAB_FUNCTION,	// Func 10
-	&SKILL_ON_X_FUNCTION,	// Func 11
-	&DEFAULT_FUNCTION,	// Func 12
-	&DEFAULT_FUNCTION,	// Func 13
-	&DEFAULT_FUNCTION,	// Func 14
-	&DAMAGE_RANGE_FUNCTION,	// Func 15
-	&DEFAULT_FUNCTION,	// Func 16
-	&DEFAULT_FUNCTION,	// Func 17
-	&DEFAULT_FUNCTION,	// Func 18
-	&CHARGED_FUNCTION,	// Func 19
-	&DEFAULT_FUNCTION,	// Func 20
-	&CLASS_SKILL_FUNCTION,	// Func 21
-	&SKILL_FUNCTION
+	&DEFAULT_FUNCTION,			// Func 8
+	&DEFAULT_FUNCTION,			// Func 9
+	&DEFAULT_FUNCTION,			// Func 10  // was SKILL_TAB_FUNCTION
+	&DEFAULT_FUNCTION,			// Func 11  // was SKILL_ON_X_FUNCTION
+	&DEFAULT_FUNCTION,			// Func 12
+	&DEFAULT_FUNCTION,			// Func 13
+	&DEFAULT_FUNCTION,			// Func 14
+	&DEFAULT_FUNCTION,			// Func 15  // DAMAGE_RANGE_FUNCTION
+	&DEFAULT_FUNCTION,			// Func 16
+	&DEFAULT_FUNCTION,			// Func 17
+	&DEFAULT_FUNCTION,			// Func 18
+	&DEFAULT_FUNCTION,			// Func 19  // was CHARGED_FUNCTION
+	&DEFAULT_FUNCTION,			// Func 20
+	&DEFAULT_FUNCTION,			// Func 21  // was CLASS_SKILL_FUNCTION
+	&DEFAULT_FUNCTION
 };
 
 char* QUALITY_NAMES[] = {

@@ -347,6 +347,7 @@ FUNCPTR(D2COMMON, GetStatValueFromStatList, int __stdcall, (StatList* pStatList,
 FUNCPTR(D2COMMON, 10760_DATATBLS_GetInventoryGridInfo, void __stdcall, (int nInventoryTxtId, int bHigherRes, InventoryLayout* pInventoryGridInfo), -10760);
 FUNCPTR(D2COMMON, 10535_DATATBLS_GetItemDataTables, D2ItemDataTbl* __stdcall, (), -10535);
 FUNCPTR(D2COMMON, 10492_DATATBLS_GetMagicAffixDataTables, D2MagicAffixDataTbl* __stdcall, (), -10492);
+FUNCPTR(D2COMMON, 10365_DATATBLS_GetRareAffixTxtRecord, RareAffixTxt* __stdcall, (int nId), -10365);
 
 FUNCPTR(D2COMMON, CheckUnitCollision, DWORD __stdcall, (UnitAny* pUnitA, UnitAny* pUnitB, DWORD dwBitMask), -10839, -10221)
 FUNCPTR(D2COMMON, GetRoomFromUnit, Room1* __stdcall, (UnitAny* ptUnit), -10331, -10846)
