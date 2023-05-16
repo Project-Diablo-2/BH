@@ -333,6 +333,7 @@ void GetWeaponAttributes()
 		{
 			flags |= ITEM_GROUP_THROWING;
 		}
+		flags = AssignClassFlags(pWeapons->nType, ancestorTypes, flags);
 
 		ItemAttributes* attrs = new ItemAttributes();
 		attrs->name = UnicodeToAnsi(GetTblEntryByIndex(pWeapons->wnamestr, TBLOFFSET_STRING));
