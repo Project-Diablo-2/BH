@@ -13,11 +13,8 @@
     <ClCompile Include="D2Version.cpp" />
     <ClCompile Include="DllMain.cpp" />
     <ClCompile Include="JSONObject.cpp" />
-    <ClCompile Include="MPQInit.cpp" />
-    <ClCompile Include="MPQReader.cpp" />
     <ClCompile Include="Mustache.cpp" />
     <ClCompile Include="Patch.cpp" />
-    <ClCompile Include="TableReader.cpp" />
     <ClCompile Include="task.cpp" />
     <ClCompile Include="Drawing\Hook.cpp">
       <Filter>Drawing</Filter>
@@ -121,11 +118,8 @@
     <ClInclude Include="Drawing.h" />
     <ClInclude Include="JSONObject.h" />
     <ClInclude Include="Modules.h" />
-    <ClInclude Include="MPQInit.h" />
-    <ClInclude Include="MPQReader.h" />
     <ClInclude Include="Mustache.h" />
     <ClInclude Include="Patch.h" />
-    <ClInclude Include="TableReader.h" />
     <ClInclude Include="task.h" />
     <ClInclude Include="lrucache.hpp" />
     <ClInclude Include="Drawing\Hook.h">

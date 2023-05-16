@@ -113,10 +113,6 @@ void MapNotify::OnAutomapDraw() {
 		automapDraw.forceUpdate();
 	}
 
-	if (!IsInitialized()) {
-		Drawing::Texthook::Draw(10, 70, Drawing::None, 12, Gold, "Loading MPQ Data...");
-	}
-
 	automapDraw.draw([=](AsyncDrawBuffer& automapBuffer) -> void {
 		POINT MyPos;
 		Drawing::Hook::ScreenToAutomap(&MyPos,

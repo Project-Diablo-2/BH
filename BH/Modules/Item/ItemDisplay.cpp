@@ -2813,7 +2813,7 @@ int GetStatFromList(UnitItemInfo* uInfo, int itemStat)
 void HandleUnknownItemCode(char* code,
 	char* tag)
 {
-	// If the MPQ files arent loaded yet then this is expected
+	// If the DATATBLS arent loaded yet then this is expected
 	if (!IsInitialized()) { return; }
 
 	// Avoid spamming endlessly

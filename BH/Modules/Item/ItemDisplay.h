@@ -2,7 +2,6 @@
 #include "../../Constants.h"
 #include "../../D2Ptrs.h"
 #include "../../Config.h"
-#include "../../MPQInit.h"
 #include "../../BH.h"
 #include <cstdlib>
 #include <regex>
@@ -28,8 +27,6 @@ struct UnitItemInfo
 	ItemAttributes* attrs;
 };
 
-ItemAttributes                    ItemAttributeList[];
-StatProperties                    StatPropertiesList[];
 extern std::map<std::string, int> UnknownItemCodes;
 
 enum ConditionType

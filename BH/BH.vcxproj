@@ -192,12 +192,9 @@ powershell.exe -NoProfile -File "$(ProjectDir)..\..\scripts\CopyDataFolder.ps1"<
     <ClCompile Include="Modules\ModuleManager.cpp" />
     <ClCompile Include="Modules\Party\Party.cpp" />
     <ClCompile Include="Modules\ScreenInfo\ScreenInfo.cpp" />
-    <ClCompile Include="MPQInit.cpp" />
-    <ClCompile Include="MPQReader.cpp" />
     <ClCompile Include="Mustache.cpp" />
     <ClCompile Include="Patch.cpp" />
     <ClCompile Include="Modules\StashExport\StashExport.cpp" />
-    <ClCompile Include="TableReader.cpp" />
     <ClCompile Include="Task.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -246,12 +243,9 @@ powershell.exe -NoProfile -File "$(ProjectDir)..\..\scripts\CopyDataFolder.ps1"<
     <ClInclude Include="Modules\ModuleManager.h" />
     <ClInclude Include="Modules\Party\Party.h" />
     <ClInclude Include="Modules\ScreenInfo\ScreenInfo.h" />
-    <ClInclude Include="MPQInit.h" />
-    <ClInclude Include="MPQReader.h" />
     <ClInclude Include="Mustache.h" />
     <ClInclude Include="Patch.h" />
     <ClInclude Include="Modules\StashExport\StashExport.h" />
-    <ClInclude Include="TableReader.h" />
     <ClInclude Include="Task.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

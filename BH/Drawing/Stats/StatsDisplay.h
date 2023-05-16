@@ -9,7 +9,6 @@
 
 #include "../../Config.h"
 #include "../../Drawing.h"
-#include "../../MPQInit.h"
 
 
 struct DisplayedStat

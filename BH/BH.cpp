@@ -7,9 +7,6 @@
 #include "D2Intercepts.h"
 #include "D2Handlers.h"
 #include "Modules.h"
-#include "MPQReader.h"
-#include "MPQInit.h"
-#include "TableReader.h"
 #include "Task.h"
 
 string BH::path;
@@ -71,38 +68,6 @@ bool BH::Startup(HINSTANCE instance, VOID* reserved) {
 	return true;
 }
 
-DWORD WINAPI LoadMPQData(VOID* lpvoid) {
-	char szFileName[1024];
-	std::string patchPath;
-	UINT ret = GetModuleFileName(NULL, szFileName, 1024);
-	patchPath.assign(szFileName);
-	size_t start_pos = patchPath.rfind("\\");
-	if (start_pos != std::string::npos) {
-		start_pos++;
-		if (start_pos < patchPath.size()) {
-			patchPath.replace(start_pos, patchPath.size() - start_pos, "pd2data.mpq");
-		}
-	}
-
-	if (_access(patchPath.c_str(), 0) == -1)
-	{
-		patchPath.assign(szFileName);
-		start_pos = patchPath.rfind("\\");
-		if (start_pos != std::string::npos) {
-			start_pos++;
-			if (start_pos < patchPath.size()) {
-				patchPath.replace(start_pos, patchPath.size() - start_pos, "Patch_D2.mpq");
-			}
-		}
-	}
-
-	ReadMPQFiles(patchPath);
-	InitializeMPQData();
-	Tables::initTables();
-
-	return 0;
-}
-
 void BH::Initialize()
 {
 	moduleManager = new ModuleManager();
@@ -143,14 +108,6 @@ void BH::Initialize()
 	settingsUI = new Drawing::UI(SETTINGS_TEXT, 400, 321);
 
 	Task::InitializeThreadPool(2);
-
-	// Read the MPQ Data asynchronously
-	//CreateThread(0, 0, LoadMPQData, 0, 0, 0);
-	Task::Enqueue([]() -> void {
-		LoadMPQData(NULL);
-		moduleManager->MpqLoaded();
-		});
-
 
 	new GameSettings();
 	new ScreenInfo();

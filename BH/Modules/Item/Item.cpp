@@ -50,7 +50,6 @@
 #include "../../BH.h"
 #include "../../D2Stubs.h"
 #include "ItemDisplay.h"
-#include "../../MPQInit.h"
 #include "../../lrucache.hpp"
 #include "../GameSettings/GameSettings.h"
 
@@ -575,8 +574,6 @@ void Item::LoadConfig() {
 	BH::config->ReadToggle("Always Show Item Stat Ranges", "None", true, Toggles["Always Show Item Stat Ranges"]);
 
 	ItemDisplay::UninitializeItemRules();
-
-	//InitializeMPQData();
 
 	BH::config->ReadInt("Filter Level", filterLevelSetting, 1);
 }
