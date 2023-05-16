@@ -4,7 +4,6 @@
 #include "../Module.h"
 #include "../../Config.h"
 #include "../../Common.h"
-#include "../../BitReader.h"
 #include "../Item/ItemDisplay.h"
 #include "../../MPQInit.h"
 
