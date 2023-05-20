@@ -139,7 +139,6 @@ namespace Drawing
 			int nFrameBonus,
 			int nAnimRate,
 			int nSkillRollback);
-		static WeaponType  GetCurrentWeaponType(Inventory* inventory);
 		static int GetActIndex(int map_number, int difficulty);
 		static WeaponType GetCurrentWeaponType(int dw_text_file_number);
 	};

@@ -616,8 +616,6 @@ void StatsDisplay::OnDraw()
 		y += 8;
 
 
-		auto weapon_type = GetCurrentWeaponType(unit->pInventory);
-
 		char szSkillText[255] = "";
 		if (!isMerc)
 		{
@@ -677,17 +675,21 @@ void StatsDisplay::OnDraw()
 		fhr_key = D2COMMON_GetUnitState(unit, 139) ? kWolfTxtFileNoAlias : fhr_key;
 		fhr_key = D2COMMON_GetUnitState(unit, 140) ? kBearTxtFileNoAlias : fhr_key;
 
-		fhr_key = fhr_key == CLASS_PAL
-			? (weapon_type == WeaponType::kSpear || weapon_type == WeaponType::kStaff)
-			? kPaladinSpearStaveFHRAlias
-			: fhr_key
-			: fhr_key == CLASS_DRU
-			? (weapon_type != WeaponType::kStaff && weapon_type != WeaponType::kSpear &&
-				weapon_type != WeaponType::kHammer2H && weapon_type != WeaponType::kAxe2H &&
-				weapon_type != WeaponType::kPole)
-			? kDruidOneHandFHRAlias
-			: fhr_key
-			: fhr_key;
+		UnitAny* pLeftWeapon = NULL;
+		pLeftWeapon = D2COMMON_GetLeftHandWeapon(unit->pInventory);
+		auto weapon_type = pLeftWeapon ? GetCurrentWeaponType(pLeftWeapon->dwTxtFileNo) : WeaponType::kAxe;
+
+		if (fhr_key == CLASS_PAL && (weapon_type == WeaponType::kSpear || weapon_type == WeaponType::kStaff))
+		{
+			fhr_key = kPaladinSpearStaveFHRAlias;
+		}
+		else if (fhr_key == CLASS_DRU && (
+			weapon_type != WeaponType::kStaff && weapon_type != WeaponType::kSpear &&
+			weapon_type != WeaponType::kHammer2H && weapon_type != WeaponType::kAxe2H &&
+			weapon_type != WeaponType::kPole))
+		{
+			fhr_key = kDruidOneHandFHRAlias;
+		}
 
 		char bp_string[255] = "";
 		GetBreakpointString(unit, STAT_FASTERHITRECOVERY, faster_hit_recovery_frames[fhr_key], (char*)&bp_string);
@@ -1528,21 +1530,6 @@ std::vector<int> StatsDisplay::GetRollbackSkillFrames(std::vector<int> nAnimFram
 	nAnimFrames[0] = ceil((nActionFrames256[0] - (nFrameBonus * 256)) / (double)nAnimRate) + 1;
 
 	return nAnimFrames;
-}
-
-WeaponType StatsDisplay::GetCurrentWeaponType(Inventory* inventory)
-{
-	if (inventory == nullptr) return WeaponType::kUnknown;
-	if (inventory->pFirstItem == nullptr) return WeaponType::kUnknown;
-
-	auto* current_item = inventory->pFirstItem;
-	do
-	{
-		if (current_item->pItemData->BodyLocation == 4 || current_item->pItemData->BodyLocation == 5) { return GetCurrentWeaponType(current_item->dwTxtFileNo); }
-		current_item = current_item->pItemData->pNextInvItem;
-	} while (current_item != nullptr);
-
-	return WeaponType::kUnknown;
 }
 
 int StatsDisplay::GetActIndex(const int map_number,
