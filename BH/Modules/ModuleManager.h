@@ -24,7 +24,6 @@ class ModuleManager {
 		void LoadModules();
 		void UnloadModules();
 		void ReloadConfig();
-		void MpqLoaded();
 
 		bool UserInput(wchar_t* module, wchar_t* msg, bool fromGame);
 

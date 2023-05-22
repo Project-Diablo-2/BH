@@ -50,7 +50,6 @@
 #include "../../BH.h"
 #include "../../D2Stubs.h"
 #include "ItemDisplay.h"
-#include "../../MPQInit.h"
 #include "../../lrucache.hpp"
 #include "../GameSettings/GameSettings.h"
 
@@ -60,6 +59,21 @@ ItemsTxtStat* GetItemsTxtStatByMod(ItemsTxtStat* pStats, int nStats, int nStat, 
 RunesTxt* GetRunewordTxtById(int rwId);
 
 void FixDecimalString(wchar_t* s, int n);
+
+bool initialized = false;
+unsigned int STAT_MAX;
+unsigned int SKILL_MAX;
+unsigned int PREFIX_OFFSET;
+unsigned int AUTOMOD_OFFSET;
+
+std::map<WORD, BYTE> throwableMap;
+std::map<WORD, BYTE> bodyLocMap;
+std::map<WORD, WORD> parentMap1;
+std::map<WORD, WORD> parentMap2;
+
+std::vector<StatProperties*> AllStatList;
+std::vector<CharStats*> CharList;
+std::map<std::string, ItemAttributes*> ItemAttributeMap;
 
 map<std::string, Toggle> Item::Toggles;
 unsigned int Item::filterLevelSetting;
@@ -123,10 +137,424 @@ void ResetCaches() {
 	map_action_cache.ResetCache();
 }
 
+bool IsInitialized() {
+	return initialized;
+}
+
+void GetCharStats()
+{
+	DWORD dwCharsStatsRecs = (*p_D2COMMON_sgptDataTable)->dwCharsStatsRecs;
+	for (auto d = 0; d < dwCharsStatsRecs; d++)
+	{
+		CharStatsTxt* pCharStatsTxt = &(*p_D2COMMON_sgptDataTable)->pCharStatsTxt[d];
+		if (pCharStatsTxt->dwToHitFactor > 0)
+		{
+			CharStats* bits = new CharStats();
+			bits->toHitFactor = pCharStatsTxt->dwToHitFactor;
+			CharList.push_back(bits);
+		}
+	}
+}
+
+void GetItemStats()
+{
+	STAT_MAX = (*p_D2COMMON_sgptDataTable)->dwItemStatCostRecs;
+	for (auto id = 0; id < STAT_MAX; id++)
+	{
+		StatProperties* bits = new StatProperties();
+		bits->pItemStatCostTxt = &(*p_D2COMMON_sgptDataTable)->pItemStatCostTxt[id];
+		bits->statId = id;
+		char* statString = UnicodeToAnsi(GetTblEntryByIndex(bits->pItemStatCostTxt->wDescStrPos, TBLOFFSET_STRING));
+		bits->name = statString;
+		AllStatList.push_back(bits);
+	}
+}
+
+void GetItemTypeMaps()
+{
+	DWORD dwItemsTypeRecs = (*p_D2COMMON_sgptDataTable)->dwItemsTypeRecs;
+	for (auto d = 0; d < dwItemsTypeRecs; d++)
+	{
+		D2ItemTypesTxt* pItemsTypeTxt = &(*p_D2COMMON_sgptDataTable)->pItemsTypeTxt[d];
+		if (pItemsTypeTxt->szCode)
+		{
+			throwableMap[d] = pItemsTypeTxt->nThrowable;
+			bodyLocMap[d] = pItemsTypeTxt->nBodyLoc1;
+			if (pItemsTypeTxt->nEquiv1)
+			{
+				parentMap1[d] = pItemsTypeTxt->nEquiv1;
+			}
+			if (pItemsTypeTxt->nEquiv2)
+			{
+				parentMap2[d] = pItemsTypeTxt->nEquiv2;
+			}
+		}
+	}
+}
+
+void FindAncestorTypes(WORD type, std::set<WORD>& ancestors, std::map<WORD, WORD>& map1, std::map<WORD, WORD>& map2)
+{
+	ancestors.insert(type);
+	std::map<WORD, WORD>::iterator it1 = map1.find(type);
+	if (it1 != map1.end())
+	{
+		FindAncestorTypes(it1->second, ancestors, map1, map2);
+	}
+	std::map<WORD, WORD>::iterator it2 = map2.find(type);
+	if (it2 != map2.end())
+	{
+		FindAncestorTypes(it2->second, ancestors, map1, map2);
+	}
+}
+
+unsigned int AssignClassFlags(WORD type, std::set<WORD>& ancestors, unsigned int flags) {
+	if (ancestors.find(ITEM_TYPE_AMAZON) != ancestors.end())
+	{
+		flags |= ITEM_GROUP_AMAZON_WEAPON;
+	}
+	else if (ancestors.find(ITEM_TYPE_BARBARIAN) != ancestors.end())
+	{
+		flags |= ITEM_GROUP_BARBARIAN_HELM;
+	}
+	else if (ancestors.find(ITEM_TYPE_NECROMANCER) != ancestors.end())
+	{
+		flags |= ITEM_GROUP_NECROMANCER_SHIELD;
+	}
+	else if (ancestors.find(ITEM_TYPE_PALADIN) != ancestors.end())
+	{
+		flags |= ITEM_GROUP_PALADIN_SHIELD;
+	}
+	else if (ancestors.find(ITEM_TYPE_SORCERESS) != ancestors.end())
+	{
+		flags |= ITEM_GROUP_SORCERESS_ORB;
+	}
+	else if (ancestors.find(ITEM_TYPE_ASSASSIN) != ancestors.end())
+	{
+		flags |= ITEM_GROUP_ASSASSIN_KATAR;
+	}
+	else if (ancestors.find(ITEM_TYPE_DRUID) != ancestors.end())
+	{
+		flags |= ITEM_GROUP_DRUID_PELT;
+	}
+	return flags;
+}
+
+std::string GetTxtItemCode(ItemsTxt* pItemsTxt)
+{
+	char code[5] = {};
+	code[0] = pItemsTxt->szCode[0];
+	code[1] = pItemsTxt->szCode[1] != ' ' ? pItemsTxt->szCode[1] : 0;
+	code[2] = pItemsTxt->szCode[2] != ' ' ? pItemsTxt->szCode[2] : 0;
+	code[3] = pItemsTxt->szCode[3] != ' ' ? pItemsTxt->szCode[3] : 0;
+	code[4] = 0;
+
+	return code;
+}
+
+void GetWeaponAttributes()
+{
+	D2ItemDataTbl* pItemDataTables = D2COMMON_10535_DATATBLS_GetItemDataTables();
+
+	for (auto d = 0; d < pItemDataTables->nWeaponsTxtRecordCount; d++)
+	{
+		ItemsTxt* pWeapons = &pItemDataTables->pWeapons[d];
+		BYTE stackable = pWeapons->bstackable > 0 ? pWeapons->bstackable : 0;
+		BYTE useable = pWeapons->buseable > 0 ? pWeapons->buseable : 0;
+		BYTE throwable = throwableMap[pWeapons->nType] > 0 ? throwableMap[pWeapons->nType] : 0;
+		unsigned int flags = ITEM_GROUP_ALLWEAPON, flags2 = 0;
+
+		std::set<WORD> ancestorTypes;
+		FindAncestorTypes(pWeapons->nType, ancestorTypes, parentMap1, parentMap2);
+
+		if (pWeapons->dwcode == pWeapons->dwultracode)
+		{
+			flags |= ITEM_GROUP_ELITE;
+		}
+		else if (pWeapons->dwcode == pWeapons->dwubercode)
+		{
+			flags |= ITEM_GROUP_EXCEPTIONAL;
+		}
+		else
+		{
+			flags |= ITEM_GROUP_NORMAL;
+		}
+
+		if (ancestorTypes.find(ITEM_TYPE_CLUB) != ancestorTypes.end() ||
+			ancestorTypes.find(ITEM_TYPE_HAMMER) != ancestorTypes.end() ||
+			ancestorTypes.find(ITEM_TYPE_MACE) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_MACE;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_WAND) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_WAND;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_STAFF) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_STAFF;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_BOW) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_BOW;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_AXE) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_AXE;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_SCEPTER) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_SCEPTER;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_SWORD) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_SWORD;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_KNIFE) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_DAGGER;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_SPEAR) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_SPEAR;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_POLEARM) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_POLEARM;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_CROSSBOW) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_CROSSBOW;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_JAVELIN) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_JAVELIN;  // TODO: this isn't being used. Fixme
+		}
+		if (ancestorTypes.find(ITEM_TYPE_THROWN) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_THROWING;
+		}
+		flags = AssignClassFlags(pWeapons->nType, ancestorTypes, flags);
+
+		ItemAttributes* attrs = new ItemAttributes();
+		attrs->name = UnicodeToAnsi(GetTblEntryByIndex(pWeapons->wnamestr, TBLOFFSET_STRING));
+		attrs->code[0] = 0;
+		attrs->code[1] = 0;
+		attrs->code[2] = 0;
+		attrs->code[3] = 0;
+		attrs->code[4] = 0;
+		attrs->category = pWeapons->nType;
+		attrs->width = 0;
+		attrs->height = 0;
+		attrs->stackable = stackable;
+		attrs->useable = useable;
+		attrs->throwable = throwable;
+		attrs->itemLevel = 0;
+		attrs->unusedFlags = 0;
+		attrs->flags = flags;
+		attrs->flags2 = flags2;
+		attrs->qualityLevel = pWeapons->blevel;
+		attrs->magicLevel = pWeapons->bmagiclvl;
+		attrs->maxac = 0;
+		attrs->cost = 0;
+		ItemAttributeMap[GetTxtItemCode(pWeapons)] = attrs;
+	}
+}
+void GetArmorAttributes()
+{
+	D2ItemDataTbl* pItemDataTables = D2COMMON_10535_DATATBLS_GetItemDataTables();
+
+	for (auto d = 0; d < pItemDataTables->nArmorTxtRecordCount; d++)
+	{
+		ItemsTxt* pArmor = &pItemDataTables->pArmor[d];
+		BYTE stackable = pArmor->bstackable > 0 ? pArmor->bstackable : 0;
+		BYTE useable = pArmor->buseable > 0 ? pArmor->buseable : 0;
+		BYTE throwable = throwableMap[pArmor->nType] > 0 ? throwableMap[pArmor->nType] : 0; // Hey, you never know
+		unsigned int flags = ITEM_GROUP_ALLARMOR, flags2 = 0;
+
+		std::set<WORD> ancestorTypes;
+		FindAncestorTypes(pArmor->nType, ancestorTypes, parentMap1, parentMap2);
+
+		if (pArmor->dwcode == pArmor->dwultracode)
+		{
+			flags |= ITEM_GROUP_ELITE;
+		}
+		else if (pArmor->dwcode == pArmor->dwubercode)
+		{
+			flags |= ITEM_GROUP_EXCEPTIONAL;
+		}
+		else
+		{
+			flags |= ITEM_GROUP_NORMAL;
+		}
+
+		if (ancestorTypes.find(ITEM_TYPE_CIRCLET) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_CIRCLET;  // TODO: This kinda seems like it should be separate
+		}
+		else if (bodyLocMap[pArmor->nType] == EQUIP_HEAD)
+		{
+			flags |= ITEM_GROUP_HELM;
+		}
+		else if (bodyLocMap[pArmor->nType] == EQUIP_BODY)
+		{
+			flags |= ITEM_GROUP_ARMOR;
+		}
+		else if (bodyLocMap[pArmor->nType] == EQUIP_GLOVES)
+		{
+			flags |= ITEM_GROUP_GLOVES;
+		}
+		else if (bodyLocMap[pArmor->nType] == EQUIP_FEET)
+		{
+			flags |= ITEM_GROUP_BOOTS;
+		}
+		else if (bodyLocMap[pArmor->nType] == EQUIP_BELT)
+		{
+			flags |= ITEM_GROUP_BELT;
+		}
+		else if (bodyLocMap[pArmor->nType] == EQUIP_RIGHT_PRIMARY && ancestorTypes.find(ITEM_TYPE_ALLSHIELD) != ancestorTypes.end())
+		{
+			flags |= ITEM_GROUP_SHIELD;
+		}
+		flags = AssignClassFlags(pArmor->nType, ancestorTypes, flags);
+
+		ItemAttributes* attrs = new ItemAttributes();
+		attrs->name = UnicodeToAnsi(GetTblEntryByIndex(pArmor->wnamestr, TBLOFFSET_STRING));
+		attrs->code[0] = 0;
+		attrs->code[1] = 0;
+		attrs->code[2] = 0;
+		attrs->code[3] = 0;
+		attrs->code[4] = 0;
+		attrs->category = pArmor->nType;
+		attrs->width = 0;
+		attrs->height = 0;
+		attrs->stackable = stackable;
+		attrs->useable = useable;
+		attrs->throwable = throwable;
+		attrs->itemLevel = 0;
+		attrs->unusedFlags = 0;
+		attrs->flags = flags;
+		attrs->flags2 = flags2;
+		attrs->qualityLevel = pArmor->blevel;
+		attrs->magicLevel = pArmor->bmagiclvl;
+		attrs->maxac = 0;
+		attrs->cost = 0;
+		ItemAttributeMap[GetTxtItemCode(pArmor)] = attrs;
+	}
+}
+void GetMiscAttributes()
+{
+	D2ItemDataTbl* pItemDataTables = D2COMMON_10535_DATATBLS_GetItemDataTables();
+
+	for (auto d = 0; d < pItemDataTables->nMiscTxtRecordCount; d++)
+	{
+		ItemsTxt* pMisc = &pItemDataTables->pMisc[d];
+		BYTE stackable = pMisc->bstackable > 0 ? pMisc->bstackable : 0;
+		BYTE useable = pMisc->buseable > 0 ? pMisc->buseable : 0;
+		BYTE throwable = throwableMap[pMisc->nType] > 0 ? throwableMap[pMisc->nType] : 0;
+		unsigned int flags = 0, flags2 = 0;
+
+		std::set<WORD> ancestorTypes;
+		FindAncestorTypes(pMisc->nType, ancestorTypes, parentMap1, parentMap2);
+		FindAncestorTypes(pMisc->wtype2, ancestorTypes, parentMap1, parentMap2);
+
+		if (ancestorTypes.find(ITEM_TYPE_RUNE) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_STACK_RUNE) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_RUNE;
+		}
+
+		// Gem Quality
+		if (ancestorTypes.find(ITEM_TYPE_CHIPPED_GEM) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_CHIPPED;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_FLAWED_GEM) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_FLAWED;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_STANDARD_GEM) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_REGULAR;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_GEN_FLAWLESS_GEM) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_STACK_FLAWLESS) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_FLAWLESS;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_GEN_PERFECT_GEM) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_STACK_PERFECT) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_PERFECT;
+		}
+
+		// Gem Type
+		if (ancestorTypes.find(ITEM_TYPE_AMETHYST) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_GEN_AMETHYST) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_AMETHYST;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_DIAMOND) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_GEN_DIAMOND) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_DIAMOND;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_EMERALD) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_GEN_EMERALD) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_EMERALD;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_RUBY) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_GEN_RUBY) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_RUBY;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_SAPPHIRE) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_GEN_SAPPHIRE) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_SAPPHIRE;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_TOPAZ) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_GEN_TOPAZ) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_TOPAZ;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_SKULL) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_GEN_SKULL) != ancestorTypes.end()) {
+			flags2 |= ITEM_GROUP_SKULL;
+		}
+
+		ItemAttributes* attrs = new ItemAttributes();
+		attrs->name = UnicodeToAnsi(GetTblEntryByIndex(pMisc->wnamestr, TBLOFFSET_STRING));
+		attrs->code[0] = 0;
+		attrs->code[1] = 0;
+		attrs->code[2] = 0;
+		attrs->code[3] = 0;
+		attrs->code[4] = 0;
+		attrs->category = pMisc->nType;
+		attrs->width = 0;
+		attrs->height = 0;
+		attrs->stackable = stackable;
+		attrs->useable = useable;
+		attrs->throwable = throwable;
+		attrs->itemLevel = 0;
+		attrs->unusedFlags = 0;
+		attrs->flags = flags;
+		attrs->flags2 = flags2;
+		attrs->qualityLevel = pMisc->blevel;
+		attrs->magicLevel = 0;
+		attrs->maxac = 0;
+		attrs->cost = 0;
+		ItemAttributeMap[GetTxtItemCode(pMisc)] = attrs;
+	}
+}
+
+void GetTotalSkills()
+{
+	SKILL_MAX = (*p_D2COMMON_sgptDataTable)->dwSkillsRecs;
+}
+
+void GetAffixOffsets()
+{
+	D2MagicAffixDataTbl* pMagicAffixInfo = D2COMMON_10492_DATATBLS_GetMagicAffixDataTables();
+	PREFIX_OFFSET = ((int)pMagicAffixInfo->pMagicPrefix - (int)pMagicAffixInfo->pMagicAffixTxt) / sizeof(AutoMagicTxt);
+	AUTOMOD_OFFSET = ((int)pMagicAffixInfo->pAutoMagic - (int)pMagicAffixInfo->pMagicAffixTxt) / sizeof(AutoMagicTxt);
+}
+
 void Item::OnGameJoin() {
 	// reset the item name cache upon joining games
 	// (GUIDs not unique across games)
 	ResetCaches();
+
+	if (!initialized)
+	{
+		GetCharStats();
+		GetItemStats();
+		GetItemTypeMaps();
+		GetWeaponAttributes();
+		GetArmorAttributes();
+		GetMiscAttributes();
+		GetTotalSkills();
+		GetAffixOffsets();
+		initialized = true;
+	}
 }
 
 void Item::LoadConfig() {
@@ -147,8 +575,6 @@ void Item::LoadConfig() {
 	BH::config->ReadToggle("Always Show Item Stat Ranges", "None", true, Toggles["Always Show Item Stat Ranges"]);
 
 	ItemDisplay::UninitializeItemRules();
-
-	//InitializeMPQData();
 
 	BH::config->ReadInt("Filter Level", filterLevelSetting, 1);
 }

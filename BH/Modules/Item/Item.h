@@ -48,6 +48,8 @@
 #include "../../Constants.h"
 #include "../../Config.h"
 #include "../../Drawing.h"
+#include "../../D2Structs.h"
+#include <set>
 
 struct UnitAny;
 struct UnitItemInfo;
@@ -116,3 +118,60 @@ BOOL StatIsCorrupted(int nStat, int nCorruptor);
 
 // reset all rule lookup caches
 void ResetCaches();
+
+void GetCharStats();
+void GetItemStats();
+void GetItemTypeMaps();
+std::string GetTxtItemCode(ItemsTxt* pItemsTxt);
+void GetWeaponAttributes();
+void GetArmorAttributes();
+void GetMiscAttributes();
+void GetTotalSkills();
+void GetAffixOffsets();
+bool IsInitialized();
+
+// Item attributes from ItemTypes.txt and Weapon/Armor/Misc.txt
+struct ItemAttributes {
+	std::string name;			// Only used in Item Drop/Item Close Notifications. Can delete
+	char code[5];				// Delete. Already exists in UnitItemInfo
+	std::string category;
+	BYTE width;					// Delete. Inventory related, which is unnecessary
+	BYTE height;				// Delete. Inventory related, which is unnecessary
+	BYTE stackable;
+	BYTE useable;
+	BYTE throwable;
+	BYTE itemLevel;		// 1=normal, 2=exceptional, 3=elite		// Delete. Unused and already exists in flags
+	BYTE unusedFlags;			// Delete. (why does this exist?)
+	unsigned int flags;			// Rename to baseFlags
+	//unsigned int weaponFlags;
+	//unsigned int armorFlags;
+	unsigned int flags2;		// Rename to miscFlags
+	BYTE qualityLevel;
+	BYTE magicLevel;
+	unsigned int maxac;			// Delete. Was going to use for PRICE but dont need it
+	unsigned int cost;			// Delete. Was going to use for PRICE but dont need it
+};
+
+// Properties from ItemStatCost.txt
+struct StatProperties {
+	std::string name;
+	//std::string localizedName;
+	ItemStatCostTxt* pItemStatCostTxt;
+	unsigned short statId;
+};
+
+struct CharStats {
+	int toHitFactor;
+};
+
+void FindAncestorTypes(WORD type, std::set<WORD>& ancestors, std::map<WORD, WORD>& map1, std::map<WORD, WORD>& map2);
+unsigned int AssignClassFlags(WORD type, std::set<WORD>& ancestors, unsigned int flags);
+
+extern unsigned int STAT_MAX;
+extern unsigned int SKILL_MAX;
+extern unsigned int PREFIX_OFFSET;
+extern unsigned int AUTOMOD_OFFSET;
+
+extern std::vector<StatProperties*> AllStatList;
+extern std::vector<CharStats*> CharList;
+extern std::map<std::string, ItemAttributes*> ItemAttributeMap;

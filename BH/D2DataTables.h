@@ -105,6 +105,25 @@ struct ItemsTxtStat
 	int dwMax;			          //0x0C
 };
 
+struct RareAffixTxt
+{
+	DWORD unk0x00[3];					//0x00
+	WORD wStringId;						//0x0C
+	WORD wVersion;						//0x0E
+	WORD wIType[7];						//0x10
+	WORD wEType[4];						//0x1E
+	char szName[32];					//0x26
+	WORD pad0x46;						//0x46
+};
+
+struct RareAffixDataTbl							//sgptDataTable + 0xD14
+{
+	int nRareAffixTxtRecordCount;					//0x00
+	RareAffixTxt* pRareAffixTxt;					//0x04
+	RareAffixTxt* pRareSuffix;					//0x08
+	RareAffixTxt* pRarePrefix;					//0x0C
+};
+
 /*
 	 Valid for Automagic.txt, MagicSuffix.txt, MagicPrefix.txt
 	 */
@@ -134,11 +153,20 @@ struct AutoMagicTxt
 	DWORD dwAdd;                    //0x8C
 };
 
+struct D2MagicAffixDataTbl						//sgptDataTable + 0xEC8
+{
+	int nMagicAffixTxtRecordCount;				//0x00
+	AutoMagicTxt* pMagicAffixTxt;				//0x04
+	AutoMagicTxt* pMagicSuffix;					//0x08
+	AutoMagicTxt* pMagicPrefix;					//0x0C
+	AutoMagicTxt* pAutoMagic;					//0x10
+};
 
 struct UniqueItemsTxt
 {
 	WORD _1;	                  //0x00
-	char szName[34];              //0x02
+	char szName[32];              //0x02
+	WORD wTblIndex;				  //0x22
 	DWORD dwVersion;              //0x24
 	union
 	{
@@ -172,7 +200,8 @@ struct SetItemsTxt
 		DWORD dwCode;
 		char szCode[4];
 	};							   //0x28
-	DWORD _2;	                   //0x2C
+	WORD nSetId;				   //0x2C
+	WORD nSetItems;				   //0x2E
 	WORD wLvl;                     //0x30
 	WORD wLvlReq;                  //0x32
 	DWORD dwRarity;                //0x34
@@ -188,6 +217,22 @@ struct SetItemsTxt
 	BYTE nAddFunc;                 //0x87
 	ItemsTxtStat hStats[9];        //0x88
 	ItemsTxtStat hGreenStats[10];   //0x118
+};
+
+struct SetsTxt
+{
+	WORD wSetId;						//0x00
+	WORD wStringId;						//0x02
+	WORD wVersion;						//0x04
+	WORD pad0x06;						//0x06
+	DWORD unk0x08;						//0x08
+	int nSetItems;						//0x0C
+	ItemsTxtStat pBoni2[2];				//0x10
+	ItemsTxtStat pBoni3[2];				//0x30
+	ItemsTxtStat pBoni4[2];				//0x50
+	ItemsTxtStat pBoni5[2];				//0x70
+	ItemsTxtStat pFBoni[8];				//0x90
+	SetItemsTxt* pSetItem[6];			//0x110
 };
 
 struct RunesTxt
@@ -1559,6 +1604,52 @@ struct ItemsTxt //size = 0x1A8, Valid for Weapons, Armors, Misc.txts
 	WORD   _ALIGN;					//0x1A6
 };
 
+struct D2ItemTypesTxt
+{
+	char szCode[4];						//0x00
+	WORD nEquiv1;						//0x04
+	WORD nEquiv2;						//0x06
+	BYTE nRepair;						//0x08
+	BYTE nBody;							//0x09
+	BYTE nBodyLoc1;						//0x0A
+	BYTE nBodyLoc2;						//0x0B
+	WORD wShoots;						//0x0C
+	WORD wQuiver;						//0x0E
+	BYTE nThrowable;					//0x10
+	BYTE nReload;						//0x11
+	BYTE nReEquip;						//0x12
+	BYTE nAutoStack;					//0x13
+	BYTE nMagic;						//0x14
+	BYTE nRare;							//0x15
+	BYTE nNormal;						//0x16
+	BYTE nCharm;						//0x17
+	BYTE nGem;							//0x18
+	BYTE nBeltable;						//0x19
+	BYTE nMaxSock1;						//0x1A
+	BYTE nMaxSock25;					//0x1B
+	BYTE nMaxSock40;					//0x1C
+	BYTE nTreasureClass;				//0x1D
+	BYTE nRarity;						//0x1E
+	BYTE nStaffMods;					//0x1F
+	BYTE nCostFormula;					//0x20
+	BYTE nClass;						//0x21
+	BYTE nStorePage;					//0x22
+	BYTE nVarInvGfx;					//0x23
+	char szInvGfx[6][32];				//0x24
+};
+
+struct D2ItemDataTbl					//sgptDataTable + 0xCD8
+{
+	int nItemsTxtRecordCount;			//0x00
+	ItemsTxt* pItemsTxt;				//0x04
+	ItemsTxt* pWeapons;					//0x08
+	int nWeaponsTxtRecordCount;			//0x0C
+	ItemsTxt* pArmor;					//0x10
+	int nArmorTxtRecordCount;			//0x14
+	ItemsTxt* pMisc;					//0x18
+	int nMiscTxtRecordCount;			//0x1C
+};
+
 struct sgptDataTable {
 	BYTE* pPlayerClass;			//0x00
 	DWORD	dwPlayerClassRecords;	//0x04
@@ -1693,12 +1784,12 @@ struct sgptDataTable {
 	BYTE* pPetTypes;				//0xBEC
 	DWORD	dwPetTypesRecs;			//0xBF0
 	BYTE* pItemsType;				//0xBF4
-	BYTE* pItemsTypeTxt;			//0xBF8
+	D2ItemTypesTxt* pItemsTypeTxt;	//0xBF8
 	DWORD	dwItemsTypeRecs;		//0xBFC
 	DWORD	dwItemsTypeNesting;		//0xC00
 	BYTE* pItemsTypeNesting;		//0xC04
 	BYTE* pSets;					//0xC08
-	BYTE* pSetsTxt;				//0xC0C
+	SetsTxt* pSetsTxt;				//0xC0C
 	DWORD	dwSetsRecs;				//0xC10
 	BYTE* pSetItems;				//0xC14
 	SetItemsTxt* pSetItemsTxt;		//0xC18

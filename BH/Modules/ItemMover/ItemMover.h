@@ -5,7 +5,6 @@
 #include "../../Config.h"
 #include "../../Common.h"
 #include "../Item/ItemDisplay.h"
-#include "../../MPQInit.h"
 
 extern int INVENTORY_WIDTH;
 extern int INVENTORY_HEIGHT;

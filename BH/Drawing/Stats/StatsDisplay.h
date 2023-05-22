@@ -9,12 +9,12 @@
 
 #include "../../Config.h"
 #include "../../Drawing.h"
-#include "../../MPQInit.h"
 
 
 struct DisplayedStat
 {
 	std::string name;
+	int			id;
 	int         value;
 	bool        useValue;
 };

@@ -65,12 +65,6 @@ void ModuleManager::ReloadConfig() {
 	}
 }
 
-void ModuleManager::MpqLoaded() {
-	for (map<string, Module*>::iterator it = moduleList.begin(); it != moduleList.end(); ++it) {
-		(*it).second->MpqLoaded();
-	}
-}
-
 bool ModuleManager::UserInput(wchar_t* module, wchar_t* msg, bool fromGame) {
 	bool block = false;
 	std::string name;

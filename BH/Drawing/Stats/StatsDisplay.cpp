@@ -233,14 +233,14 @@ void StatsDisplay::LoadConfig()
 	BH::config->ReadMapList("Stat Screen", stats);
 	for (unsigned int i = 0; i < stats.size(); i++)
 	{
-		std::transform(stats[i].first.begin(), stats[i].first.end(), stats[i].first.begin(), ::tolower);
-		if (StatMap.count(stats[i].first) > 0)
+		int statId = -1;
+		stringstream ss(Trim(stats[i].first));
+		if (!(ss >> statId).fail() && statId < STAT_MAX)
 		{
-			StatProperties* sp = StatMap[stats[i].first];
 			DisplayedStat* customStat = new DisplayedStat();
-			customStat->name = stats[i].first;
+			customStat->name = AllStatList[statId]->name;
+			customStat->id = statId;
 			customStat->useValue = false;
-			std::transform(customStat->name.begin(), customStat->name.end(), customStat->name.begin(), ::tolower);
 			// Getting rid of the check for sp->saveParamBits > 0 to display weapon mastery values
 			// if a param is supplied it will be used
 			int          num = -1;
@@ -884,7 +884,7 @@ void StatsDisplay::OnDraw()
 			for (unsigned int i = 0; i < customStats.size(); i++)
 			{
 				int secondary = customStats[i]->useValue ? customStats[i]->value : 0;
-				int stat = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_NUMBER(customStats[i]->name), secondary));
+				int stat = static_cast<int>(D2COMMON_GetUnitStat(unit, customStats[i]->id, secondary));
 				if (secondary > 0)
 				{
 					Texthook::Draw(column1,
