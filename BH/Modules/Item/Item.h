@@ -134,7 +134,7 @@ bool IsInitialized();
 struct ItemAttributes {
 	std::string name;			// Only used in Item Drop/Item Close Notifications. Can delete
 	char code[5];				// Delete. Already exists in UnitItemInfo
-	std::string category;
+	WORD category;
 	BYTE width;					// Delete. Inventory related, which is unnecessary
 	BYTE height;				// Delete. Inventory related, which is unnecessary
 	BYTE stackable;

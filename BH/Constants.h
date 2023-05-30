@@ -1354,6 +1354,12 @@ enum InventoryTxtIndex {
 #define ITEM_TYPE_SAPPHIRE			101
 #define ITEM_TYPE_TOPAZ				102
 #define ITEM_TYPE_SKULL				103
+
+#define ITEM_TYPE_T1_MAP			106
+#define ITEM_TYPE_T2_MAP			107
+#define ITEM_TYPE_T3_MAP			108
+#define ITEM_TYPE_T4_MAP			109
+
 #define ITEM_TYPE_STACK_FLAWLESS	128
 #define ITEM_TYPE_STACK_PERFECT		129
 #define ITEM_TYPE_STACK_AMETHYST	130
@@ -1374,6 +1380,8 @@ enum InventoryTxtIndex {
 #define ITEM_TYPE_GEN_TOPAZ			146
 #define ITEM_TYPE_GEN_SKULL			147
 #define ITEM_TYPE_GEN_RUNE			148
+#define ITEM_TYPE_PVP_MAP			199
+#define ITEM_TYPE_T5_MAP			211
 
 enum MinAccrIndex
 {
