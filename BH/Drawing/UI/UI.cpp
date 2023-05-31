@@ -208,8 +208,11 @@ bool UI::OnLeftClick(bool up, unsigned int mouseX, unsigned int mouseY) {
 	// Prevent clicks while in the main menu
 	if (!D2CLIENT_GetUIState(UI_GAME))
 	{
+		SetActive(false);
+		SetDragged(false, false);
 		return false;
 	}
+
 	if (IsMinimized()) {
 		int n = 0;
 		for (list<UI*>::iterator it = Minimized.begin(); it != Minimized.end(); it++, n++)
