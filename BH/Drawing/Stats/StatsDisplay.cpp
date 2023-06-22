@@ -1041,6 +1041,7 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		int nMaxAnimAcceleration = 175;
 		int nFrameMinAccr = 0;
 		int nAttackRate = 0;
+		int nAttackRateBonus = 0;
 		int nAnimRate = 0;
 		int nMinAnimRate = 0;
 		int nMaxAnimRate = 0;
@@ -1101,6 +1102,16 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 				WWNextHitDelay);
 			return;
 		}
+		// Double swing
+		else if (nSkillId == 133 && pUnit->dwMode != PLAYER_MODE_SEQUENCE)
+		{
+			nAttackRateBonus = pRightSkill->pSkillInfo->dwParam5;
+		}
+		// Dragon tail
+		else if (nSkillId == 270 && pUnit->dwMode != PLAYER_MODE_KICK)
+		{
+			nAttackRateBonus = pRightSkill->pSkillInfo->dwParam4;
+		}
 
 		if (pRightSkill->mode == PLAYER_MODE_SEQUENCE)
 		{
@@ -1142,7 +1153,7 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 			}
 
 			nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
-			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
+			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAttackRateBonus;
 			nAnimAcceleration = nFrameMinAccr + nAttackRate - 30;
 			nMinAnimAcceleration = nAttackRate - 30;
 		}
@@ -1153,7 +1164,7 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 			nFrames = pMonSeqInfo->nFrameCount;
 
 			nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
-			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
+			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAttackRateBonus;
 			nAnimAcceleration = nFrameMinAccr + nAttackRate;
 			nMinAnimAcceleration = nAttackRate;
 		}
@@ -1201,7 +1212,7 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 			// This calculates EIAS from IAS
 			nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
 			// This is 100 + WSM + SIAS
-			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
+			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAttackRateBonus;
 			nAnimAcceleration = nFrameMinAccr + nAttackRate;
 			nMinAnimAcceleration = nAttackRate;
 		}
