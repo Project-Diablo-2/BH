@@ -23,6 +23,7 @@ void GameSettings::LoadConfig() {
 	BH::config->ReadToggle("Buff Timers", "None", false, GameSettings::Toggles["Buff Timers"]);
 	BH::config->ReadToggle("Screenshake", "None", true, GameSettings::Toggles["Screenshake"]);
 	BH::config->ReadToggle("DPS", "None", false, GameSettings::Toggles["DPS"]);
+	BH::config->ReadToggle("Belt Status", "None", true, GameSettings::Toggles["Belt Status"]);
 
 	BH::config->ReadToggle("Developer Aura", "None", true, GameSettings::Toggles["Developer Aura"]);
 	BH::config->ReadToggle("99 Aura", "None", true, GameSettings::Toggles["99 Aura"]);
@@ -79,6 +80,11 @@ void GameSettings::LoadGeneralTab() {
 	y += 15;
 	new Drawing::Checkhook(generalTab, x, y, &GameSettings::Toggles["DPS"].state, "Enable DPS Counter");
 	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["DPS"].toggle, "");
+
+	y += 15;
+	new Drawing::Checkhook(generalTab, x, y, &GameSettings::Toggles["Belt Status"].state, "Enable Belt Status");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Belt Status"].toggle, "");
+
 
 	// Quick Cast
 	y += 20;
