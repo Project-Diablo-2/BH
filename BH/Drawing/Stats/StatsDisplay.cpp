@@ -390,10 +390,10 @@ void StatsDisplay::OnDraw()
 		int       xPacMultiplier = pData->nCharFlags & PLAYER_TYPE_EXPANSION ? 2 : 1;
 		int       resPenalty[3] = { RES_PENALTY_CLS_NORM, RES_PENALTY_CLS_NM, RES_PENALTY_CLS_HELL };
 		int       penalty = resPenalty[D2CLIENT_GetDifficulty()] * xPacMultiplier;
-		int       fMax = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXFIRERESIST, 0)) + 75;
-		int       cMax = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXCOLDRESIST, 0)) + 75;
-		int       lMax = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXLIGHTNINGRESIST, 0)) + 75;
-		int       pMax = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXPOISONRESIST, 0)) + 75;
+		int       fMax = min(static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXFIRERESIST, 0)) + 75, MAX_PLAYER_RESISTANCE);
+		int       cMax = min(static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXCOLDRESIST, 0)) + 75, MAX_PLAYER_RESISTANCE);
+		int       lMax = min(static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXLIGHTNINGRESIST, 0)) + 75, MAX_PLAYER_RESISTANCE);
+		int       pMax = min(static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXPOISONRESIST, 0)) + 75, MAX_PLAYER_RESISTANCE);
 		int       pLengthReduce = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_POISONLENGTHREDUCTION, 0));
 
 		Texthook::Draw(column1,

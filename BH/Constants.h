@@ -116,6 +116,7 @@ enum TextColor {
 #define RES_PENALTY_XPAC_NORM		(2*RES_PENALTY_CLS_NORM)
 #define RES_PENALTY_XPAC_NM			(2*RES_PENALTY_CLS_NM)
 #define RES_PENALTY_XPAC_HELL		(2*RES_PENALTY_CLS_HELL)
+#define MAX_PLAYER_RESISTANCE		90
 
 //////////////////////////////////////////////////////////////////////////
 // Trade Flags
