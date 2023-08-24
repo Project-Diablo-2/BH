@@ -133,23 +133,18 @@ bool IsInitialized();
 // Item attributes from ItemTypes.txt and Weapon/Armor/Misc.txt
 struct ItemAttributes {
 	std::string name;			// Only used in Item Drop/Item Close Notifications. Can delete
-	char code[5];				// Delete. Already exists in UnitItemInfo
 	WORD category;
 	BYTE width;					// Delete. Inventory related, which is unnecessary
 	BYTE height;				// Delete. Inventory related, which is unnecessary
 	BYTE stackable;
 	BYTE useable;
 	BYTE throwable;
-	BYTE itemLevel;		// 1=normal, 2=exceptional, 3=elite		// Delete. Unused and already exists in flags
-	BYTE unusedFlags;			// Delete. (why does this exist?)
-	unsigned int flags;			// Rename to baseFlags
-	//unsigned int weaponFlags;
-	//unsigned int armorFlags;
-	unsigned int flags2;		// Rename to miscFlags
+	unsigned int baseFlags;
+	unsigned int weaponFlags;
+	unsigned int armorFlags;
+	unsigned int miscFlags;
 	BYTE qualityLevel;
 	BYTE magicLevel;
-	unsigned int maxac;			// Delete. Was going to use for PRICE but dont need it
-	unsigned int cost;			// Delete. Was going to use for PRICE but dont need it
 };
 
 // Properties from ItemStatCost.txt

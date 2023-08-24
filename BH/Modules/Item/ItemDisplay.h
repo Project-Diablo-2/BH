@@ -479,9 +479,10 @@ private:
 class ItemGroupCondition : public Condition
 {
 public:
-	ItemGroupCondition(unsigned int group) : itemGroup(group) { conditionType = CT_Operand; };
+	ItemGroupCondition(unsigned int group, unsigned int type) : itemGroup(group), flagType(type) { conditionType = CT_Operand; };
 private:
 	unsigned int itemGroup;
+	unsigned int flagType;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);

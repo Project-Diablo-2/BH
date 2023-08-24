@@ -405,6 +405,14 @@ std::map<int, int> maptiers = {
 	{ITEM_TYPE_T5_MAP, 5},
 };
 
+enum AttributeFlagTypes
+{
+	ITEMFLAG_BASE,
+	ITEMFLAG_WEAPON,
+	ITEMFLAG_ARMOR,
+	ITEMFLAG_MISC
+};
+
 enum Operation
 {
 	EQUAL,
@@ -445,6 +453,7 @@ enum FilterCondition
 	COND_NORM,
 	COND_EXC,
 	COND_ELT,
+	COND_CLASS,
 	COND_ID,
 	COND_ILVL,
 	COND_QLVL,
@@ -513,6 +522,9 @@ enum FilterCondition
 	COND_2H,
 	COND_AXE,
 	COND_MACE,
+	COND_CLUB,
+	COND_TMACE,
+	COND_HAMMER,
 	COND_SWORD,
 	COND_DAGGER,
 	COND_THROWING,
@@ -575,6 +587,7 @@ std::map<std::string, FilterCondition> condition_map =
 	{"NORM", COND_NORM},
 	{"EXC", COND_EXC},
 	{"ELT", COND_ELT},
+	{"CLASS", COND_CLASS},
 	{"ID", COND_ID},
 	{"ILVL", COND_ILVL},
 	{"QLVL", COND_QLVL},
@@ -644,6 +657,9 @@ std::map<std::string, FilterCondition> condition_map =
 	{"2H", COND_2H},
 	{"AXE", COND_AXE},
 	{"MACE", COND_MACE},
+	{"CLUB", COND_CLUB},
+	{"TMACE", COND_TMACE},
+	{"HAMMER", COND_HAMMER},
 	{"SWORD", COND_SWORD},
 	{"DAGGER", COND_DAGGER},
 	{"THROWING", COND_THROWING},
@@ -789,15 +805,15 @@ char* GemTypes[] = {
 	"Skull"
 };
 
-bool IsGem(ItemAttributes* attrs) { return (attrs->flags2 & ITEM_GROUP_GEM) > 0; }
+bool IsGem(ItemAttributes* attrs) { return (attrs->miscFlags & ITEM_GROUP_GEM) > 0; }
 
 BYTE GetGemLevel(ItemAttributes* attrs)
 {
-	if (attrs->flags2 & ITEM_GROUP_CHIPPED) { return 1; }
-	else if (attrs->flags2 & ITEM_GROUP_FLAWED) { return 2; }
-	else if (attrs->flags2 & ITEM_GROUP_REGULAR) { return 3; }
-	else if (attrs->flags2 & ITEM_GROUP_FLAWLESS) { return 4; }
-	else if (attrs->flags2 & ITEM_GROUP_PERFECT) { return 5; }
+	if (attrs->miscFlags & ITEM_GROUP_CHIPPED) { return 1; }
+	else if (attrs->miscFlags & ITEM_GROUP_FLAWED) { return 2; }
+	else if (attrs->miscFlags & ITEM_GROUP_REGULAR) { return 3; }
+	else if (attrs->miscFlags & ITEM_GROUP_FLAWLESS) { return 4; }
+	else if (attrs->miscFlags & ITEM_GROUP_PERFECT) { return 5; }
 	return 0;
 }
 
@@ -805,13 +821,13 @@ char* GetGemLevelString(BYTE level) { return GemLevels[level]; }
 
 BYTE GetGemType(ItemAttributes* attrs)
 {
-	if (attrs->flags2 & ITEM_GROUP_AMETHYST) { return 1; }
-	else if (attrs->flags2 & ITEM_GROUP_DIAMOND) { return 2; }
-	else if (attrs->flags2 & ITEM_GROUP_EMERALD) { return 3; }
-	else if (attrs->flags2 & ITEM_GROUP_RUBY) { return 4; }
-	else if (attrs->flags2 & ITEM_GROUP_SAPPHIRE) { return 5; }
-	else if (attrs->flags2 & ITEM_GROUP_TOPAZ) { return 6; }
-	else if (attrs->flags2 & ITEM_GROUP_SKULL) { return 7; }
+	if (attrs->miscFlags & ITEM_GROUP_AMETHYST) { return 1; }
+	else if (attrs->miscFlags & ITEM_GROUP_DIAMOND) { return 2; }
+	else if (attrs->miscFlags & ITEM_GROUP_EMERALD) { return 3; }
+	else if (attrs->miscFlags & ITEM_GROUP_RUBY) { return 4; }
+	else if (attrs->miscFlags & ITEM_GROUP_SAPPHIRE) { return 5; }
+	else if (attrs->miscFlags & ITEM_GROUP_TOPAZ) { return 6; }
+	else if (attrs->miscFlags & ITEM_GROUP_SKULL) { return 7; }
 	return 0;
 }
 
@@ -819,7 +835,7 @@ char* GetGemTypeString(BYTE type) { return GemTypes[type]; }
 
 bool IsRune(ItemAttributes* attrs)
 {
-	return (attrs->flags2 & ITEM_GROUP_RUNE) > 0;
+	return (attrs->miscFlags & ITEM_GROUP_RUNE) > 0;
 	//char* code = attrs->code;
 	//return (code[0] == 'r' && std::isdigit(code[1]) && std::isdigit(code[2]));
 }
@@ -948,7 +964,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 
 	// Either enhanced defense or enhanced damage depending on item type
 	WORD stat;
-	if (uInfo->attrs->flags & ITEM_GROUP_ALLARMOR) { stat = STAT_ENHANCEDDEFENSE; }
+	if (uInfo->attrs->armorFlags & ITEM_GROUP_ALLARMOR) { stat = STAT_ENHANCEDDEFENSE; }
 	else
 	{
 		// Normal %ED will have the same value for STAT_ENHANCEDMAXIMUMDAMAGE and STAT_ENHANCEDMINIMUMDAMAGE
@@ -1807,13 +1823,16 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new QualityCondition(ITEM_QUALITY_INFERIOR));
 		break;
 	case COND_NORM:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_NORMAL));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_NORMAL, ITEMFLAG_BASE));
 		break;
 	case COND_EXC:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_EXCEPTIONAL));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_EXCEPTIONAL, ITEMFLAG_BASE));
 		break;
 	case COND_ELT:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ELITE));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ELITE, ITEMFLAG_BASE));
+		break;
+	case COND_CLASS:
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_CLASS, ITEMFLAG_BASE));
 		break;
 	case COND_ID:
 		Condition::AddOperand(conditions, new FlagsCondition(ITEM_IDENTIFIED));
@@ -1957,49 +1976,49 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new ItemStatCondition(STAT_REPAIRSDURABILITY, 0, operation, value, value2));
 		break;
 	case COND_ARMOR:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ALLARMOR));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ALLARMOR, ITEMFLAG_ARMOR));
 		break;
 	case COND_BELT:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BELT));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BELT, ITEMFLAG_ARMOR));
 		break;
 	case COND_CHEST:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ARMOR));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BODY_ARMOR, ITEMFLAG_ARMOR));
 		break;
 	case COND_HELM:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_HELM));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_HELM, ITEMFLAG_ARMOR));
 		break;
 	case COND_SHIELD:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SHIELD));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SHIELD, ITEMFLAG_ARMOR));
 		break;
 	case COND_GLOVES:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_GLOVES));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_GLOVES, ITEMFLAG_ARMOR));
 		break;
 	case COND_BOOTS:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BOOTS));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BOOTS, ITEMFLAG_ARMOR));
 		break;
 	case COND_CIRC:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_CIRCLET));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_CIRCLET, ITEMFLAG_ARMOR));
 		break;
 	case COND_DRU:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_DRUID_PELT));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_DRUID_PELT, ITEMFLAG_ARMOR));
 		break;
 	case COND_BAR:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BARBARIAN_HELM));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BARBARIAN_HELM, ITEMFLAG_ARMOR));
 		break;
 	case COND_DIN:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_PALADIN_SHIELD));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_PALADIN_SHIELD, ITEMFLAG_ARMOR));
 		break;
 	case COND_NEC:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_NECROMANCER_SHIELD));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_NECROMANCER_SHIELD, ITEMFLAG_ARMOR));
 		break;
 	case COND_SIN:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ASSASSIN_KATAR));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ASSASSIN_KATAR, ITEMFLAG_WEAPON));
 		break;
 	case COND_SOR:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SORCERESS_ORB));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SORCERESS_ORB, ITEMFLAG_WEAPON));
 		break;
 	case COND_ZON:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AMAZON_WEAPON));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AMAZON_WEAPON, ITEMFLAG_WEAPON));
 		break;
 	case COND_SHOP:
 		Condition::AddOperand(conditions, new ShopCondition());
@@ -2014,46 +2033,55 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new TwoHandedCondition());
 		break;
 	case COND_AXE:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AXE));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AXE, ITEMFLAG_WEAPON));
 		break;
 	case COND_MACE:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_MACE));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ALLMACE, ITEMFLAG_WEAPON));
+		break;
+	case COND_CLUB:
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_CLUB, ITEMFLAG_WEAPON));
+		break;
+	case COND_TMACE:
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_TIPPED_MACE, ITEMFLAG_WEAPON));
+		break;
+	case COND_HAMMER:
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_HAMMER, ITEMFLAG_WEAPON));
 		break;
 	case COND_SWORD:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SWORD));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SWORD, ITEMFLAG_WEAPON));
 		break;
 	case COND_DAGGER:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_DAGGER));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_DAGGER, ITEMFLAG_WEAPON));
 		break;
 	case COND_THROWING:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_THROWING));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_THROWING, ITEMFLAG_WEAPON));
 		break;
 	case COND_JAV:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_THROWING | ITEM_GROUP_SPEAR));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_JAVELIN, ITEMFLAG_WEAPON));
 		break;
 	case COND_SPEAR:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SPEAR));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SPEAR, ITEMFLAG_WEAPON));
 		break;
 	case COND_POLEARM:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_POLEARM));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_POLEARM, ITEMFLAG_WEAPON));
 		break;
 	case COND_BOW:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BOW));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_BOW, ITEMFLAG_WEAPON));
 		break;
 	case COND_XBOW:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_CROSSBOW));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_CROSSBOW, ITEMFLAG_WEAPON));
 		break;
 	case COND_STAFF:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_STAFF));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_STAFF, ITEMFLAG_WEAPON));
 		break;
 	case COND_WAND:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_WAND));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_WAND, ITEMFLAG_WEAPON));
 		break;
 	case COND_SCEPTER:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SCEPTER));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_SCEPTER, ITEMFLAG_WEAPON));
 		break;
 	case COND_WEAPON:
-		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ALLWEAPON));
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ALLWEAPON, ITEMFLAG_WEAPON));
 		break;
 	case COND_SK:
 		if ((number_ss >> cond_num).fail() || cond_num < 0 || cond_num >(int)SKILL_MAX) { break; }
@@ -2411,8 +2439,21 @@ bool RequiredLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 
 bool ItemGroupCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
-	Condition* arg2) {
-	return ((uInfo->attrs->flags & itemGroup) > 0);
+	Condition* arg2)
+{
+	switch (flagType)
+	{
+	case ITEMFLAG_BASE:
+		return ((uInfo->attrs->baseFlags & itemGroup) > 0);
+	case ITEMFLAG_WEAPON:
+		return ((uInfo->attrs->weaponFlags & itemGroup) > 0);
+	case ITEMFLAG_ARMOR:
+		return ((uInfo->attrs->armorFlags & itemGroup) > 0);
+	case ITEMFLAG_MISC:
+		return ((uInfo->attrs->miscFlags & itemGroup) > 0);
+	default:
+		return false;
+	}
 }
 
 bool EDCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2421,7 +2462,7 @@ bool EDCondition::EvaluateInternal(UnitItemInfo* uInfo,
 {
 	// Either enhanced defense or enhanced damage depending on item type
 	WORD stat;
-	if (uInfo->attrs->flags & ITEM_GROUP_ALLARMOR) { stat = STAT_ENHANCEDDEFENSE; }
+	if (uInfo->attrs->armorFlags & ITEM_GROUP_ALLARMOR) { stat = STAT_ENHANCEDDEFENSE; }
 	else
 	{
 		// Normal %ED will have the same value for STAT_ENHANCEDMAXIMUMDAMAGE and STAT_ENHANCEDMINIMUMDAMAGE
