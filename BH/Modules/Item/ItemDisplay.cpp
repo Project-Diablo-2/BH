@@ -944,13 +944,6 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	code[3] = szCode[3] != ' ' ? szCode[3] : 0;
 	code[4] = '\0';
 
-	int  qlvl_int = static_cast<int>(uInfo->attrs->qualityLevel);
-	auto ilvl_int = item->pItemData->dwItemLevel;
-	auto alvl_int = GetAffixLevel((BYTE)item->pItemData->dwItemLevel,
-		(BYTE)uInfo->attrs->qualityLevel,
-		uInfo->attrs->magicLevel);
-	auto clvl_int = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
-
 	int fRes = D2COMMON_GetUnitStat(item, STAT_FIRERESIST, 0);
 	int lRes = D2COMMON_GetUnitStat(item, STAT_LIGHTNINGRESIST, 0);
 	int cRes = D2COMMON_GetUnitStat(item, STAT_COLDRESIST, 0);
@@ -978,21 +971,26 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	}
 	sprintf_s(ed, "%d", value);
 
+	auto qlvl_int = uInfo->attrs->qualityLevel;
+	auto ilvl_int = item->pItemData->dwItemLevel;
+	auto mlvl_int = uInfo->attrs->magicLevel;
+	auto alvl_int = GetAffixLevel(
+		ilvl_int,
+		qlvl_int,
+		mlvl_int
+	);
+	auto clvl_int = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
+
 	sprintf_s(sockets, "%d", D2COMMON_GetUnitStat(item, STAT_SOCKETS, 0));
-	sprintf_s(ilvl, "%d", item->pItemData->dwItemLevel);
-	sprintf_s(alvl, "%d", GetAffixLevel((BYTE)item->pItemData->dwItemLevel, (BYTE)uInfo->attrs->qualityLevel, uInfo->attrs->magicLevel));
+	sprintf_s(ilvl, "%d", ilvl_int);
+	sprintf_s(alvl, "%d", alvl_int);
 	sprintf_s(origName, "%s", name.c_str());
 
-	// (1) ilvl = int(.5 * clvl) + int(.5 * ilvl)
-	auto craft_ilvl = static_cast<int>(0.5 * clvl_int) + static_cast<int>(0.5 * ilvl_int);
-	// (2) if ilvl > 99 then ilvl = 99
-	craft_ilvl = craft_ilvl > 99 ? 99 : craft_ilvl;
-	// (3) if qlvl > ilvl then ilvl = qlvl
-	craft_ilvl = qlvl_int > craft_ilvl ? qlvl_int : craft_ilvl;
-	//(4) if ilvl < (99 – int(qlvl/2)= then affix level = ilvl - int(qlvl/2) else affix level = ilvl * 2 - 99.
-	auto craft_alvl = craft_ilvl < (99 - qlvl_int / 2) ? craft_ilvl - qlvl_int / 2 : craft_ilvl * 2 - 99;
-
-
+	auto craft_alvl = GetAffixLevel(
+		(int)(0.5 * clvl_int) + (int)(0.5 * ilvl_int),
+		qlvl_int,
+		mlvl_int
+	);
 	sprintf_s(craftalvl, "%d", craft_alvl);
 
 	sprintf_s(lvlreq, "%d", GetRequiredLevel(uInfo->item));
@@ -2332,15 +2330,13 @@ bool CraftLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	auto ilvl_int = uInfo->item->pItemData->dwItemLevel;
 	auto clvl_int = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
 	auto qlvl_int = uInfo->attrs->qualityLevel;
+	auto mlvl_int = uInfo->attrs->magicLevel;
 
-	// (1) ilvl = int(.5 * clvl) + int(.5 * ilvl)
-	auto craft_ilvl = static_cast<int>(0.5 * clvl_int) + static_cast<int>(0.5 * ilvl_int);
-	// (2) if ilvl > 99 then ilvl = 99
-	craft_ilvl = craft_ilvl > 99 ? 99 : craft_ilvl;
-	// (3) if qlvl > ilvl then ilvl = qlvl
-	craft_ilvl = qlvl_int > craft_ilvl ? qlvl_int : craft_ilvl;
-	//(4) if ilvl < (99 – int(qlvl/2)= then affix level = ilvl - int(qlvl/2) else affix level = ilvl * 2 - 99.
-	auto craft_alvl = craft_ilvl < (99 - qlvl_int / 2) ? craft_ilvl - qlvl_int / 2 : craft_ilvl * 2 - 99;
+	auto craft_alvl = GetAffixLevel(
+		(int)(0.5 * clvl_int) + (int)(0.5 * ilvl_int),
+		qlvl_int,
+		mlvl_int
+	);
 
 	return IntegerCompare(craft_alvl, operation, craftLevel, craftLevel2);
 }
