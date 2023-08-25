@@ -579,6 +579,7 @@ void Item::LoadConfig() {
 
 	ItemDisplay::UninitializeItemRules();
 
+	BH::config->ReadKey("Cycle Filter Level", "VK_ADD", filterCycleKey);
 	BH::config->ReadInt("Filter Level", filterLevelSetting, 1);
 }
 
@@ -654,6 +655,11 @@ void Item::DrawSettings() {
 
 	new Checkhook(settingsTab, x, y, &Toggles["Verbose Notifications"].state, "Verbose Notifications");
 	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Verbose Notifications"].toggle, "");
+	y += 15;
+
+	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Cycle Through Filter Levels");
+	colored_text->SetColor(Gold);
+	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterCycleKey, "");
 	y += 15;
 
 	colored_text = new Texthook(settingsTab, x, y + 2, "Filter Level:");
@@ -740,6 +746,22 @@ void Item::OnLoop() {
 }
 
 void Item::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
+	if (key == filterCycleKey) {
+		*block = true;
+		if (!up && D2CLIENT_GetPlayerUnit()) {
+			if (filterLevelSetting == ItemFilterNames.size() - 1) {
+				filterLevelSetting = 0;
+				PrintText(ITEM_QUALITY_NONE, "Filter level: 0 - Show All Items");
+			}
+			else if (filterLevelSetting < ItemFilterNames.size()) {
+				filterLevelSetting++;
+				PrintText(ITEM_QUALITY_NONE, "Filter level: %s", &ItemFilterNames[filterLevelSetting]);
+			}
+			ResetCaches();
+			return;
+		}
+	}
+
 	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
 		if (key == (*it).second.toggle) {
 			*block = true;

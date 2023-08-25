@@ -60,6 +60,7 @@ private:
 	unsigned int showPlayer;
 	Drawing::UITab* settingsTab;
 	static unsigned int filterLevelSetting;
+	unsigned int filterCycleKey;
 public:
 	static UnitAny* viewingUnit;
 	vector<string> ItemFilterNames;
