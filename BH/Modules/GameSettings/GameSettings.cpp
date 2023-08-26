@@ -181,6 +181,18 @@ void GameSettings::LoadInteractionTab() {
 		"Place 1 unstacked item");
 	colored_text->SetColor(Gold);
 
+	y += 20;
+	colored_text = new Drawing::Texthook(tab, x, y,
+		"Changing filter levels");
+
+	y += 15;
+	colored_text = new Drawing::Texthook(tab, x + indent, y,
+		"Ctrl+Numpad [0 - 9]");
+	colored_text->SetColor(Gold);
+	colored_text = new Drawing::Texthook(tab, x + indent + offset, y,
+		"Set filter level");
+	colored_text->SetColor(Gold);
+
 	// Auras
 	y += 20;
 	new Drawing::Texthook(tab, x, (y), "Auras (only for top 3 players)");
@@ -211,8 +223,9 @@ void GameSettings::OnLoad() {
 }
 
 void GameSettings::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
+	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
 	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
-		if (key == (*it).second.toggle) {
+		if (key == (*it).second.toggle && !ctrlState) {
 			*block = true;
 			if (up) {
 				(*it).second.state = !(*it).second.state;

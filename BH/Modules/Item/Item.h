@@ -60,6 +60,10 @@ private:
 	unsigned int showPlayer;
 	Drawing::UITab* settingsTab;
 	static unsigned int filterLevelSetting;
+	static unsigned int prevFilterLevelSetting;
+	unsigned int filterLevelIncKey;
+	unsigned int filterLevelDecKey;
+	unsigned int filterLevelPrevKey;
 public:
 	static UnitAny* viewingUnit;
 	vector<string> ItemFilterNames;
@@ -69,6 +73,7 @@ public:
 	void OnLoad();
 	void OnUnload();
 	void ReplaceItemFilters(vector<string> itemFilterNames);
+	void ChangeFilterLevels(int newLevel);
 
 	void LoadConfig();
 	void DrawSettings();

@@ -77,6 +77,7 @@ std::map<std::string, ItemAttributes*> ItemAttributeMap;
 
 map<std::string, Toggle> Item::Toggles;
 unsigned int Item::filterLevelSetting;
+unsigned int Item::prevFilterLevelSetting;
 UnitAny* Item::viewingUnit;
 
 Patch* itemNamePatch = new Patch(Call, D2CLIENT, { 0x92366, 0x96736 }, (int)ItemName_Interception, 6);
@@ -579,7 +580,11 @@ void Item::LoadConfig() {
 
 	ItemDisplay::UninitializeItemRules();
 
+	BH::config->ReadKey("Increase Filter Level", "None", filterLevelIncKey);
+	BH::config->ReadKey("Decrease Filter Level", "None", filterLevelDecKey);
+	BH::config->ReadKey("Restore Prev Filter Level", "None", filterLevelPrevKey);
 	BH::config->ReadInt("Filter Level", filterLevelSetting, 1);
+	BH::config->ReadInt("Previous Filter Level", prevFilterLevelSetting, 0);
 }
 
 void Item::DrawSettings() {
@@ -656,6 +661,21 @@ void Item::DrawSettings() {
 	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Verbose Notifications"].toggle, "");
 	y += 15;
 
+	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Increase Filter Level");
+	colored_text->SetColor(Gold);
+	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelIncKey, "");
+	y += 15;
+
+	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Decrease Filter Level");
+	colored_text->SetColor(Gold);
+	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelDecKey, "");
+	y += 15;
+
+	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Restore Previous Filter Level");
+	colored_text->SetColor(Gold);
+	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelPrevKey, "");
+	y += 15;
+
 	colored_text = new Texthook(settingsTab, x, y + 2, "Filter Level:");
 	colored_text->SetColor(Gold);
 	// Just a default as this is called first time around, not used
@@ -692,6 +712,21 @@ void Item::ReplaceItemFilters(vector<string> itemFilterNames) {
 	}
 }
 
+void Item::ChangeFilterLevels(int newLevel) {
+	if (newLevel > ItemFilterNames.size())
+		return;
+
+	prevFilterLevelSetting = filterLevelSetting;
+	filterLevelSetting = newLevel;
+	
+	if (filterLevelSetting == 0)
+		PrintText(TextColor::Gold, "Filter level: ÿc50 - Show All Items");
+	else
+		PrintText(TextColor::Gold, "Filter level: ÿc0%s", &ItemFilterNames[filterLevelSetting]);
+
+	ResetCaches();
+}
+
 void Item::OnUnload() {
 	itemNamePatch->Remove();
 	itemPropertiesPatch->Remove();
@@ -717,6 +752,8 @@ void Item::OnLoop() {
 	// This is a bit of a hack to reset the cache when the user changes the item filter level
 	if (localFilterLevel != filterLevelSetting) {
 		ResetCaches();
+		if (localFilterLevel != 9999)
+			prevFilterLevelSetting = localFilterLevel;
 		localFilterLevel = filterLevelSetting;
 	}
 
@@ -740,8 +777,37 @@ void Item::OnLoop() {
 }
 
 void Item::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
+	if (key == filterLevelIncKey) {
+		*block = true;
+		if (!up && D2CLIENT_GetPlayerUnit() && filterLevelSetting < ItemFilterNames.size() - 1) 
+			ChangeFilterLevels(filterLevelSetting + 1);
+		return;
+	}
+	if (key == filterLevelDecKey) {
+		*block = true;
+		if (!up && D2CLIENT_GetPlayerUnit() && filterLevelSetting > 0)
+			ChangeFilterLevels(filterLevelSetting - 1);
+		return;
+	}
+	if (key == filterLevelPrevKey) {
+		*block = true;
+		if (!up && D2CLIENT_GetPlayerUnit() &&
+			prevFilterLevelSetting < ItemFilterNames.size()) {
+			ChangeFilterLevels(prevFilterLevelSetting);
+		}
+		return;
+	}
+	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
+	if (ctrlState && key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
+		*block = true;
+		unsigned int targetLevel = key - 0x60;
+		if (!up && D2CLIENT_GetPlayerUnit() && targetLevel < ItemFilterNames.size())
+			ChangeFilterLevels(targetLevel);
+		return;
+	}
+
 	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
-		if (key == (*it).second.toggle) {
+		if (key == (*it).second.toggle && !ctrlState) {
 			*block = true;
 			if (up) {
 				(*it).second.state = !(*it).second.state;

@@ -34,7 +34,7 @@ void MapNotify::OnLoad() {
 void MapNotify::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 	GameSettings* settings = static_cast<GameSettings*>(BH::moduleManager->Get("gamesettings"));
 	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
-	if (key == settings->reloadConfigCtrl && ctrlState || key == settings->reloadConfig) {
+	if (key == settings->reloadConfigCtrl && ctrlState || key == settings->reloadConfig && !ctrlState) {
 		*block = true;
 		if (up)
 			BH::ReloadConfig();
