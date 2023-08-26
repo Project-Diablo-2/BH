@@ -584,6 +584,7 @@ void Item::LoadConfig() {
 	BH::config->ReadKey("Decrease Filter Level", "None", filterLevelDecKey);
 	BH::config->ReadKey("Restore Prev Filter Level", "None", filterLevelPrevKey);
 	BH::config->ReadInt("Filter Level", filterLevelSetting, 1);
+	BH::config->ReadInt("Previous Filter Level", prevFilterLevelSetting, 0);
 }
 
 void Item::DrawSettings() {
@@ -791,7 +792,7 @@ void Item::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 	if (key == filterLevelPrevKey) {
 		*block = true;
 		if (!up && D2CLIENT_GetPlayerUnit() &&
-			prevFilterLevelSetting < ItemFilterNames.size() - 1) {
+			prevFilterLevelSetting < ItemFilterNames.size()) {
 			ChangeFilterLevels(prevFilterLevelSetting);
 		}
 		return;
@@ -806,7 +807,7 @@ void Item::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 	}
 
 	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
-		if (key == (*it).second.toggle) {
+		if (key == (*it).second.toggle && !ctrlState) {
 			*block = true;
 			if (up) {
 				(*it).second.state = !(*it).second.state;

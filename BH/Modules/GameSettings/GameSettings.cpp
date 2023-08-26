@@ -223,8 +223,9 @@ void GameSettings::OnLoad() {
 }
 
 void GameSettings::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
+	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
 	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
-		if (key == (*it).second.toggle) {
+		if (key == (*it).second.toggle && !ctrlState) {
 			*block = true;
 			if (up) {
 				(*it).second.state = !(*it).second.state;

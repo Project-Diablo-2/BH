@@ -582,6 +582,7 @@ void StashExport::CopyItemJSONToClipboard() {
 }
 
 void StashExport::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
+	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
 	if (key == exportGear) {
 		*block = true;
 		if (up)
@@ -596,14 +597,14 @@ void StashExport::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 		}
 	}
 	// Control + C
-	else if (key == 67 && GetKeyState(VK_CONTROL) & 0x8000) {
+	else if (key == 67 && ctrlState) {
 		*block = true;
 		if (!up)
 			return;
 		CopyItemJSONToClipboard();
 	}
 	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
-		if (key == (*it).second.toggle) {
+		if (key == (*it).second.toggle && !ctrlState) {
 			*block = true;
 			if (up) {
 				(*it).second.state = !(*it).second.state;
