@@ -181,6 +181,18 @@ void GameSettings::LoadInteractionTab() {
 		"Place 1 unstacked item");
 	colored_text->SetColor(Gold);
 
+	y += 20;
+	colored_text = new Drawing::Texthook(tab, x, y,
+		"Changing filter levels");
+
+	y += 15;
+	colored_text = new Drawing::Texthook(tab, x + indent, y,
+		"Ctrl+Numpad [0 - 9]");
+	colored_text->SetColor(Gold);
+	colored_text = new Drawing::Texthook(tab, x + indent + offset, y,
+		"Set filter level");
+	colored_text->SetColor(Gold);
+
 	// Auras
 	y += 20;
 	new Drawing::Texthook(tab, x, (y), "Auras (only for top 3 players)");

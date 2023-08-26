@@ -580,9 +580,9 @@ void Item::LoadConfig() {
 
 	ItemDisplay::UninitializeItemRules();
 
-	BH::config->ReadKey("Increase Filter Strictness", "None", filterLevelIncKey);
-	BH::config->ReadKey("Decrease Filter Strictness", "None", filterLevelDecKey);
-	BH::config->ReadKey("Restore Prev Filter Strictness", "None", filterLevelPrevKey);
+	BH::config->ReadKey("Increase Filter Level", "None", filterLevelIncKey);
+	BH::config->ReadKey("Decrease Filter Level", "None", filterLevelDecKey);
+	BH::config->ReadKey("Restore Prev Filter Level", "None", filterLevelPrevKey);
 	BH::config->ReadInt("Filter Level", filterLevelSetting, 1);
 }
 
@@ -660,17 +660,17 @@ void Item::DrawSettings() {
 	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Verbose Notifications"].toggle, "");
 	y += 15;
 
-	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Increase Filter Strictness");
+	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Increase Filter Level");
 	colored_text->SetColor(Gold);
 	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelIncKey, "");
 	y += 15;
 
-	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Decrease Filter Strictness");
+	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Decrease Filter Level");
 	colored_text->SetColor(Gold);
 	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelDecKey, "");
 	y += 15;
 
-	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Restore Previous Filter Strictness");
+	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Restore Previous Filter Level");
 	colored_text->SetColor(Gold);
 	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelPrevKey, "");
 	y += 15;
@@ -719,7 +719,7 @@ void Item::ChangeFilterLevels(int newLevel) {
 	filterLevelSetting = newLevel;
 	
 	if (filterLevelSetting == 0)
-		PrintText(TextColor::Gold, "Filter level: ÿc00 - Show All Items");
+		PrintText(TextColor::Gold, "Filter level: ÿc50 - Show All Items");
 	else
 		PrintText(TextColor::Gold, "Filter level: ÿc0%s", &ItemFilterNames[filterLevelSetting]);
 
