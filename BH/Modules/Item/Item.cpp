@@ -77,6 +77,7 @@ std::map<std::string, ItemAttributes*> ItemAttributeMap;
 
 map<std::string, Toggle> Item::Toggles;
 unsigned int Item::filterLevelSetting;
+unsigned int Item::prevFilterLevelSetting;
 UnitAny* Item::viewingUnit;
 
 Patch* itemNamePatch = new Patch(Call, D2CLIENT, { 0x92366, 0x96736 }, (int)ItemName_Interception, 6);
@@ -579,7 +580,9 @@ void Item::LoadConfig() {
 
 	ItemDisplay::UninitializeItemRules();
 
-	BH::config->ReadKey("Cycle Filter Level", "VK_ADD", filterCycleKey);
+	BH::config->ReadKey("Increase Filter Strictness", "None", filterLevelIncKey);
+	BH::config->ReadKey("Decrease Filter Strictness", "None", filterLevelDecKey);
+	BH::config->ReadKey("Restore Prev Filter Strictness", "None", filterLevelPrevKey);
 	BH::config->ReadInt("Filter Level", filterLevelSetting, 1);
 }
 
@@ -657,9 +660,19 @@ void Item::DrawSettings() {
 	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Verbose Notifications"].toggle, "");
 	y += 15;
 
-	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Cycle Through Filter Levels");
+	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Increase Filter Strictness");
 	colored_text->SetColor(Gold);
-	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterCycleKey, "");
+	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelIncKey, "");
+	y += 15;
+
+	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Decrease Filter Strictness");
+	colored_text->SetColor(Gold);
+	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelDecKey, "");
+	y += 15;
+
+	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Restore Previous Filter Strictness");
+	colored_text->SetColor(Gold);
+	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelPrevKey, "");
 	y += 15;
 
 	colored_text = new Texthook(settingsTab, x, y + 2, "Filter Level:");
@@ -698,6 +711,21 @@ void Item::ReplaceItemFilters(vector<string> itemFilterNames) {
 	}
 }
 
+void Item::ChangeFilterLevels(int newLevel) {
+	if (newLevel > ItemFilterNames.size())
+		return;
+
+	prevFilterLevelSetting = filterLevelSetting;
+	filterLevelSetting = newLevel;
+	
+	if (filterLevelSetting == 0)
+		PrintText(TextColor::Gold, "Filter level: ÿc00 - Show All Items");
+	else
+		PrintText(TextColor::Gold, "Filter level: ÿc0%s", &ItemFilterNames[filterLevelSetting]);
+
+	ResetCaches();
+}
+
 void Item::OnUnload() {
 	itemNamePatch->Remove();
 	itemPropertiesPatch->Remove();
@@ -723,6 +751,8 @@ void Item::OnLoop() {
 	// This is a bit of a hack to reset the cache when the user changes the item filter level
 	if (localFilterLevel != filterLevelSetting) {
 		ResetCaches();
+		if (localFilterLevel != 9999)
+			prevFilterLevelSetting = localFilterLevel;
 		localFilterLevel = filterLevelSetting;
 	}
 
@@ -746,20 +776,33 @@ void Item::OnLoop() {
 }
 
 void Item::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
-	if (key == filterCycleKey) {
+	if (key == filterLevelIncKey) {
 		*block = true;
-		if (!up && D2CLIENT_GetPlayerUnit()) {
-			if (filterLevelSetting == ItemFilterNames.size() - 1) {
-				filterLevelSetting = 0;
-				PrintText(ITEM_QUALITY_NONE, "Filter level: 0 - Show All Items");
-			}
-			else if (filterLevelSetting < ItemFilterNames.size()) {
-				filterLevelSetting++;
-				PrintText(ITEM_QUALITY_NONE, "Filter level: %s", &ItemFilterNames[filterLevelSetting]);
-			}
-			ResetCaches();
-			return;
+		if (!up && D2CLIENT_GetPlayerUnit() && filterLevelSetting < ItemFilterNames.size() - 1) 
+			ChangeFilterLevels(filterLevelSetting + 1);
+		return;
+	}
+	if (key == filterLevelDecKey) {
+		*block = true;
+		if (!up && D2CLIENT_GetPlayerUnit() && filterLevelSetting > 0)
+			ChangeFilterLevels(filterLevelSetting - 1);
+		return;
+	}
+	if (key == filterLevelPrevKey) {
+		*block = true;
+		if (!up && D2CLIENT_GetPlayerUnit() &&
+			prevFilterLevelSetting < ItemFilterNames.size() - 1) {
+			ChangeFilterLevels(prevFilterLevelSetting);
 		}
+		return;
+	}
+	bool shiftState = ((GetKeyState(VK_LSHIFT) & 0x80) || (GetKeyState(VK_RSHIFT) & 0x80));
+	if (shiftState && key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
+		*block = true;
+		unsigned int targetLevel = key - 0x60;
+		if (!up && D2CLIENT_GetPlayerUnit() && targetLevel < ItemFilterNames.size())
+			ChangeFilterLevels(targetLevel);
+		return;
 	}
 
 	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
