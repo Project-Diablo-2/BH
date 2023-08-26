@@ -796,8 +796,8 @@ void Item::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 		}
 		return;
 	}
-	bool shiftState = ((GetKeyState(VK_LSHIFT) & 0x80) || (GetKeyState(VK_RSHIFT) & 0x80));
-	if (shiftState && key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
+	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
+	if (ctrlState && key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
 		*block = true;
 		unsigned int targetLevel = key - 0x60;
 		if (!up && D2CLIENT_GetPlayerUnit() && targetLevel < ItemFilterNames.size())
