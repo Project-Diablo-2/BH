@@ -5,6 +5,8 @@
 #include "../Item/ItemDisplay.h"
 #include "../../D2Version.h"
 #include <time.h>
+#include <set>
+#include <vector>
 
 using namespace Drawing;
 
@@ -295,7 +297,25 @@ void ScreenInfo::OnAutomapDraw() {
 	else {
 		areaLevel = levelTxt->wMonLvl[D2CLIENT_GetDifficulty()];
 	}
-	if (areaLevel > 0) {
+
+	if (pUnit->pPlayerData && pUnit->pPlayerData->nCorruptZone != 0)
+	{
+		std::set<int> sCorruptZoneIds = ValidCorruptZones.at(pUnit->pPlayerData->nCorruptZone);
+		if (sCorruptZoneIds.find(levelId) != sCorruptZoneIds.end())
+		{
+			areaLevel = 85;
+			szAreaLevel = to_string(areaLevel);
+			szLevel = "ÿc;" + szLevel + " (" + to_string(szAreaLevel) + ")";
+		}
+		else
+		{
+			if (areaLevel > 0) {
+				szAreaLevel = to_string(areaLevel);
+				szLevel = szLevel + " (" + to_string(szAreaLevel) + ")";
+			}
+		}
+	}
+	else if (areaLevel > 0) {
 		szAreaLevel = to_string(areaLevel);
 		szLevel = szLevel + " (" + to_string(szAreaLevel) + ")";
 	}

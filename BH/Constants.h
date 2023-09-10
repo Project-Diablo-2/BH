@@ -1,5 +1,8 @@
 ﻿#pragma once
 
+#include <set>
+#include <vector>
+
 #define BH_VERSION "PD2 0.1"
 #define SETTINGS_TEXT "Settings"
 
@@ -1411,6 +1414,77 @@ enum MinAccrIndex
 #define TBLOFFSET_STRING			0
 #define TBLOFFSET_PATCHSTRING		10000
 #define TBLOFFSET_EXPANSIONSTRING	20000
+
+const std::vector<std::set<int>> ValidCorruptZones =
+{
+	{}, // init
+	{2}, // Blood Moor
+	{3}, // Cold Plains
+	{4}, // Stony Field
+	{5}, // Dark Wood
+	{6}, // Black Marsh
+	{7}, // Tamoe Highland
+	{8}, // Den of Evil
+	{9, 13}, // The Cave
+	{10, 14}, // The Underground Passage
+	{11, 15}, // The Hole
+	{12, 16}, // The Pit
+	{17, 18, 19}, // Burial Grounds + Crypt/Masoleum
+	{21, 22, 23, 24, 25}, // Forgotten Tower
+	{26, 27, 28}, // Outer Cloister + Barracks
+	{29, 30, 31}, // Jail
+	{32, 33}, // Inner Cloister + Cathedral
+	{34, 35, 36, 37}, // Catacombs
+	{38}, // Tristram
+	{39}, // The Cow Level
+	{41}, // Rocky Wastes
+	{42}, // Dry Hills
+	{43}, // Far Oasis
+	{44}, // Lost City
+	{46}, // Canyon of Magi
+	{47, 48, 49}, // Act 2 Sewers 1, 2, 3
+	{51, 52, 53, 54}, // Palace Cellars
+	{55, 59}, // Stony Tomb
+	{56, 57, 60}, // Halls of the Dead
+	{58, 61}, // Claw Viper Temple
+	{62, 63, 64}, // Maggot Lair
+	{65}, // Ancient Tunnels
+	{66, 67, 68, 69, 70, 71, 72}, // Tal Rasha Tombs
+	{74}, // Arcane Sanctuary
+	{76}, // Spider Forest
+	{77}, // Great Marsh
+	{78}, // Flayer Jungle
+	{79}, // Lower Kurast
+	{80}, // Kurast Bazaar
+	{81}, // Upper Kurast
+	{82, 83}, // Causeway + Travincal
+	{84}, // Arachnid Lair
+	{85}, // Spider Cavern
+	{86, 87, 90}, // Swampy Pit
+	{88, 89, 91}, // Flayer Dungeon
+	{92, 93}, // Kurast Sewers
+	{100, 101, 102}, // Durance of Hate
+	{104}, // Outer Steppes
+	{105}, // Plains of Despair
+	{106}, // City of the Damned
+	{107}, // River of Flame
+	{108}, // Chaos Sanctuary
+	{110}, // Bloody Foothills
+	{111}, // Frigid Highlands
+	{112}, // Arreat Plateau
+	{113, 115}, // Crystalline Passage + Icy Cavern
+	{114}, // Frozen River
+	{116}, // Drifter Cavern
+	{117}, // Frozen Tundra
+	{118}, // Ancient's Way
+	{119}, // Icy Cellar
+	{121, 122, 123, 124}, // Nihlathak's Temple
+	{125}, // Abaddon
+	{126}, // Pit of Acheron
+	{127}, // Infernal Pit
+	{128, 129, 130}, // Worldstone Keep
+	{131}, // Throne of Destruction
+};
 
 const int NUM_CORRUPTIONS = 90;
 
