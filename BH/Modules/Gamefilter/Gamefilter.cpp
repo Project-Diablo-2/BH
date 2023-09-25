@@ -1,4 +1,5 @@
 ﻿#include "Gamefilter.h"
+#include "ParsedFilterString.h"
 #include "../../D2Ptrs.h"
 #include "../../D2Intercepts.h"
 #include "../../D2Stubs.h"
@@ -118,16 +119,12 @@ void Gamefilter::OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket) {
 			showDifficulty = App.bnet.showNormalDiff.value;
 		}
 
-		string sGameName;
-
 		for (unsigned int i = 0; i < sFilter.length(); i++)
 			sFilter[i] = ::toupper(sFilter[i]);
-
-		for (unsigned int i = 0; i < pEntry->sGameName.length(); i++)
-			sGameName += ::toupper(pEntry->sGameName[i]);
 		sLastFilter = sFilter;
 
-		if ((wFilter.empty() || strstr(sGameName.c_str(), sFilter.c_str())) && showDifficulty)
+		ParsedFilterString parsedFilter(sFilter.c_str());
+		if (parsedFilter.IsIncluded(pEntry) && showDifficulty)
 		{
 			ControlText* pText = new ControlText;
 			memset(pText, NULL, sizeof(ControlText));
@@ -447,12 +444,8 @@ void Gamefilter::BuildGameList(string sFilter)
 				showDifficulty = App.bnet.showNormalDiff.value;
 			}
 
-			string sGameName((*ListEntry)->sGameName.c_str());
-
-			for (UINT i = 0; i < sGameName.length(); i++)
-				sGameName[i] = ::toupper(sGameName[i]);
-
-			if (strstr(sGameName.c_str(), sFilter.c_str()) && showDifficulty)
+			ParsedFilterString parsedFilter(sFilter.c_str());
+			if (parsedFilter.IsIncluded(*ListEntry) && showDifficulty)
 			{
 
 				ControlText* pText = new ControlText;
