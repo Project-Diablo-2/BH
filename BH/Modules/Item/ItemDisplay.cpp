@@ -785,6 +785,25 @@ std::string join(C const& strings,
 	return ostr.str();
 }
 
+int ShopNPCs[] = {
+	NPCID_Akara,	// Act 1
+	NPCID_Gheed,	// Act 1
+	NPCID_Charsi,	// Act 1
+	NPCID_Elzix,	// Act 2
+	NPCID_Drognan,	// Act 2
+	NPCID_Fara,		// Act 2
+	NPCID_Lysander,	// Act 2
+	NPCID_Hratli,	// Act 3
+	NPCID_Alkor,	// Act 3
+	NPCID_Ormus,	// Act 3
+	NPCID_Asheara,	// Act 3
+	NPCID_Jamella,	// Act 4
+	NPCID_Halbu,	// Act 4
+	NPCID_Larzuk,	// Act 5
+	NPCID_Malah,	// Act 5
+	NPCID_Anya		// Act 5
+};
+
 char* GemLevels[] = {
 	"NONE",
 	"Chipped",
@@ -1041,9 +1060,10 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		{
 			if (bLimit && replacements[n].key == "NL")
 			{
-				// Allow %NL% on identified, magic+ item names
+				// Allow %NL% on identified, magic+ item names, and items within shops
 				if ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
-					(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0))
+					(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0) ||
+					find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs))
 				{
 					name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, replacements[n].value);
 				}
@@ -2571,22 +2591,7 @@ bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		uInfo->item->pItemData->pOwnerInventory->pOwner)
 	{
 		auto wNpcId = uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo;
-		if (wNpcId == NPCID_Akara	||	// Act 1
-			wNpcId == NPCID_Gheed	||	// Act 1
-			wNpcId == NPCID_Charsi	||	// Act 1
-			wNpcId == NPCID_Elzix	||	// Act 2
-			wNpcId == NPCID_Drognan	||	// Act 2
-			wNpcId == NPCID_Fara	||	// Act 2
-			wNpcId == NPCID_Lysander ||	// Act 2
-			wNpcId == NPCID_Hratli	||	// Act 3
-			wNpcId == NPCID_Akara	||	// Act 3
-			wNpcId == NPCID_Ormus	||	// Act 3
-			wNpcId == NPCID_Asheara	||	// Act 3
-			wNpcId == NPCID_Jamella	||	// Act 4
-			wNpcId == NPCID_Halbu	||	// Act 4
-			wNpcId == NPCID_Larzuk	||	// Act 5
-			wNpcId == NPCID_Malah	||	// Act 5
-			wNpcId == NPCID_Anya)		// Act 5
+		if (find(begin(ShopNPCs), end(ShopNPCs), wNpcId) != end(ShopNPCs))
 		{
 			is_shop = true;
 		}
