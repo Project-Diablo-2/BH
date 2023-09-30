@@ -1017,6 +1017,8 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	sprintf_s(rangeadder, "%d", txt->brangeadder);
 	sprintf_s(qty, "%d", D2COMMON_GetUnitStat(item, STAT_AMMOQUANTITY, 0));
 
+	bool inShop = (find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) == end(ShopNPCs)) ? false : true;
+
 	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
 	if (pUnit && txt->bquest == 0) { sprintf_s(sellValue, "%d", D2COMMON_GetItemPrice(pUnit, item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1)); }
 
@@ -1063,7 +1065,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				// Allow %NL% on identified, magic+ item names, and items within shops
 				if ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
 					(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0) ||
-					find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs))
+					inShop)
 				{
 					name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, replacements[n].value);
 				}
@@ -1259,19 +1261,25 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		auto       match_count = std::distance(color_matches, color_end);
 		nColorCodesSize += 3 * match_count;
 
+		int lengthLimit = MAX_NAME_SIZE;
+
+		// Increase limit for shop items
+		if (inShop)
+			lengthLimit = 500;
+
 		int nColorsToKeep = 0;
 		for (std::sregex_iterator k = color_matches; k != color_end; ++k)
 		{
 			std::smatch match = *k;
 			auto        pos = match.position();
-			if (pos - (nColorsToKeep) > MAX_NAME_SIZE) { break; }
+			if (pos - (nColorsToKeep) > lengthLimit) { break; }
 			nColorsToKeep += 3;
 		}
 
 		// Truncate if too long
-		if (name.size() - nColorCodesSize > MAX_NAME_SIZE)
+		if (name.size() - nColorCodesSize > lengthLimit)
 		{
-			int max_size = MAX_NAME_SIZE + nColorsToKeep;
+			int max_size = lengthLimit + nColorsToKeep;
 			name.resize(max_size);
 		}
 	}
