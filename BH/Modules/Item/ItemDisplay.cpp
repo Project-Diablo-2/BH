@@ -1017,7 +1017,10 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	sprintf_s(rangeadder, "%d", txt->brangeadder);
 	sprintf_s(qty, "%d", D2COMMON_GetUnitStat(item, STAT_AMMOQUANTITY, 0));
 
-	bool inShop = (find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) == end(ShopNPCs)) ? false : true;
+	bool inShop = false;
+	if (item->pItemData->pOwnerInventory != 0 && // Skip on ground items
+		find(begin(ShopNPCs), end(ShopNPCs), item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs))
+		inShop = true;
 
 	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
 	if (pUnit && txt->bquest == 0) { sprintf_s(sellValue, "%d", D2COMMON_GetItemPrice(pUnit, item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1)); }
