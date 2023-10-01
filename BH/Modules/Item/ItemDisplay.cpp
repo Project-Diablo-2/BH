@@ -1005,7 +1005,8 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	if (IsRune(attrs))
 	{
 		sprintf_s(runenum, "%d", RuneNumberFromItemCode(code));
-		sprintf_s(runename, name.substr(0, name.find(' ')).c_str());
+		// TODO: removes " Rune" from the rune name. Pretty likely to break on non-english strings
+		sprintf_s(runename, attrs->name.substr(0, attrs->name.find(' ')).c_str());
 	}
 	else if (IsGem(attrs))
 	{
