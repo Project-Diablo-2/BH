@@ -722,7 +722,7 @@ void Item::ChangeFilterLevels(int newLevel) {
 	if (filterLevelSetting == 0)
 		PrintText(TextColor::Gold, "Filter level: ÿc50 - Show All Items");
 	else
-		PrintText(TextColor::Gold, "Filter level: ÿc0%s", ItemFilterNames[filterLevelSetting]);
+		PrintText(TextColor::Gold, "Filter level: ÿc0%s", ItemFilterNames[filterLevelSetting].c_str());
 
 	ResetCaches();
 }
