@@ -1277,8 +1277,6 @@ static DWORD previousFlags;
 
 void __stdcall Item::OnProperties(wchar_t* wTxt)
 {
-	const int MAXLEN = 1024;
-	const int MAXDESCRIPTION = 512;
 	UnitAny* pItem = *p_D2CLIENT_SelectedInvItem;
 	UnitItemInfo uInfo;
 	if (!pItem || pItem->dwType != UNIT_ITEM || CreateUnitItemInfo(&uInfo, pItem)) {
@@ -1312,11 +1310,11 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 
 		string desc = item_desc_cache.Get(&uInfo);
 		if (desc != "") {
-			static wchar_t wDesc[MAXDESCRIPTION];
-			auto chars_written = MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, desc.c_str(), -1, wDesc, MAXDESCRIPTION);
+			static wchar_t wDesc[MAX_ITEM_TEXT_SIZE];
+			auto chars_written = MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, desc.c_str(), -1, wDesc, MAX_ITEM_TEXT_SIZE);
 
 			int aLen = wcslen(wTxt);
-			swprintf_s(wTxt + aLen, MAXLEN - aLen,
+			swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen,
 				L"%s%s\n",
 				(chars_written > 0) ? wDesc : L"\377c1Item Description is too long.",
 				GetColorCode(TextColor::White).c_str()
@@ -1377,7 +1375,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 	{
 		if (ilvl != alvl && (quality == ITEM_QUALITY_MAGIC || quality == ITEM_QUALITY_RARE || quality == ITEM_QUALITY_CRAFT)) {
 			int aLen = wcslen(wTxt);
-			swprintf_s(wTxt + aLen, MAXLEN - aLen,
+			swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen,
 				L"%sAffix Level: %d\n",
 				GetColorCode(TextColor::White).c_str(),
 				GetAffixLevel((BYTE)pItem->pItemData->dwItemLevel, (BYTE)uInfo.attrs->qualityLevel, uInfo.attrs->magicLevel));
@@ -1388,7 +1386,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 	if (Toggles["Show iLvl"].state)
 	{
 		int aLen = wcslen(wTxt);
-		swprintf_s(wTxt + aLen, MAXLEN - aLen,
+		swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen,
 			L"%sItem Level: %d\n",
 			GetColorCode(TextColor::White).c_str(),
 			pItem->pItemData->dwItemLevel);

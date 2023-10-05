@@ -26,7 +26,6 @@
 	{"STAT62", STAT_MANALEECH},		\
 	{"REPLIFE", STAT_REPLENISHLIFE},
 
-#define MAX_NAME_SIZE 56
 // For ignoring size
 std::vector<std::string> colorreps =
 {
@@ -950,13 +949,13 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	const string& action_name,
 	BOOL          bLimit)
 {
-	char origName[512], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4] = "0";
+	char origName[MAX_ITEM_TEXT_SIZE], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4] = "0";
 	char gemtype[16] = "", gemlevel[16] = "", sellValue[16] = "", statVal[16] = "", qty[4] = "";
 	char lvlreq[4], wpnspd[4], rangeadder[4], allres[4], ed[4];
 
 	UnitAny* item = uInfo->item;
 	ItemsTxt* txt = D2COMMON_GetItemText(item->dwTxtFileNo);
-	char* szCode = txt->szCode;
+	char* szCode = txt->szCode;  // TODO: uInfo already has this, can we remove?
 	code[0] = szCode[0];
 	code[1] = szCode[1] != ' ' ? szCode[1] : 0;
 	code[2] = szCode[2] != ' ' ? szCode[2] : 0;
@@ -1025,7 +1024,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
 	if (pUnit && txt->bquest == 0) { sprintf_s(sellValue, "%d", D2COMMON_GetItemPrice(pUnit, item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1)); }
 
-	ItemAttributes* attrs = ItemAttributeMap[code];
+	ItemAttributes* attrs = ItemAttributeMap[code];  // TODO: uInfo already has this, can we replace?
 	if (IsRune(attrs))
 	{
 		sprintf_s(runenum, "%d", RuneNumberFromItemCode(code));
@@ -1256,6 +1255,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		}
 	}
 
+	int lengthLimit = 0;
 	if (bLimit)
 	{
 		// Calc the extra size from colors
@@ -1265,11 +1265,8 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		auto       match_count = std::distance(color_matches, color_end);
 		nColorCodesSize += 3 * match_count;
 
-		int lengthLimit = MAX_NAME_SIZE;
-
 		// Increase limit for shop items
-		if (inShop)
-			lengthLimit = 500;
+		lengthLimit = inShop ? MAX_ITEM_TEXT_SIZE : MAX_ITEM_NAME_SIZE;
 
 		int nColorsToKeep = 0;
 		for (std::sregex_iterator k = color_matches; k != color_end; ++k)
@@ -1287,6 +1284,12 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			name.resize(max_size);
 		}
 	}
+
+	// Limit all names/descriptions to a hard cap, regarless of color codes
+	lengthLimit = (uInfo->itemCode[0] == 't' || uInfo->itemCode[0] == 'i') &&
+		uInfo->itemCode[1] == 'b' &&
+		uInfo->itemCode[2] == 'k' ? BOOK_NAME_SIZE_LIMIT : MAX_ITEM_TEXT_SIZE;
+	if (name.size() > lengthLimit - 1) { name.resize(lengthLimit - 1); }
 }
 
 BYTE GetAffixLevel(BYTE ilvl,
