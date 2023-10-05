@@ -785,6 +785,25 @@ std::string join(C const& strings,
 	return ostr.str();
 }
 
+int ShopNPCs[] = {
+	NPCID_Akara,	// Act 1
+	NPCID_Gheed,	// Act 1
+	NPCID_Charsi,	// Act 1
+	NPCID_Elzix,	// Act 2
+	NPCID_Drognan,	// Act 2
+	NPCID_Fara,		// Act 2
+	NPCID_Lysander,	// Act 2
+	NPCID_Hratli,	// Act 3
+	NPCID_Alkor,	// Act 3
+	NPCID_Ormus,	// Act 3
+	NPCID_Asheara,	// Act 3
+	NPCID_Jamella,	// Act 4
+	NPCID_Halbu,	// Act 4
+	NPCID_Larzuk,	// Act 5
+	NPCID_Malah,	// Act 5
+	NPCID_Anya		// Act 5
+};
+
 char* GemLevels[] = {
 	"NONE",
 	"Chipped",
@@ -998,6 +1017,11 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	sprintf_s(rangeadder, "%d", txt->brangeadder);
 	sprintf_s(qty, "%d", D2COMMON_GetUnitStat(item, STAT_AMMOQUANTITY, 0));
 
+	bool inShop = false;
+	if (item->pItemData->pOwnerInventory != 0 && // Skip on ground items
+		find(begin(ShopNPCs), end(ShopNPCs), item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs))
+		inShop = true;
+
 	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
 	if (pUnit && txt->bquest == 0) { sprintf_s(sellValue, "%d", D2COMMON_GetItemPrice(pUnit, item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1)); }
 
@@ -1042,9 +1066,10 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		{
 			if (bLimit && replacements[n].key == "NL")
 			{
-				// Allow %NL% on identified, magic+ item names
+				// Allow %NL% on identified, magic+ item names, and items within shops
 				if ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
-					(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0))
+					(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0) ||
+					inShop)
 				{
 					name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, replacements[n].value);
 				}
@@ -1240,19 +1265,25 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		auto       match_count = std::distance(color_matches, color_end);
 		nColorCodesSize += 3 * match_count;
 
+		int lengthLimit = MAX_NAME_SIZE;
+
+		// Increase limit for shop items
+		if (inShop)
+			lengthLimit = 500;
+
 		int nColorsToKeep = 0;
 		for (std::sregex_iterator k = color_matches; k != color_end; ++k)
 		{
 			std::smatch match = *k;
 			auto        pos = match.position();
-			if (pos - (nColorsToKeep) > MAX_NAME_SIZE) { break; }
+			if (pos - (nColorsToKeep) > lengthLimit) { break; }
 			nColorsToKeep += 3;
 		}
 
 		// Truncate if too long
-		if (name.size() - nColorCodesSize > MAX_NAME_SIZE)
+		if (name.size() - nColorCodesSize > lengthLimit)
 		{
-			int max_size = MAX_NAME_SIZE + nColorsToKeep;
+			int max_size = lengthLimit + nColorsToKeep;
 			name.resize(max_size);
 		}
 	}
@@ -2572,22 +2603,7 @@ bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		uInfo->item->pItemData->pOwnerInventory->pOwner)
 	{
 		auto wNpcId = uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo;
-		if (wNpcId == NPCID_Akara	||	// Act 1
-			wNpcId == NPCID_Gheed	||	// Act 1
-			wNpcId == NPCID_Charsi	||	// Act 1
-			wNpcId == NPCID_Elzix	||	// Act 2
-			wNpcId == NPCID_Drognan	||	// Act 2
-			wNpcId == NPCID_Fara	||	// Act 2
-			wNpcId == NPCID_Lysander ||	// Act 2
-			wNpcId == NPCID_Hratli	||	// Act 3
-			wNpcId == NPCID_Akara	||	// Act 3
-			wNpcId == NPCID_Ormus	||	// Act 3
-			wNpcId == NPCID_Asheara	||	// Act 3
-			wNpcId == NPCID_Jamella	||	// Act 4
-			wNpcId == NPCID_Halbu	||	// Act 4
-			wNpcId == NPCID_Larzuk	||	// Act 5
-			wNpcId == NPCID_Malah	||	// Act 5
-			wNpcId == NPCID_Anya)		// Act 5
+		if (find(begin(ShopNPCs), end(ShopNPCs), wNpcId) != end(ShopNPCs))
 		{
 			is_shop = true;
 		}
