@@ -619,12 +619,19 @@ void StatsDisplay::OnDraw()
 		char szSkillText[255] = "";
 		if (!isMerc)
 		{
+			char rightSkillName[64] = "";
+			Skill* pRightSkill = D2COMMON_10507_UNITS_GetRightSkill(unit);
+			SkillDescTxt* pSkillDescTxt = &(*p_D2COMMON_sgptDataTable)->pSkillDescTxt[pRightSkill->pSkillInfo->wSkillDesc];
+			std::string skillName = UnicodeToAnsi(GetTblEntryByIndex(pSkillDescTxt->wStrName, TBLOFFSET_STRING));
+			sprintf(rightSkillName, "%s", skillName.c_str());
+
 			Texthook::Draw(column1,
 				(y += 16),
 				None,
 				6,
 				Gold,
-				L"Breakpoints (relative to Right Click Skill):");
+				"Breakpoints (ÿc0%sÿc4):",
+				rightSkillName);
 		}
 		else
 		{
@@ -641,7 +648,7 @@ void StatsDisplay::OnDraw()
 				None,
 				6,
 				Gold,
-				"Breakpoints (%s):",
+				"Breakpoints (ÿc0%sÿc4):",
 				szSkillText);
 		}
 
