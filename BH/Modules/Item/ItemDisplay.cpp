@@ -892,6 +892,8 @@ string ItemNameLookupCache::make_cached_T(UnitItemInfo* uInfo,
 	const string& name)
 {
 	string new_name(name);
+	if (new_name.front() == ' ') { new_name.erase(0, 1); }					// removes one leading space (happens on magic items without a prefix)
+	if (new_name.back() == ' ') { new_name.erase(new_name.size() - 1, 1); }	// removes one trailing space (happens on magic items without a suffix)
 	for (vector<Rule*>::const_iterator it = RuleList.begin(); it != RuleList.end(); it++)
 	{
 		if ((*it)->Evaluate(uInfo))
@@ -1050,11 +1052,14 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		{ "WPNSPD", wpnspd },
 		{ "RANGE", rangeadder },
 		{ "CODE", code },
+		{ "CL", "\n" },
 		{ "NL", "\n" },
 		{ "PRICE", sellValue },
 		{ "QTY", qty },
 		{ "RES", allres},
 		{ "ED", ed},
+		{ "LBRACE", "{" },
+		{ "RBRACE", "}" },
 		COLOR_REPLACEMENTS
 	};
 	int nColorCodesSize = 0;
@@ -1063,9 +1068,9 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	{
 		while (name.find("%" + replacements[n].key + "%") != string::npos)
 		{
-			if (bLimit && replacements[n].key == "NL")
+			if (bLimit && (replacements[n].key == "NL" || replacements[n].key == "CL"))
 			{
-				// Allow %NL% on identified, magic+ item names, and items within shops
+				// Allow %NL% and %CL% on identified, magic+ item names, and items within shops
 				if ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
 					(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0) ||
 					inShop)
@@ -1083,7 +1088,14 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, replacements[n].value);
 			}
 		}
+		// Remove leading or trailing new lines from %CL% keywords
+		if (replacements[n].key == "CL")
+		{
+			if (name.front() == '\n') { name.erase(0, 1); }
+			if (name.back() == '\n') { name.erase(name.size() - 1, 1); }
+		}
 	}
+
 	// Replace named stat output strings with their STAT# counterpart
 	map<string, int>::iterator it;
 	for (it = stat_id_map.begin(); it != stat_id_map.end(); it++)
@@ -2584,7 +2596,8 @@ bool EquippedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	bool is_equipped = false;
 	if (uInfo->item->pItemData->pOwnerInventory)
 	{
-		if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId == D2CLIENT_GetPlayerUnit()->dwUnitId)
+		if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId == D2CLIENT_GetPlayerUnit()->dwUnitId || 
+			uInfo->item->pItemData->pOwnerInventory->dwOwnerId == D2CLIENT_GetMercUnit()->dwUnitId)
 		{
 			if (uInfo->item->pItemData->BodyLocation > 0 && uInfo->item->pItemData->ItemLocation == STORAGE_NULL)
 			{
