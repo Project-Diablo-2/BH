@@ -83,35 +83,9 @@ void MapNotify::OnDraw() {
 								&& (*BH::MiscToggles2)["Item Detailed Notifications"].state) {
 								if ((*BH::MiscToggles2)["Item Close Notifications"].state || (dwFlags & ITEM_NEW)) {
 									std::string itemName = GetItemName(unit);
-									
-									// Removes leading/trailing spaces from text notifications (this doesn't affect the trailing spaces that are due to color keywords)
-									bool finished = false;
+									regex trimName("^\\s*(?:(?:\\s*?)(ÿc[0123456789;:]))*\\s*(.*?\\S)\\s*(?:ÿc[0123456789;:])*\\s*$");	// Matches on leading/trailing spaces (skips most color codes)
+									itemName = regex_replace(itemName, trimName, "$1$2");												// Trims the matched spaces from notifications
 									size_t start_pos = 0;
-									while (!finished && start_pos < itemName.size() - 3)
-									{
-										if (itemName.at(start_pos) == ' ') { itemName.erase(start_pos, 1); }				// removes leading spaces
-										else if (itemName.at(start_pos) == 'ÿ' && itemName.at(start_pos + 1) == 'c')
-										{
-											char x = itemName.at(start_pos + 2);
-											if (x == '0' || x == '1' || x == '2' || x == '3' || x == '4' || x == '5' || x == '6' || x == '7' || x == '8' || x == '9' || x == ';' || x == ':') { start_pos += 3; }	// skips over (most) color codes
-										}
-										else { finished = true; }
-									}
-									finished = false;
-									start_pos = itemName.size() - 1;
-									while (!finished && start_pos > 2)
-									{
-										if (itemName.at(start_pos) == ' ') { itemName.erase(start_pos, 1); start_pos--; }	// removes trailing spaces
-										else if (itemName.at(start_pos - 2) == 'ÿ' && itemName.at(start_pos - 1) == 'c')
-										{
-											char x = itemName.at(start_pos);
-											if (x == '0' || x == '1' || x == '2' || x == '3' || x == '4' || x == '5' || x == '6' || x == '7' || x == '8' || x == '9' || x == ';' || x == ':') { start_pos -= 3; }	// skips over (most) color codes
-										}
-										else { finished = true; }
-									}
-									// TODO: Prevent color keywords from increasing the size of the text box for the displayed string (each color keyword increases the size of the string by 3, which also increases the size of the text box by the same amount even though the color keywords aren't actually displayed themselves)
-									
-									start_pos = 0;
 									while ((start_pos = itemName.find('\n', start_pos)) != std::string::npos) {
 										itemName.replace(start_pos, 1, " - ");
 										start_pos += 3;
