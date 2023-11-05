@@ -29,6 +29,7 @@ void GameSettings::LoadConfig() {
 	BH::config->ReadToggle("99 Aura", "None", true, GameSettings::Toggles["99 Aura"]);
 	BH::config->ReadToggle("Rathma Aura", "None", true, GameSettings::Toggles["Rathma Aura"]);
 	BH::config->ReadToggle("Dclone Aura", "None", true, GameSettings::Toggles["Dclone Aura"]);
+	BH::config->ReadToggle("PVP Aura", "None", true, GameSettings::Toggles["PVP Aura"]);
 
 	BH::config->ReadKey("Show Players Gear", "VK_0", showPlayer);
 	BH::config->ReadKey("Resync Hotkey", "VK_9", resyncKey);
@@ -208,6 +209,10 @@ void GameSettings::LoadInteractionTab() {
 	y += 15;
 	new Drawing::Checkhook(tab, x, y, &GameSettings::Toggles["Rathma Aura"].state, "Show Rathma Aura");
 	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Rathma Aura"].toggle, "");
+
+	y += 15;
+	new Drawing::Checkhook(tab, x, y, &GameSettings::Toggles["PVP Aura"].state, "Show PVP Aura");
+	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["PVP Aura"].toggle, "");
 
 	y += 20;
 	new Drawing::Texthook(tab, x, (y), "Developer Only");
