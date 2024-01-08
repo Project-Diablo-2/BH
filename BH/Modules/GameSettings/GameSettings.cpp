@@ -257,4 +257,12 @@ void GameSettings::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 			return;
 		}
 	}
+
+	if (!BH::settingsUI->IsMinimized() && key == VK_ESCAPE) {
+		*block = true;
+		if (up)
+			return;
+		BH::settingsUI->SetMinimized(true);
+		return;
+	}
 }
