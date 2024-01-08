@@ -2341,7 +2341,7 @@ bool MapIdCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	auto map_id = **Var_D2CLIENT_MapId();
+	int map_id = (int)D2CLIENT_GetPlayerUnit()->pAct->pRoom1->pRoom2->pLevel->dwLevelNo;
 
 	return IntegerCompare(map_id, operation, mapId, mapId2);
 }
