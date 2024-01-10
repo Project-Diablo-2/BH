@@ -2353,7 +2353,7 @@ bool MapIdCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		int map_id = (int)player->pAct->pRoom1->pRoom2->pLevel->dwLevelNo;
 		return IntegerCompare(map_id, operation, mapId, mapId2);
 	}
-	return 0;
+	return false;
 }
 
 bool MapTierCondition::EvaluateInternal(UnitItemInfo* uInfo,
