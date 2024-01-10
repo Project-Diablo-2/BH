@@ -2341,9 +2341,19 @@ bool MapIdCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	int map_id = (int)D2CLIENT_GetPlayerUnit()->pAct->pRoom1->pRoom2->pLevel->dwLevelNo;
+	UnitAny* player = D2CLIENT_GetPlayerUnit();
 
-	return IntegerCompare(map_id, operation, mapId, mapId2);
+	if (player &&
+		player->pAct &&
+		player->pAct->pRoom1 &&
+		player->pAct->pRoom1->pRoom2 &&
+		player->pAct->pRoom1->pRoom2->pLevel &&
+		player->pAct->pRoom1->pRoom2->pLevel->dwLevelNo > 0)
+	{
+		int map_id = (int)player->pAct->pRoom1->pRoom2->pLevel->dwLevelNo;
+		return IntegerCompare(map_id, operation, mapId, mapId2);
+	}
+	return 0;
 }
 
 bool MapTierCondition::EvaluateInternal(UnitItemInfo* uInfo,
