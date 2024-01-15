@@ -30,7 +30,7 @@ DWORD WINAPI GameThread(VOID* lpvoid) {
 		if ((*p_D2WIN_FirstControl) && inGame) {
 			inGame = false;
 			__raise BH::moduleManager->OnGameExit();
-			BH::config->Write();
+			App.config->SaveConfig();
 			BH::oogDraw->Install();
 		}
 		else if (D2CLIENT_GetPlayerUnit() && !inGame) {
