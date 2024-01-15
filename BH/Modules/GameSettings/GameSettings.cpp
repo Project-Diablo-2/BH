@@ -10,32 +10,13 @@
 // This module was inspired by the RedVex plugin "Item Mover", written by kaiks.
 // Thanks to kaiks for sharing his code.
 
-map<std::string, Toggle> GameSettings::Toggles;
 unsigned int GameSettings::KeyHookOffset = 300;
 
 void GameSettings::Init() {
 }
 
 void GameSettings::LoadConfig() {
-	BH::config->ReadToggle("Quick Cast", "None", false, GameSettings::Toggles["Quick Cast"]);
-	BH::config->ReadToggle("Skill Bar", "None", false, GameSettings::Toggles["Skill Bar"]);
-	BH::config->ReadToggle("Skill Bar Disable", "None", false, GameSettings::Toggles["Skill Bar Disable"]);
-	BH::config->ReadToggle("Buff Timers", "None", false, GameSettings::Toggles["Buff Timers"]);
-	BH::config->ReadToggle("Screenshake", "None", true, GameSettings::Toggles["Screenshake"]);
-	BH::config->ReadToggle("DPS", "None", false, GameSettings::Toggles["DPS"]);
-	BH::config->ReadToggle("Belt Status", "None", true, GameSettings::Toggles["Belt Status"]);
 
-	BH::config->ReadToggle("Developer Aura", "None", true, GameSettings::Toggles["Developer Aura"]);
-	BH::config->ReadToggle("99 Aura", "None", true, GameSettings::Toggles["99 Aura"]);
-	BH::config->ReadToggle("Rathma Aura", "None", true, GameSettings::Toggles["Rathma Aura"]);
-	BH::config->ReadToggle("Dclone Aura", "None", true, GameSettings::Toggles["Dclone Aura"]);
-	BH::config->ReadToggle("PVP Aura", "None", true, GameSettings::Toggles["PVP Aura"]);
-
-	BH::config->ReadKey("Show Players Gear", "VK_0", showPlayer);
-	BH::config->ReadKey("Resync Hotkey", "VK_9", resyncKey);
-	BH::config->ReadKey("Character Stats", "VK_8", advStatMenuKey);
-	BH::config->ReadKey("Reload Config", "VK_NUMPAD0", reloadConfig);
-	BH::config->ReadKey("Reload Config Ctrl", "VK_R", reloadConfigCtrl);
 }
 
 void GameSettings::LoadGeneralTab() {
@@ -53,38 +34,38 @@ void GameSettings::LoadGeneralTab() {
 	y += 15;
 	colored_text = new Drawing::Texthook(generalTab, x, (y), "Show Player's Gear");
 	colored_text->SetColor(Gold);
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &showPlayer, "");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.showPlayersGear.hotkey, "");
 
 	y += 15;
 	colored_text = new Drawing::Texthook(generalTab, x, (y), "Resync");
 	colored_text->SetColor(Gold);
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &resyncKey, "");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.resyncHotkey.hotkey, "");
 
 	y += 15;
 	colored_text = new Drawing::Texthook(generalTab, x, (y), "Advanced Stat Display");
 	colored_text->SetColor(Gold);
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &advStatMenuKey, "");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.characterStats.hotkey, "");
 
 	y += 15;
 	colored_text = new Drawing::Texthook(generalTab, x, (y), "Reload Config");
 	colored_text->SetColor(Gold);
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &reloadConfig, "");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.general.reloadConfig.hotkey, "");
 
 	y += 15;
-	new Drawing::Checkhook(generalTab, x, y, &ScreenInfo::Toggles["Experience Meter"].state, "Experience Meter");
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &ScreenInfo::Toggles["Experience Meter"].toggle, "");
+	new Drawing::Checkhook(generalTab, x, y, &App.game.experienceMeter.toggle.isEnabled, "Experience Meter");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.experienceMeter.toggle.hotkey, "");
 
 	y += 15;
-	new Drawing::Checkhook(generalTab, x, y, &GameSettings::Toggles["Screenshake"].state, "Enable Screenshake");
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Screenshake"].toggle, "");
+	new Drawing::Checkhook(generalTab, x, y, &App.game.screenshake.toggle.isEnabled, "Enable Screenshake");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.screenshake.toggle.hotkey, "");
 
 	y += 15;
-	new Drawing::Checkhook(generalTab, x, y, &GameSettings::Toggles["DPS"].state, "Enable DPS Counter");
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["DPS"].toggle, "");
+	new Drawing::Checkhook(generalTab, x, y, &App.game.dpsCounter.toggle.isEnabled, "Enable DPS Counter");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.dpsCounter.toggle.hotkey, "");
 
 	y += 15;
-	new Drawing::Checkhook(generalTab, x, y, &GameSettings::Toggles["Belt Status"].state, "Enable Belt Status");
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Belt Status"].toggle, "");
+	new Drawing::Checkhook(generalTab, x, y, &App.game.beltStatus.toggle.isEnabled, "Enable Belt Status");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.beltStatus.toggle.hotkey, "");
 
 
 	// Quick Cast
@@ -92,20 +73,20 @@ void GameSettings::LoadGeneralTab() {
 	new Drawing::Texthook(generalTab, x, (y), "Quick Cast");
 
 	y += 15;
-	new Drawing::Checkhook(generalTab, x, y, &GameSettings::Toggles["Quick Cast"].state, "Quick Cast");
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Quick Cast"].toggle, "");
+	new Drawing::Checkhook(generalTab, x, y, &App.game.quickCast.toggle.isEnabled, "Quick Cast");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.quickCast.toggle.hotkey, "");
 
 	y += 15;
-	new Drawing::Checkhook(generalTab, x, y, &GameSettings::Toggles["Skill Bar"].state, "Skill Bar");
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Skill Bar"].toggle, "");
+	new Drawing::Checkhook(generalTab, x, y, &App.game.skillBar.toggle.isEnabled, "Skill Bar");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.skillBar.toggle.hotkey, "");
 
 	y += 15;
-	new Drawing::Checkhook(generalTab, x + x_tab, y, &GameSettings::Toggles["Skill Bar Disable"].state, "Only enable with Quick Cast");
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Skill Bar Disable"].toggle, "");
+	new Drawing::Checkhook(generalTab, x + x_tab, y, &App.game.skillBarDisable.toggle.isEnabled, "Only enable with Quick Cast");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.skillBarDisable.toggle.hotkey, "");
 
 	y += 15;
-	new Drawing::Checkhook(generalTab, x, y, &GameSettings::Toggles["Buff Timers"].state, "Always show Buff Timers");
-	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Buff Timers"].toggle, "");
+	new Drawing::Checkhook(generalTab, x, y, &App.game.buffTimers.toggle.isEnabled, "Always show Buff Timers");
+	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.buffTimers.toggle.hotkey, "");
 
 }
 
@@ -199,26 +180,26 @@ void GameSettings::LoadInteractionTab() {
 	new Drawing::Texthook(tab, x, (y), "Auras (only for top 3 players)");
 
 	y += 15;
-	new Drawing::Checkhook(tab, x, y, &GameSettings::Toggles["99 Aura"].state, "Show 99 Aura");
-	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["99 Aura"].toggle, "");
+	new Drawing::Checkhook(tab, x, y, &App.general.maxLevelAura.toggle.isEnabled, "Show 99 Aura");
+	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &App.general.maxLevelAura.toggle.hotkey, "");
 
 	y += 15;
-	new Drawing::Checkhook(tab, x, y, &GameSettings::Toggles["Dclone Aura"].state, "Show Dclone Aura");
-	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Dclone Aura"].toggle, "");
+	new Drawing::Checkhook(tab, x, y, &App.general.dcloneAura.toggle.isEnabled, "Show Dclone Aura");
+	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &App.general.dcloneAura.toggle.hotkey, "");
 
 	y += 15;
-	new Drawing::Checkhook(tab, x, y, &GameSettings::Toggles["Rathma Aura"].state, "Show Rathma Aura");
-	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Rathma Aura"].toggle, "");
+	new Drawing::Checkhook(tab, x, y, &App.general.rathmaAura.toggle.isEnabled, "Show Rathma Aura");
+	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &App.general.rathmaAura.toggle.hotkey, "");
 
 	y += 15;
-	new Drawing::Checkhook(tab, x, y, &GameSettings::Toggles["PVP Aura"].state, "Show PVP Aura");
-	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["PVP Aura"].toggle, "");
+	new Drawing::Checkhook(tab, x, y, &App.general.pvpAura.toggle.isEnabled, "Show PVP Aura");
+	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &App.general.pvpAura.toggle.hotkey, "");
 
 	y += 20;
 	new Drawing::Texthook(tab, x, (y), "Developer Only");
 	y += 15;
-	new Drawing::Checkhook(tab, x, y, &GameSettings::Toggles["Developer Aura"].state, "Show Developer Aura");
-	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &GameSettings::Toggles["Developer Aura"].toggle, "");
+	new Drawing::Checkhook(tab, x, y, &App.general.devAura.toggle.isEnabled, "Show Developer Aura");
+	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &App.general.devAura.toggle.hotkey, "");
 }
 
 void GameSettings::OnLoad() {
@@ -229,18 +210,18 @@ void GameSettings::OnLoad() {
 
 void GameSettings::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
-	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
-		if (key == (*it).second.toggle && !ctrlState) {
+	for (vector<Toggle*>::iterator it = App.hotkeyToggles.begin(); it != App.hotkeyToggles.end(); it++) {
+		if (key == (*it)->hotkey && !ctrlState && D2CLIENT_GetUIState(UI_GAME)) {
 			*block = true;
 			if (up) {
-				(*it).second.state = !(*it).second.state;
-				BH::config->Write();
+				(*it)->isEnabled = !(*it)->isEnabled;
+				App.config->SaveConfig();
 			}
 			return;
 		}
 	}
 
-	if (key == showPlayer) {
+	if (key == App.game.showPlayersGear.hotkey) {
 		*block = true;
 		if (up)
 			return;
@@ -256,5 +237,13 @@ void GameSettings::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 				D2CLIENT_SetUIVar(0x01, 0, 0);
 			return;
 		}
+	}
+
+	if (!BH::settingsUI->IsMinimized() && key == VK_ESCAPE) {
+		*block = true;
+		if (up)
+			return;
+		BH::settingsUI->SetMinimized(true);
+		return;
 	}
 }

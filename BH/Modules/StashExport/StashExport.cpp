@@ -6,9 +6,9 @@
 #include "../Item/ItemDisplay.h"
 #include "../Item/Item.h"
 #include "../../Constants.h"
+#include "../GameSettings/GameSettings.h"
 #include <algorithm>
 
-map<std::string, Toggle> StashExport::Toggles;
 map<std::string, std::unique_ptr<Mustache::AMustacheTemplate>> StashExport::MustacheTemplates;
 UnitAny* StashExport::viewingUnit;
 
@@ -19,46 +19,55 @@ using namespace Drawing;
 void StashExport::OnLoad() {
 	LoadConfig();
 
+	Drawing::Texthook* colored_text;
 	settingsTab = new UITab("StashExport", BH::settingsUI);
 
 	unsigned int x = 8;
 	unsigned int y = 7;
-	int keyhook_x = 310;
 
-	new Checkhook(settingsTab, x, y, &Toggles["Include Equipment"].state, "Include Equipment");
-	new Checkhook(settingsTab, x, (y += 15), &Toggles["Include Fixed Stats"].state, "Include Fixed Stats");
-	new Checkhook(settingsTab, x, (y += 15), &Toggles["Condense Stats"].state, "Condense Stats");
-	new Checkhook(settingsTab, x, (y += 15), &Toggles["Export On Menu"].state, "Export On Menu");
+	colored_text = new Drawing::Texthook(settingsTab, x, y, "Stash");
+
+	y += 15;
+	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Export Gear");
+	colored_text->SetColor(Gold);
+	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.stash.exportGear.hotkey, "");
+	new Checkhook(settingsTab, x, (y += 15), &App.stash.includeEquipment.toggle.isEnabled, "Include Equipment");
+	new Checkhook(settingsTab, x, (y += 15), &App.stash.exportOnMenu.toggle.isEnabled, "Export On Menu");
 
 	// the MustacheTemplates will not be reloaded
 	options.clear();
 	options.push_back("json");
 
-	BH::config->ReadAssoc("Mustache", mustaches);
-	BH::config->ReadString("Mustache Default", dfltExprt);
 	int idx = 0;
 
-	for (auto it = mustaches.cbegin(); it != mustaches.cend(); it++) {
+	for (auto it = App.stash.mustacheFormat.values.cbegin(); it != App.stash.mustacheFormat.values.cend(); it++) {
 		auto t = Mustache::parse(it->second);
 		if (t) {
 			idx++;
-			if (dfltExprt.compare(it->first) == 0) {
+			if (App.stash.mustacheDefault.value.compare(it->first) == 0) {
 				exportType = idx;
 			}
 			MustacheTemplates[it->first] = std::unique_ptr<Mustache::AMustacheTemplate>(t);
-			options.push_back(it->first);
+			// Only add "top level" options to the Export Type dropdown
+			// Otherwise it quickly gets cluttered with mustacheFormat lines
+			if (std::find(
+				App.stash.mustacheOptions.values.begin(),
+				App.stash.mustacheOptions.values.end(),
+				it->first) != App.stash.mustacheOptions.values.end()
+				)
+			{
+				options.push_back(it->first);
+			}
 		}
 	}
 
+	y += 20;
+	colored_text = new Drawing::Texthook(settingsTab, x, y, "Export Type");
 	new Combohook(settingsTab, x, (y += 15), 150, &exportType, options);
 }
 
 void StashExport::LoadConfig() {
-	BH::config->ReadToggle("Include Equipment", "None", true, Toggles["Include Equipment"]);
-	BH::config->ReadToggle("Include Fixed Stats", "None", false, Toggles["Include Fixed Stats"]);
-	BH::config->ReadToggle("Condense Stats", "None", true, Toggles["Condense Stats"]);
-	BH::config->ReadToggle("Export On Menu", "None", false, Toggles["Export On Menu"]);
-	BH::config->ReadToggle("Export Gear", "None", false, Toggles["Export Gear"]);
+
 }
 
 void StashExport::OnUnload() {
@@ -84,9 +93,6 @@ JSONObject* StashExport::getStatEntry(WORD statId, WORD statId2, DWORD statVal, 
 		range->set("max", (int)max);
 		entry->set("range", range);
 	}
-	//else if (min && max && !Toggles["Include Fixed Stats"].state) {
-	//	return nullptr;
-	//}
 
 	switch (statId) {
 	case STAT_SINGLESKILL:
@@ -189,6 +195,7 @@ JSONObject* StashExport::getStatEntry(WORD statId, WORD statId2, DWORD statVal, 
 			break;
 		}
 		entry->set("name", NAMEOF(statId));
+		entry->set("stat_id", statId);
 		entry->set("value", (int)statVal);
 		break;
 	}
@@ -233,13 +240,6 @@ void StashExport::fillStats(JSONArray* statsArray, ItemsTxtStat *itemDef, UnitAn
 
 			auto entry = statFunc(pItem, itemStats, pItemStatCostTxt, statParam);
 			statsArray->add(entry);
-			// TODO: the *desc column is only available in the txt files so "Condense Stats" no longer has a purpose
-			// Delete me and all other "Condense Stats" switches
-			//if (entry && Toggles["Condense Stats"].state) {
-			//	entry->set("name", UnicodeToAnsi(GetTblEntryByIndex(pItemStatCostTxt->wDescStrPos, TBLOFFSET_STRING)));
-			//	break;
-			//}
-			
 		}
 	}
 }
@@ -462,7 +462,6 @@ void StashExport::WriteStash() {
 	BnetData* pInfo = (*p_D2LAUNCH_BnData);
 
 	if (!IsInitialized()) {
-		PrintText(1, "Initializing...");
 		return;
 	}
 
@@ -472,7 +471,8 @@ void StashExport::WriteStash() {
 	// Make sure the directory exists
 	CreateDirectory((BH::path + "\\stash\\").c_str(), NULL);
 
-	std::string path = BH::path + "\\stash\\" + pInfo->szAccountName + "_" + unit->pPlayerData->szName + ".txt";
+	std::string account = pInfo->szAccountName;
+	std::string path = BH::path + "\\stash\\" + (account == "" ? "SinglePlayer" : account) + "_" + unit->pPlayerData->szName + ".txt";
 	fstream file(path, std::ofstream::out | std::ofstream::trunc);
 	if (!file.is_open()) {
 		PrintText(1, "Failed to open %s for writing", path.c_str());
@@ -483,9 +483,11 @@ void StashExport::WriteStash() {
 	std::map<JSONObject*, unsigned int> objCounts;
 	for (UnitAny* pItem = unit->pInventory->pFirstItem; pItem; pItem = pItem->pItemData->pNextInvItem) {
 		if (pItem->pItemData->NodePage == NODEPAGE_EQUIP &&
-			!Toggles["Include Equipment"].state) {
+			!App.stash.includeEquipment.toggle.isEnabled) {
 			continue;
 		}
+		// TODO: Add another switch here for "includeStash" (and maybe even includeInventory)
+		// So we can export equipped items only
 
 		auto stash = new JSONObject();
 		GetItemInfo(pItem, stash);
@@ -539,7 +541,6 @@ void StashExport::WriteStash() {
 
 void StashExport::CopyItemJSONToClipboard() {
 	if (!IsInitialized()) {
-		PrintText(1, "Initializing...");
 		return;
 	}
 
@@ -551,17 +552,11 @@ void StashExport::CopyItemJSONToClipboard() {
 	if (!pItem) return;
 
 	auto stash = new JSONObject();
-	bool bCondenseStats = Toggles["Condense Stats"].state;
-	bool bIncludeEquipment = Toggles["Include Equipment"].state;
-	bool bIncludeFixedStats = Toggles["Include Fixed Stats"].state;
+	bool bIncludeEquipment = App.stash.includeEquipment.toggle.isEnabled;
 
-	Toggles["Condense Stats"].state = false;
-	Toggles["Include Equipment"].state = true;
-	Toggles["Include Fixed Stats"].state = true;
+	App.stash.includeEquipment.toggle.isEnabled = true;
 	GetItemInfo(pItem, stash);
-	Toggles["Condense Stats"].state = bCondenseStats;
-	Toggles["Include Equipment"].state = bIncludeEquipment;
-	Toggles["Include Fixed Stats"].state = bIncludeFixedStats;
+	App.stash.includeEquipment.toggle.isEnabled = bIncludeEquipment;
 
 	std::string buffer;
 	JSONWriter writer(buffer, SER_OPT_FORMATTED);
@@ -583,7 +578,7 @@ void StashExport::CopyItemJSONToClipboard() {
 
 void StashExport::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
-	if (key == exportGear) {
+	if (key == App.stash.exportGear.hotkey) {
 		*block = true;
 		if (up)
 			return;
@@ -591,7 +586,7 @@ void StashExport::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 	}
 	else if (key == VK_ESCAPE) {
 		if (up &&
-			StashExport::Toggles["Export On Menu"].state &&
+			App.stash.exportOnMenu.toggle.isEnabled &&
 			D2CLIENT_GetUIState(UI_ESCMENU_MAIN)) {
 			WriteStash();
 		}
@@ -602,15 +597,6 @@ void StashExport::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 		if (!up)
 			return;
 		CopyItemJSONToClipboard();
-	}
-	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
-		if (key == (*it).second.toggle && !ctrlState) {
-			*block = true;
-			if (up) {
-				(*it).second.state = !(*it).second.state;
-			}
-			return;
-		}
 	}
 }
 
@@ -664,96 +650,6 @@ static JSONObject* DAMAGE_PERCENT_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStat
 	range->set("max", (int)itemStats.dwMax);
 	entry->set("range", range);
 	return entry;
-}
-
-static JSONObject* DAMAGE_RANGE_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
-{
-	if (StashExport::Toggles["Include Fixed Stats"].state) {
-		auto entry = new JSONObject();
-		entry->set("name", NAMEOF(pItemStatCostTxt->wStat));
-		entry->set("min", itemStats.dwMin);
-		entry->set("max", itemStats.dwMax);
-		return entry;
-	}
-
-	return nullptr;
-}
-
-static JSONObject* SKILL_ON_X_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
-{
-	if (StashExport::Toggles["Include Fixed Stats"].state) {
-		auto entry = new JSONObject();
-		std::string skill;
-		auto skillId = param ? param : 0;
-		if (skillId) {
-			SkillsTxt* pSkillsTxt = &(*p_D2COMMON_sgptDataTable)->pSkillsTxt[skillId];
-			SkillDescTxt* pSkillDescTxt = &(*p_D2COMMON_sgptDataTable)->pSkillDescTxt[pSkillsTxt->wSkillDesc];
-			if (pSkillsTxt && pSkillDescTxt)
-			{
-				skill = UnicodeToAnsi(GetTblEntryByIndex(pSkillDescTxt->wStrName, TBLOFFSET_STRING));
-			}
-		}
-
-		entry->set("name", NAMEOF(pItemStatCostTxt->wStat));
-		entry->set("skill", skill);
-		entry->set("chance%", itemStats.dwMin);
-		entry->set("level", itemStats.dwMax);
-		return entry;
-	}
-
-	return nullptr;
-}
-
-// TODO: All of these were pretty much the same as DEFAULT_FUNCTION so they didnt really need to be updated
-// Keeping them temporarily just to be 100% sure they aren't necessary
-//static JSONObject* CLASS_SKILL_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
-//{
-//	return DEFAULT_FUNCTION(pItem, skProp, skDef, skProp->get("val1"), min, max);
-//}
-//
-//static JSONObject* SKILL_TAB_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
-//{
-//	auto id2 = param ? param->toInt() : 0;
-//	auto elem = JSONNumber(id2);
-//	return DEFAULT_FUNCTION(pItem, skProp, skDef, &elem, min, max);
-//}
-//
-//static JSONObject* SKILL_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
-//{
-//	auto skillId = param ? param : 0;
-//	if (!id) {
-//		auto sk = Tables::Skills.findEntry("skill", param->toString());
-//		if (sk) id = (int)sk->getNumber("Id");
-//	}
-//
-//	auto elem = JSONNumber(id);
-//	return DEFAULT_FUNCTION(pItem, skProp, skDef, &elem, min, max);
-//}
-
-static JSONObject* CHARGED_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, ItemStatCostTxt* pItemStatCostTxt, int param)
-{
-	if (StashExport::Toggles["Include Fixed Stats"].state) {
-		auto entry = new JSONObject();
-		std::string skill;
-		auto skillId = param ? param : 0;
-		if (skillId)
-		{
-			SkillsTxt* pSkillsTxt = &(*p_D2COMMON_sgptDataTable)->pSkillsTxt[skillId];
-			SkillDescTxt* pSkillDescTxt = &(*p_D2COMMON_sgptDataTable)->pSkillDescTxt[pSkillsTxt->wSkillDesc];
-			if (pSkillsTxt && pSkillDescTxt)
-			{
-				skill = UnicodeToAnsi(GetTblEntryByIndex(pSkillDescTxt->wStrName, TBLOFFSET_STRING));
-			}
-		}
-
-		entry->set("name", NAMEOF(pItemStatCostTxt->wStat));
-		entry->set("skill", skill);
-		entry->set("charges", itemStats.dwMin);
-		entry->set("level", itemStats.dwMax);
-		return entry;
-	}
-
-	return nullptr;
 }
 
 std::function<JSONObject* (UnitAny*, ItemsTxtStat, ItemStatCostTxt*, int)> STAT_FUNCTIONS[] = {

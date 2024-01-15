@@ -10,8 +10,6 @@
 
 using namespace Drawing;
 
-map<std::string, Toggle> ScreenInfo::Toggles;
-
 void ScreenInfo::OnLoad() {
 	LoadConfig();
 
@@ -32,10 +30,6 @@ void ScreenInfo::OnLoad() {
 }
 
 void ScreenInfo::LoadConfig() {
-	BH::config->ReadToggle("Experience Meter", "VK_NUMPAD7", false, Toggles["Experience Meter"]);
-
-	BH::config->ReadArray("AutomapInfo", automapInfo);
-
 	/*BH::config->ReadAssoc("Skill Warning", SkillWarnings);
 	SkillWarningMap.clear();
 	for (auto it = SkillWarnings.cbegin(); it != SkillWarnings.cend(); it++) {
@@ -71,17 +65,7 @@ void ScreenInfo::OnGameJoin() {
 }
 
 void ScreenInfo::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
-	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
-	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
-		if (key == (*it).second.toggle && !ctrlState) {
-			*block = true;
-			if (up) {
-				(*it).second.state = !(*it).second.state;
-			}
-			return;
-		}
-	}
-	return;
+
 }
 
 
@@ -183,7 +167,7 @@ void ScreenInfo::OnDraw() {
 
 	// It's a kludge to peek into other modules for config info, but it just seems silly to
 	// create a new UI tab for each module with config parameters.
-	/*if ((*BH::MiscToggles)["Quest Drop Warning"].state) {
+	/*if (questdropwarning) {
 		char *bossNames[3] = {"Mephisto", "Diablo", "Baal"};
 		int xpac = pData->nCharFlags & PLAYER_TYPE_EXPANSION;
 		int doneDuriel = D2COMMON_GetQuestFlag2(quests, THE_SEVEN_TOMBS, QFLAG_REWARD_GRANTED);
@@ -212,7 +196,7 @@ void ScreenInfo::OnDraw() {
 		}
 	}*/
 
-	if (Toggles["Experience Meter"].state) {
+	if (App.game.experienceMeter.toggle.isEnabled) {
 		drawExperienceInfo();
 	}
 }
@@ -334,7 +318,7 @@ void ScreenInfo::OnAutomapDraw() {
 		{"AREALEVEL", szAreaLevel}
 	};
 
-	for (vector<string>::iterator it = automapInfo.begin(); it < automapInfo.end(); it++) {
+	for (vector<string>::iterator it = App.screen.automapInfo.values.begin(); it < App.screen.automapInfo.values.end(); it++) {
 		string key;
 		key.assign(*it);
 		for (int n = 0; n < sizeof(automap) / sizeof(automap[0]); n++) {

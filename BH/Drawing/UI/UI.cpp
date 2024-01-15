@@ -258,7 +258,7 @@ bool UI::OnLeftClick(bool up, unsigned int mouseX, unsigned int mouseY) {
 			SetDragged(false, true);
 			if( startX == mouseX && startY == mouseY && GetAsyncKeyState(VK_CONTROL) )
 			{
-				PrintText(135, "Right Click to Close" );
+				PrintText(135, "Right Click or ESC to Close");
 			}
 		}
 		SetActive(true);
