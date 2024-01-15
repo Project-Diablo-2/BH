@@ -75,9 +75,6 @@ std::vector<StatProperties*> AllStatList;
 std::vector<CharStats*> CharList;
 std::map<std::string, ItemAttributes*> ItemAttributeMap;
 
-map<std::string, Toggle> Item::Toggles;
-unsigned int Item::filterLevelSetting;
-unsigned int Item::prevFilterLevelSetting;
 UnitAny* Item::viewingUnit;
 
 Patch* itemNamePatch = new Patch(Call, D2CLIENT, { 0x92366, 0x96736 }, (int)ItemName_Interception, 6);
@@ -125,8 +122,14 @@ void Item::OnLoad() {
 	itemPropertyStringDamagePatch->Install();
 	itemPropertyStringPatch->Install();
 
-	if (Toggles["Show Ethereal"].state || Toggles["Show Sockets"].state || Toggles["Show iLvl"].state || Toggles["Color Mod"].state ||
-		Toggles["Show Rune Numbers"].state || Toggles["Alt Item Style"].state || Toggles["Shorten Item Names"].state || Toggles["Advanced Item Display"].state)
+	if (App.legacy.showEthereal.toggle.isEnabled ||
+		App.legacy.showSockets.toggle.isEnabled ||
+		App.lootfilter.showIlvl.toggle.isEnabled ||
+		App.legacy.colorMod.toggle.isEnabled ||
+		App.legacy.showRuneNumbers.toggle.isEnabled ||
+		App.legacy.altItemStyle.toggle.isEnabled ||
+		App.legacy.shortenItemNames.toggle.isEnabled ||
+		App.lootfilter.advancedItemDisplay.toggle.isEnabled)
 		itemNamePatch->Install();
 
 	DrawSettings();
@@ -562,29 +565,7 @@ void Item::OnGameJoin() {
 }
 
 void Item::LoadConfig() {
-	BH::config->ReadToggle("Show Ethereal", "None", true, Toggles["Show Ethereal"]);
-	BH::config->ReadToggle("Show Sockets", "None", true, Toggles["Show Sockets"]);
-	BH::config->ReadToggle("Show ILvl", "None", true, Toggles["Show iLvl"]);
-	BH::config->ReadToggle("Show Rune Numbers", "None", true, Toggles["Show Rune Numbers"]);
-	BH::config->ReadToggle("Alt Item Style", "None", true, Toggles["Alt Item Style"]);
-	BH::config->ReadToggle("Color Mod", "None", false, Toggles["Color Mod"]);
-	BH::config->ReadToggle("Shorten Item Names", "None", false, Toggles["Shorten Item Names"]);
-	BH::config->ReadToggle("Always Show Items", "None", false, Toggles["Always Show Items"]);
-	BH::config->ReadToggle("Advanced Item Display", "None", false, Toggles["Advanced Item Display"]);
-	BH::config->ReadToggle("Item Drop Notifications", "None", false, Toggles["Item Drop Notifications"]);
-	BH::config->ReadToggle("Item Close Notifications", "None", false, Toggles["Item Close Notifications"]);
-	BH::config->ReadToggle("Item Detailed Notifications", "None", false, Toggles["Item Detailed Notifications"]);
-	BH::config->ReadToggle("Verbose Notifications", "None", false, Toggles["Verbose Notifications"]);
-	BH::config->ReadToggle("Allow Unknown Items", "None", false, Toggles["Allow Unknown Items"]);
-	BH::config->ReadToggle("Always Show Item Stat Ranges", "None", true, Toggles["Always Show Item Stat Ranges"]);
-
 	ItemDisplay::UninitializeItemRules();
-
-	BH::config->ReadKey("Increase Filter Level", "None", filterLevelIncKey);
-	BH::config->ReadKey("Decrease Filter Level", "None", filterLevelDecKey);
-	BH::config->ReadKey("Restore Prev Filter Level", "None", filterLevelPrevKey);
-	BH::config->ReadInt("Filter Level", filterLevelSetting, 1);
-	BH::config->ReadInt("Previous Filter Level", prevFilterLevelSetting, 0);
 }
 
 void Item::DrawSettings() {
@@ -597,83 +578,83 @@ void Item::DrawSettings() {
 	new Drawing::Texthook(settingsTab, x, (y), "Settings");
 	y += 15;
 
-	new Checkhook(settingsTab, x, y, &Toggles["Always Show Items"].state, "Always Show Items");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Always Show Items"].toggle, "");
+	new Checkhook(settingsTab, x, y, &App.game.alwaysShowItems.toggle.isEnabled, "Always Show Items");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.game.alwaysShowItems.toggle.hotkey, "");
 	y += 15;
 
-	new Checkhook(settingsTab, x, y, &Toggles["Always Show Item Stat Ranges"].state, "Always Show Item Stat Ranges");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Always Show Item Stat Ranges"].toggle, "");
+	new Checkhook(settingsTab, x, y, &App.lootfilter.alwaysShowStatRanges.toggle.isEnabled, "Always Show Item Stat Ranges");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.lootfilter.alwaysShowStatRanges.toggle.hotkey, "");
 	y += 15;
 
-	new Checkhook(settingsTab, x, y, &Toggles["Show iLvl"].state, "Show Item Level");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Show iLvl"].toggle, "");
+	new Checkhook(settingsTab, x, y, &App.lootfilter.showIlvl.toggle.isEnabled, "Show Item Level");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.lootfilter.showIlvl.toggle.hotkey, "");
 	y += 20;
 
 	// Display Style
 	new Drawing::Texthook(settingsTab, x, (y), "Display Style (only without loot filter)");
 	y += 15;
 
-	Checkhook* etheral = new Checkhook(settingsTab, x, y, &Toggles["Show Ethereal"].state, "Show Ethereal");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Show Ethereal"].toggle, "");
+	Checkhook* etheral = new Checkhook(settingsTab, x, y, &App.legacy.showEthereal.toggle.isEnabled, "Show Ethereal");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.legacy.showEthereal.toggle.hotkey, "");
 	y += 15;
 
-	Checkhook* sockets = new Checkhook(settingsTab, x, y, &Toggles["Show Sockets"].state, "Show Sockets");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Show Sockets"].toggle, "");
+	Checkhook* sockets = new Checkhook(settingsTab, x, y, &App.legacy.showSockets.toggle.isEnabled, "Show Sockets");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.legacy.showSockets.toggle.hotkey, "");
 	y += 15;
 
-	Checkhook* runes = new Checkhook(settingsTab, x, y, &Toggles["Show Rune Numbers"].state, "Show Rune Numbers");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Show Rune Numbers"].toggle, "");
+	Checkhook* runes = new Checkhook(settingsTab, x, y, &App.legacy.showRuneNumbers.toggle.isEnabled, "Show Rune Numbers");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.legacy.showRuneNumbers.toggle.hotkey, "");
 	y += 15;
 
-	Checkhook* alt = new Checkhook(settingsTab, x, y, &Toggles["Alt Item Style"].state, "Alt Style");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Alt Item Style"].toggle, "");
+	Checkhook* alt = new Checkhook(settingsTab, x, y, &App.legacy.altItemStyle.toggle.isEnabled, "Alt Style");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.legacy.altItemStyle.toggle.hotkey, "");
 	y += 15;
 
-	Checkhook* color = new Checkhook(settingsTab, x, y, &Toggles["Color Mod"].state, "Color Mod");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Color Mod"].toggle, "");
+	Checkhook* color = new Checkhook(settingsTab, x, y, &App.legacy.colorMod.toggle.isEnabled, "Color Mod");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.legacy.colorMod.toggle.hotkey, "");
 	y += 15;
 
-	Checkhook* shorten = new Checkhook(settingsTab, x, y, &Toggles["Shorten Item Names"].state, "Shorten Names");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Shorten Item Names"].toggle, "");
+	Checkhook* shorten = new Checkhook(settingsTab, x, y, &App.legacy.shortenItemNames.toggle.isEnabled, "Shorten Names");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.legacy.shortenItemNames.toggle.hotkey, "");
 	y += 20;
 
 	// Loot Filter
 	new Drawing::Texthook(settingsTab, x, (y), "Loot Filter");
 
 	y += 15;
-	new Checkhook(settingsTab, x, y, &Toggles["Advanced Item Display"].state, "Enable Loot Filter");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Advanced Item Display"].toggle, "");
+	new Checkhook(settingsTab, x, y, &App.lootfilter.advancedItemDisplay.toggle.isEnabled, "Enable Loot Filter");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.lootfilter.advancedItemDisplay.toggle.hotkey, "");
 	y += 15;
 
-	new Checkhook(settingsTab, x, y, &Toggles["Item Drop Notifications"].state, "Drop Notifications");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Item Drop Notifications"].toggle, "");
+	new Checkhook(settingsTab, x, y, &App.legacy.dropNotifications.toggle.isEnabled, "Drop Notifications");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.legacy.dropNotifications.toggle.hotkey, "");
 	y += 15;
 
-	new Checkhook(settingsTab, x, y, &Toggles["Item Close Notifications"].state, "Close Notifications");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Item Close Notifications"].toggle, "");
+	new Checkhook(settingsTab, x, y, &App.legacy.closeNotifications.toggle.isEnabled, "Close Notifications");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.legacy.closeNotifications.toggle.hotkey, "");
 	y += 15;
 
-	new Checkhook(settingsTab, x, y, &Toggles["Item Detailed Notifications"].state, "Detailed Notifications");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Item Detailed Notifications"].toggle, "");
+	new Checkhook(settingsTab, x, y, &App.lootfilter.detailedNotifications.toggle.isEnabled, "Detailed Notifications");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.lootfilter.detailedNotifications.toggle.hotkey, "");
 	y += 15;
 
-	new Checkhook(settingsTab, x, y, &Toggles["Verbose Notifications"].state, "Verbose Notifications");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &Toggles["Verbose Notifications"].toggle, "");
+	new Checkhook(settingsTab, x, y, &App.legacy.verboseNotifications.toggle.isEnabled, "Verbose Notifications");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.legacy.verboseNotifications.toggle.hotkey, "");
 	y += 15;
 
 	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Increase Filter Level");
 	colored_text->SetColor(Gold);
-	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelIncKey, "");
+	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.lootfilter.filterLevelIncrease.hotkey, "");
 	y += 15;
 
 	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Decrease Filter Level");
 	colored_text->SetColor(Gold);
-	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelDecKey, "");
+	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.lootfilter.filterLevelDecrease.hotkey, "");
 	y += 15;
 
 	colored_text = new Drawing::Texthook(settingsTab, x, (y), "Restore Previous Filter Level");
 	colored_text->SetColor(Gold);
-	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &filterLevelPrevKey, "");
+	new Drawing::Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.lootfilter.filterLevelPrevious.hotkey, "");
 	y += 15;
 
 	colored_text = new Texthook(settingsTab, x, y + 2, "Filter Level:");
@@ -685,7 +666,7 @@ void Item::DrawSettings() {
 		ItemFilterNames.push_back("1 - Normal");
 	}
 
-	new Combohook(settingsTab, 120, y, 200, &filterLevelSetting, ItemFilterNames);
+	new Combohook(settingsTab, 120, y, 200, &App.lootfilter.filterLevel.uValue, ItemFilterNames);
 }
 
 void Item::ReplaceItemFilters(vector<string> itemFilterNames) {
@@ -707,8 +688,8 @@ void Item::ReplaceItemFilters(vector<string> itemFilterNames) {
 		}
 	}
 
-	if (filterLevelSetting >= ItemFilterNames.size()) {
-		filterLevelSetting = 1;
+	if (App.lootfilter.filterLevel.uValue >= ItemFilterNames.size()) {
+		App.lootfilter.filterLevel.uValue = 1;
 	}
 }
 
@@ -716,13 +697,13 @@ void Item::ChangeFilterLevels(int newLevel) {
 	if (newLevel > ItemFilterNames.size())
 		return;
 
-	prevFilterLevelSetting = filterLevelSetting;
-	filterLevelSetting = newLevel;
-	
-	if (filterLevelSetting == 0)
+	App.lootfilter.lastFilterLevel.uValue = App.lootfilter.filterLevel.uValue;
+	App.lootfilter.filterLevel.uValue = newLevel;
+
+	if (App.lootfilter.filterLevel.uValue == 0)
 		PrintText(TextColor::Gold, "Filter level: ÿc50 - Show All Items");
 	else
-		PrintText(TextColor::Gold, "Filter level: ÿc0%s", ItemFilterNames[filterLevelSetting].c_str());
+		PrintText(TextColor::Gold, "Filter level: ÿc0%s", ItemFilterNames[App.lootfilter.filterLevel.uValue].c_str());
 
 	ResetCaches();
 }
@@ -750,17 +731,17 @@ void Item::OnLoop() {
 	static unsigned int localFilterLevel = 9999;
 
 	// This is a bit of a hack to reset the cache when the user changes the item filter level
-	if (localFilterLevel != filterLevelSetting) {
+	if (localFilterLevel != App.lootfilter.filterLevel.uValue) {
 		ResetCaches();
 		if (localFilterLevel != 9999)
-			prevFilterLevelSetting = localFilterLevel;
-		localFilterLevel = filterLevelSetting;
+			App.lootfilter.lastFilterLevel.uValue = localFilterLevel;
+		localFilterLevel = App.lootfilter.filterLevel.uValue;
 	}
 
 	if (!D2CLIENT_GetUIState(0x01))
 		viewingUnit = NULL;
 
-	if (Toggles["Advanced Item Display"].state) {
+	if (App.lootfilter.advancedItemDisplay.toggle.isEnabled) {
 		ItemDisplay::InitializeItemRules();
 	}
 
@@ -777,23 +758,23 @@ void Item::OnLoop() {
 }
 
 void Item::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
-	if (key == filterLevelIncKey) {
+	if (key == App.lootfilter.filterLevelIncrease.hotkey) {
 		*block = true;
-		if (!up && D2CLIENT_GetPlayerUnit() && filterLevelSetting < ItemFilterNames.size() - 1) 
-			ChangeFilterLevels(filterLevelSetting + 1);
+		if (!up && D2CLIENT_GetPlayerUnit() && App.lootfilter.filterLevel.uValue < ItemFilterNames.size() - 1)
+			ChangeFilterLevels(App.lootfilter.filterLevel.uValue + 1);
 		return;
 	}
-	if (key == filterLevelDecKey) {
+	if (key == App.lootfilter.filterLevelDecrease.hotkey) {
 		*block = true;
-		if (!up && D2CLIENT_GetPlayerUnit() && filterLevelSetting > 0)
-			ChangeFilterLevels(filterLevelSetting - 1);
+		if (!up && D2CLIENT_GetPlayerUnit() && App.lootfilter.filterLevel.uValue > 0)
+			ChangeFilterLevels(App.lootfilter.filterLevel.uValue - 1);
 		return;
 	}
-	if (key == filterLevelPrevKey) {
+	if (key == App.lootfilter.filterLevelPrevious.hotkey) {
 		*block = true;
 		if (!up && D2CLIENT_GetPlayerUnit() &&
-			prevFilterLevelSetting < ItemFilterNames.size()) {
-			ChangeFilterLevels(prevFilterLevelSetting);
+			App.lootfilter.lastFilterLevel.uValue < ItemFilterNames.size()) {
+			ChangeFilterLevels(App.lootfilter.lastFilterLevel.uValue);
 		}
 		return;
 	}
@@ -804,16 +785,6 @@ void Item::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 		if (!up && D2CLIENT_GetPlayerUnit() && targetLevel < ItemFilterNames.size())
 			ChangeFilterLevels(targetLevel);
 		return;
-	}
-
-	for (map<string, Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
-		if (key == (*it).second.toggle && !ctrlState) {
-			*block = true;
-			if (up) {
-				(*it).second.state = !(*it).second.state;
-			}
-			return;
-		}
 	}
 }
 
@@ -848,7 +819,7 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* item)
 	string itemName = szName;
 	char* code = D2COMMON_GetItemText(item->dwTxtFileNo)->szCode;
 
-	if (Toggles["Advanced Item Display"].state) {
+	if (App.lootfilter.advancedItemDisplay.toggle.isEnabled) {
 		UnitItemInfo uInfo;
 		if (!CreateUnitItemInfo(&uInfo, item)) {
 			GetItemName(&uInfo, itemName);
@@ -925,7 +896,7 @@ void __stdcall GetItemFromPacket_OldGround(px9c* pPacket)
 
 void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 {
-	if (Toggles["Advanced Item Display"].state) {
+	if (App.lootfilter.advancedItemDisplay.toggle.isEnabled) {
 		bool showOnMap = false;
 		auto color = UNDEFINED_COLOR;
 
@@ -947,26 +918,26 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 			}
 		}
 		//PrintText(1, "Item on ground: %s, %s, %s, %X", item.name.c_str(), item.code, item.attrs->category.c_str(), item.attrs->flags);
-		if (showOnMap && !(*BH::MiscToggles2)["Item Detailed Notifications"].state) {
+		if (showOnMap && !App.lootfilter.detailedNotifications.toggle.isEnabled) {
 			if (color == UNDEFINED_COLOR) {
 				color = ItemColorFromQuality(uInfo->item->pItemData->dwQuality);
 			}
-			if ((*BH::MiscToggles2)["Item Drop Notifications"].state &&
+			if (App.legacy.dropNotifications.toggle.isEnabled &&
 				pPacket->nAction == ITEM_ACTION_NEW_GROUND &&
 				color != DEAD_COLOR
 				) {
 				PrintText(color, "%s%s Dropped",
 					uInfo->attrs->name.c_str(),
-					(*BH::MiscToggles2)["Verbose Notifications"].state ? " \377c5drop" : ""
+					App.legacy.verboseNotifications.toggle.isEnabled ? " \377c5drop" : ""
 				);
 			}
-			if ((*BH::MiscToggles2)["Item Close Notifications"].state &&
+			if (App.legacy.closeNotifications.toggle.isEnabled &&
 				pPacket->nAction == ITEM_ACTION_OLD_GROUND &&
 				color != DEAD_COLOR
 				) {
 				PrintText(color, "%s%s",
 					uInfo->attrs->name.c_str(),
-					(*BH::MiscToggles2)["Verbose Notifications"].state ? " \377c5close" : ""
+					App.legacy.verboseNotifications.toggle.isEnabled ? " \377c5close" : ""
 				);
 			}
 		}
@@ -985,8 +956,8 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 
 void Item::OrigGetItemName(UnitAny* item, string& itemName, char* code)
 {
-	bool displayItemLevel = Toggles["Show iLvl"].state;
-	if (Toggles["Shorten Item Names"].state)
+	bool displayItemLevel = App.lootfilter.showIlvl.toggle.isEnabled;
+	if (App.legacy.shortenItemNames.toggle.isEnabled)
 	{
 		// We will also strip ilvls from these items
 		if (code[0] == 't' && code[1] == 's' && code[2] == 'c')  // town portal scroll
@@ -1131,7 +1102,7 @@ void Item::OrigGetItemName(UnitAny* item, string& itemName, char* code)
 	}
 
 	/*Suffix Color Mod*/
-	if (Toggles["Color Mod"].state)
+	if (App.legacy.colorMod.toggle.isEnabled)
 	{
 		/*Essences*/
 		if (code[0] == 't' && code[1] == 'e' && code[2] == 's')
@@ -1152,15 +1123,15 @@ void Item::OrigGetItemName(UnitAny* item, string& itemName, char* code)
 		}
 	}
 
-	if (Toggles["Alt Item Style"].state)
+	if (App.legacy.altItemStyle.toggle.isEnabled)
 	{
-		if (Toggles["Show Rune Numbers"].state && D2COMMON_GetItemText(item->dwTxtFileNo)->nType == 74)
+		if (App.legacy.showRuneNumbers.toggle.isEnabled && D2COMMON_GetItemText(item->dwTxtFileNo)->nType == 74)
 		{
 			itemName = to_string(item->dwTxtFileNo - 609) + " - " + itemName;
 		}
 		else
 		{
-			if (Toggles["Show Sockets"].state)
+			if (App.legacy.showSockets.toggle.isEnabled)
 			{
 				int sockets = D2COMMON_GetUnitStat(item, STAT_SOCKETS, 0);
 				if (sockets > 0)
@@ -1169,7 +1140,7 @@ void Item::OrigGetItemName(UnitAny* item, string& itemName, char* code)
 				}
 			}
 
-			if (Toggles["Show Ethereal"].state && item->pItemData->dwFlags & ITEM_ETHEREAL)
+			if (App.legacy.showEthereal.toggle.isEnabled && item->pItemData->dwFlags & ITEM_ETHEREAL)
 			{
 				itemName = "Eth " + itemName;
 			}
@@ -1183,23 +1154,23 @@ void Item::OrigGetItemName(UnitAny* item, string& itemName, char* code)
 	}
 	else
 	{
-		if (Toggles["Show Sockets"].state) {
+		if (App.legacy.showSockets.toggle.isEnabled) {
 			int sockets = D2COMMON_GetUnitStat(item, STAT_SOCKETS, 0);
 			if (sockets > 0)
 				itemName += "(" + to_string(sockets) + ")";
 		}
-		if (Toggles["Show Ethereal"].state && item->pItemData->dwFlags & ITEM_ETHEREAL)
+		if (App.legacy.showEthereal.toggle.isEnabled && item->pItemData->dwFlags & ITEM_ETHEREAL)
 			itemName += "(Eth)";
 
 		if (displayItemLevel)
 			itemName += "(L" + to_string(item->pItemData->dwItemLevel) + ")";
 
-		if (Toggles["Show Rune Numbers"].state && D2COMMON_GetItemText(item->dwTxtFileNo)->nType == 74)
+		if (App.legacy.showRuneNumbers.toggle.isEnabled && D2COMMON_GetItemText(item->dwTxtFileNo)->nType == 74)
 			itemName = "[" + to_string(item->dwTxtFileNo - 609) + "]" + itemName;
 	}
 
 	/*Affix (Colors) Color Mod*/
-	if (Toggles["Color Mod"].state)
+	if (App.legacy.colorMod.toggle.isEnabled)
 	{
 		///*Flawless Gems*/
 		//if( (code[0] == 'g' && code[1] == 'l'					) ||
@@ -1283,7 +1254,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 		return; // unknown item code
 	}
 
-	if (Toggles["Advanced Item Display"].state)
+	if (App.lootfilter.advancedItemDisplay.toggle.isEnabled)
 	{
 		if (lastItem == nullptr)
 		{
@@ -1322,7 +1293,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 		}
 	}
 
-	if (!(Toggles["Always Show Item Stat Ranges"].state ||
+	if (!(App.lootfilter.alwaysShowStatRanges.toggle.isEnabled ||
 		GetKeyState(VK_CONTROL) & 0x8000) ||
 		pItem == nullptr ||
 		pItem->dwType != UNIT_ITEM) {
@@ -1371,7 +1342,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 	int alvl = GetAffixLevel((BYTE)pItem->pItemData->dwItemLevel, (BYTE)uInfo.attrs->qualityLevel, uInfo.attrs->magicLevel);
 	int quality = pItem->pItemData->dwQuality;
 	// Add alvl
-	if (Toggles["Show iLvl"].state)
+	if (App.lootfilter.showIlvl.toggle.isEnabled)
 	{
 		if (ilvl != alvl && (quality == ITEM_QUALITY_MAGIC || quality == ITEM_QUALITY_RARE || quality == ITEM_QUALITY_CRAFT)) {
 			int aLen = wcslen(wTxt);
@@ -1383,7 +1354,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 	}
 
 	// Add ilvl
-	if (Toggles["Show iLvl"].state)
+	if (App.lootfilter.showIlvl.toggle.isEnabled)
 	{
 		int aLen = wcslen(wTxt);
 		swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen,
@@ -1535,7 +1506,7 @@ BOOL __stdcall Item::OnDamagePropertyBuild(UnitAny* pItem, DamageStats* pDmgStat
 }
 
 void __stdcall Item::OnPropertyBuild(wchar_t* wOut, int nStat, UnitAny* pItem, int nStatParam) {
-	if (!(Toggles["Always Show Item Stat Ranges"].state || GetKeyState(VK_CONTROL) & 0x8000) || pItem == nullptr || pItem->dwType != UNIT_ITEM) {
+	if (!(App.lootfilter.alwaysShowStatRanges.toggle.isEnabled || GetKeyState(VK_CONTROL) & 0x8000) || pItem == nullptr || pItem->dwType != UNIT_ITEM) {
 		return;
 	}
 
@@ -2407,19 +2378,19 @@ void __declspec(naked) ViewInventoryPatch3_ASM()
 //seems to force alt to be down
 BOOL Item::PermShowItemsPatch1()
 {
-	return Toggles["Always Show Items"].state || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
-	//return Toggles["Always Show Items"].state;
+	return App.game.alwaysShowItems.toggle.isEnabled || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
+	//return App.game.alwaysShowItems.toggle.isEnabled;
 }
 
 //these two seem to deal w/ fixing the inv/waypoints when alt is down
 BOOL Item::PermShowItemsPatch2() {
-	//return Toggles["Always Show Items"].state || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
-	return Toggles["Always Show Items"].state && !D2CLIENT_GetUIState(UI_GROUND_ITEMS);
+	//return App.game.alwaysShowItems.toggle.isEnabled || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
+	return App.game.alwaysShowItems.toggle.isEnabled && !D2CLIENT_GetUIState(UI_GROUND_ITEMS);
 }
 
 BOOL Item::PermShowItemsPatch3() {
-	return Toggles["Always Show Items"].state || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
-	//return Toggles["Always Show Items"].state;
+	return App.game.alwaysShowItems.toggle.isEnabled || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
+	//return App.game.alwaysShowItems.toggle.isEnabled;
 }
 
 

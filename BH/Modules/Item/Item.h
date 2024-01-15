@@ -45,6 +45,7 @@
 
 #pragma once
 #include "../Module.h"
+#include "../../BH.h"
 #include "../../Constants.h"
 #include "../../Config.h"
 #include "../../Drawing.h"
@@ -56,14 +57,7 @@ struct UnitItemInfo;
 
 class Item : public Module {
 private:
-	static map<std::string, Toggle> Toggles;
-	unsigned int showPlayer;
 	Drawing::UITab* settingsTab;
-	static unsigned int filterLevelSetting;
-	static unsigned int prevFilterLevelSetting;
-	unsigned int filterLevelIncKey;
-	unsigned int filterLevelDecKey;
-	unsigned int filterLevelPrevKey;
 public:
 	static UnitAny* viewingUnit;
 	vector<string> ItemFilterNames;
@@ -83,7 +77,6 @@ public:
 	void OnLoop();
 	void OnKey(bool up, BYTE key, LPARAM lParam, bool* block);
 	void OnLeftClick(bool up, int x, int y, bool* block);
-	std::map<string, Toggle>* GetToggles() { return &Toggles; }
 
 	static void __fastcall ItemNamePatch(wchar_t* name, UnitAny* item);
 	static void OrigGetItemName(UnitAny* item, string& itemName, char* code);
@@ -100,7 +93,7 @@ public:
 	static UnitAny* GetViewUnit();
 	static UnitAny* GetViewUnitAndDrawBox();
 
-	static unsigned int GetFilterLevel() { return filterLevelSetting; }
+	static unsigned int GetFilterLevel() { return App.lootfilter.filterLevel.uValue; }
 };
 
 void ItemName_Interception();

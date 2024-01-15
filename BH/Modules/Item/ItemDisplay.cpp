@@ -2702,18 +2702,14 @@ bool GemmedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 void SkillListCondition::Init()
 {
 	// Clear lists
-	classSkillList.clear();
-	skillList.clear();
 	goodClassSkills.clear();
 	goodTabSkills.clear();
 
 	// Build character skills list
-	BH::config->ReadAssoc("ClassSkillsList", skillList);
-	for (auto it = skillList.cbegin(); it != skillList.cend(); it++) { if (StringToBool((*it).second)) { goodClassSkills.push_back(stoi((*it).first)); } }
+	for (auto it = App.lootfilter.classSkillsList.values.cbegin(); it != App.lootfilter.classSkillsList.values.cend(); it++) { if (StringToBool((*it).second)) { goodClassSkills.push_back(stoi((*it).first)); } }
 
 	// Build tab skills list
-	BH::config->ReadAssoc("TabSkillsList", classSkillList);
-	for (auto it = classSkillList.cbegin(); it != classSkillList.cend(); it++) { if (StringToBool((*it).second)) { goodTabSkills.push_back(stoi((*it).first)); } }
+	for (auto it = App.lootfilter.tabSkillsList.values.cbegin(); it != App.lootfilter.tabSkillsList.values.cend(); it++) { if (StringToBool((*it).second)) { goodTabSkills.push_back(stoi((*it).first)); } }
 }
 
 bool SkillListCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -2874,7 +2870,7 @@ void HandleUnknownItemCode(char* code,
 	if (!IsInitialized()) { return; }
 
 	// Avoid spamming endlessly
-	if (UnknownItemCodes.size() > 10 || (*BH::MiscToggles2)["Allow Unknown Items"].state) { return; }
+	if (UnknownItemCodes.size() > 10 || App.lootfilter.allowUnknownItems.toggle.isEnabled) { return; }
 	if (UnknownItemCodes.find(code) == UnknownItemCodes.end())
 	{
 		//PrintText(1, "Unknown item code %s: %c%c%c\n", tag, code[0], code[1], code[2]);
