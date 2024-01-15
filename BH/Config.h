@@ -98,25 +98,18 @@ inline bool operator< (const ConfigEntry& lhs, const ConfigEntry& rhs) {
 class Config {
 private:
 	std::string configName;
+	// Only used in lootfilter Parse()
 	std::map<std::string, ConfigEntry> contents;
 	vector<pair<string, string>> orderedKeyVals;
-
-	static bool HasChanged(ConfigEntry entry, string& value);
-	static bool StringToBool(std::string input);
 public:
 	void SaveConfig();
 	void LoadConfig();
 	Config(std::string name) : configName(name) {};
 
-	//Parse the config file and store results
-	bool Parse();
-	bool Write();
-	std::list<std::string> GetDefinedKeys();
-
 	std::string GetConfigName();
 	void SetConfigName(std::string name);
 
-	//Functions to read values from the configuration
+	// Functions to read values from the configuration
 	int GetInt(json::json_pointer sectionKey, std::string key, SettingsInt def);
 	float GetFloat(json::json_pointer sectionKey, std::string key, SettingsFloat def);
 	bool GetBool(json::json_pointer sectionKey, std::string key, SettingsBool def);
@@ -126,16 +119,7 @@ public:
 	std::vector<std::string> GetArray(json::json_pointer sectionKey, std::string key, SettingsArray def);
 	std::map<std::string, std::string> GetAssoc(json::json_pointer sectionKey, std::string key, SettingsAssoc def);
 
-	//Functions to read values from the configuration (OLD)
-	bool				ReadBoolean(std::string key, bool& value);
-	std::string			ReadString(std::string key, std::string& value);
-	int					ReadInt(std::string key, int& value);
-	unsigned int		ReadInt(std::string key, unsigned int& value, unsigned int defaultValue = 0);
-	unsigned int		ReadKey(std::string key, std::string toggle, unsigned int &value);
-	Toggle				ReadToggle(std::string key, std::string toggle, bool defaultState, Toggle& value);
-	std::vector<string> ReadArray(std::string key, std::vector<string>& value);
-	map<string, string> ReadAssoc(std::string key, std::map<string, string>& value);
-	map<string, unsigned int> ReadAssoc(std::string key, std::map<string, unsigned int>& value);
-	map<string, bool> ReadAssoc(std::string key, std::map<string, bool>& value);
+	// Functions to read values from the lootfilter configuration
+	bool Parse();
 	vector<pair<string, string>> ReadMapList(std::string key, vector<pair<string,string>>& value);
 };
