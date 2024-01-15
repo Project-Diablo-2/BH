@@ -19,45 +19,27 @@ Patch* ftjPatch = new Patch(Call, D2CLIENT, { 0x4363E, 0x443FE }, (int)FailToJoi
 Patch* removePass = new Patch(Call, D2MULTI, { 0x1250, 0x1AD0 }, (int)RemovePass_Interception, 5);
 
 void Bnet::OnLoad() {
-	showLastGame = &bools["Autofill Last Game"];
-	*showLastGame = true;
-	
-	showLastPass = &bools["Autofill Last Password"];
-	*showLastPass = true;
-
-	nextInstead = &bools["Autofill Next Game"];
-	*nextInstead = true;
-
-	keepDesc = &bools["Autofill Description"];
-	*keepDesc = true;
-
-	failToJoin = 4000;
+	failToJoin = App.bnet.failToJoin.value;
 	LoadConfig();
 }
 
 void Bnet::LoadConfig() {
-	BH::config->ReadBoolean("Autofill Last Game", *showLastGame);
-	BH::config->ReadBoolean("Autofill Last Password", *showLastPass);
-	BH::config->ReadBoolean("Autofill Next Game", *nextInstead);
-	BH::config->ReadBoolean("Autofill Description", *keepDesc);
-	BH::config->ReadInt("Fail To Join", failToJoin);
-
 	InstallPatches();
 }
 
 void Bnet::InstallPatches() {
-	if (*showLastGame || *nextInstead) {
+	if (App.bnet.autofillLastGame.value || App.bnet.autofillNextGame.value) {
 		nextGame1->Install();
 		nextGame2->Install();
 	}
 
-	if (*showLastPass) {
+	if (App.bnet.autofillLastPass.value) {
 		nextPass1->Install();
 		nextPass2->Install();
 		removePass->Install();
 	}
 
-	if (*keepDesc) {
+	if (App.bnet.autofillLastDesc.value) {
 		gameDesc->Install();
 	}
 
@@ -100,7 +82,7 @@ void Bnet::OnGameJoin() {
 }
 
 void Bnet::OnGameExit() {
-	if (*nextInstead) {
+	if (App.bnet.autofillNextGame.value) {
 		std::smatch match;
 		if (std::regex_search(Bnet::lastName, match, Bnet::reg) && match.size() == 3) {
 			std::string name = match.format("$1");
