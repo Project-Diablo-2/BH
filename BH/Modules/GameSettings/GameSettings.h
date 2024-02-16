@@ -5,15 +5,8 @@
 #include "../../Common.h"
 
 class GameSettings : public Module {
-private:
-	unsigned int showPlayer;
 public:
 	static unsigned int KeyHookOffset;
-	static map<std::string, Toggle> Toggles;
-	unsigned int resyncKey;
-	unsigned int advStatMenuKey;
-	unsigned int reloadConfig;
-	unsigned int reloadConfigCtrl;
 
 	GameSettings() : Module("GameSettings") {};
 	~GameSettings() {};

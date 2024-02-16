@@ -23,22 +23,13 @@ void Gamefilter::OnLoad() {
 		destoryGameList->Install();
 		listRefresh->Install();
 	}
-	refreshTime = 1501;
-	BH::config->ReadInt("GameListRefresh", refreshTime);
-	if (refreshTime < 1500) { refreshTime = 1500; }
-
-	showDiff = &bools["Show Difficulty"];
-	*showDiff = true;
-
-	showGs = &bools["Show Gameserver"];
-	*showGs = true;
+	refreshTime = App.bnet.refreshTime.value;
 
 	LoadConfig();
 }
 
 void Gamefilter::LoadConfig() {
-	BH::config->ReadBoolean("Show Difficulty", *showDiff);
-	BH::config->ReadBoolean("Show Gameserver", *showGs);
+
 }
 
 void Gamefilter::OnUnload() {
@@ -284,14 +275,14 @@ void Gamefilter::OnOOGDraw() {
 		D2WIN_DrawText(L"Filter", 549, 170, 4, -1);
 		D2WIN_DrawText(wFilterString.c_str(), 424, 190, 4, -1);
 
-		if (*showDiff || *showGs) {
+		if (App.bnet.showDifficulty.value || App.bnet.showGameserver.value) {
 			D2WIN_SetTextSize(6);
 			DWORD dwListStart = (*p_D2MULTI_GameListControl)->dwSelectStart;
 			DWORD dwListEnd = filterVector.size() > 9 ? dwListStart + 9 : filterVector.size();
 			for (unsigned int i = dwListStart; i < dwListEnd; i++)
 			{
 				unsigned int uiYPos = 235 + (i - dwListStart) * 19;
-				if (*showDiff) {
+				if (App.bnet.showDifficulty.value) {
 					if ((filterVector.at(i)->dwStatus & 0x1000)) {
 						D2WIN_DrawText(L"NM", 547, uiYPos, Blue, -1);
 					}
@@ -302,7 +293,7 @@ void Gamefilter::OnOOGDraw() {
 						D2WIN_DrawText(L"N", 547, uiYPos, White, -1);
 					}
 				}
-				if (*showGs) {
+				if (App.bnet.showGameserver.value) {
 					D2WIN_DrawText(gServerVector.at(i), 528, uiYPos, Grey, -1);
 				}
 			}

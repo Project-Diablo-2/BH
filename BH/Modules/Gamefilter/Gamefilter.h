@@ -16,11 +16,6 @@ struct GameListEntry
 struct Control;
 
 class Gamefilter : public Module {
-	private:
-		std::map<string, bool> bools;
-		bool* showDiff;
-		bool* showGs;		
-
 	public:
 		static std::list<GameListEntry*> gameList;
 		static std::vector<GameListEntry*> filterVector;
@@ -39,8 +34,6 @@ class Gamefilter : public Module {
 
 		void OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket);
 		void OnOOGDraw();
-
-		std::map<string, bool>* GetBools() { return &bools; }
 
 		static void CreateGamelist();
 		static void __stdcall DestroyGamelist(Control* pControl);

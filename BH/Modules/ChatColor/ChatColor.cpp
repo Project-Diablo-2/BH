@@ -36,9 +36,7 @@ void ChatColor::OnLoad() {
 }
 
 void ChatColor::LoadConfig() {
-	whisperColors.clear();
 
-	BH::config->ReadAssoc("Whisper Color", whisperColors);
 }
 
 void ChatColor::OnChatPacketRecv(BYTE* packet, bool* block) {
@@ -54,9 +52,9 @@ void ChatColor::OnChatPacketRecv(BYTE* packet, bool* block) {
 
 			bool replace = false;
 			int color = 0;
-			if (whisperColors.find(from) != whisperColors.end()) {
+			if (App.bnet.whisperColor.values.find(from) != App.bnet.whisperColor.values.end()) {
 				replace = true;
-				color = whisperColors[from];
+				color = std::stoi(App.bnet.whisperColor.values[from]) ;
 			}
 
 			if (replace) {

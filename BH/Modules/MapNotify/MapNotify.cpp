@@ -32,9 +32,8 @@ void MapNotify::OnLoad() {
 }
 
 void MapNotify::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
-	GameSettings* settings = static_cast<GameSettings*>(BH::moduleManager->Get("gamesettings"));
 	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
-	if (key == settings->reloadConfigCtrl && ctrlState || key == settings->reloadConfig && !ctrlState) {
+	if (key == App.general.reloadConfigCtrl.hotkey && ctrlState || key == App.general.reloadConfig.hotkey && !ctrlState) {
 		*block = true;
 		if (up)
 			BH::ReloadConfig();
@@ -80,8 +79,8 @@ void MapNotify::OnDraw() {
 
 						if ((*it)->Evaluate(&uInfo)) {
 							if ((unit->dwFlags & UNITFLAG_REVEALED) == 0x0
-								&& (*BH::MiscToggles2)["Item Detailed Notifications"].state) {
-								if ((*BH::MiscToggles2)["Item Close Notifications"].state || (dwFlags & ITEM_NEW)) {
+								&& App.lootfilter.detailedNotifications.toggle.isEnabled) {
+								if (App.legacy.closeNotifications.toggle.isEnabled || (dwFlags & ITEM_NEW)) {
 									std::string itemName = GetItemName(unit);
 									size_t start_pos = 0;
 									while ((start_pos = itemName.find('\n', start_pos)) != std::string::npos) {

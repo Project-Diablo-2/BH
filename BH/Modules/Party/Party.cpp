@@ -10,13 +10,11 @@ Drawing::Hook* PartyHook;
 Drawing::Hook* LootHook;
 
 void Party::OnLoad() {
-	BH::config->ReadToggle("Party Enabled", "None", true, Toggles["Enabled"]);
-	BH::config->ReadToggle("Looting Enabled", "None", true, Toggles["LootEnabled"]);
 	c = 0;
 
-	PartyHook = new Drawing::Checkhook(Drawing::InGame, 100, 100, &Toggles["Enabled"].state, "Autoparty Enabled");
+	PartyHook = new Drawing::Checkhook(Drawing::InGame, 100, 100, &App.party.autoParty.toggle.isEnabled, "Autoparty Enabled");
 	PartyHook->SetActive(0);
-	LootHook = new Drawing::Checkhook(Drawing::InGame, 240, 100, &Toggles["LootEnabled"].state, "Autoloot Enabled");
+	LootHook = new Drawing::Checkhook(Drawing::InGame, 240, 100, &App.party.autoCorpseLoot.toggle.isEnabled, "Autoloot Enabled");
 	LootHook->SetActive(0);
 }
 
@@ -28,7 +26,7 @@ void Party::OnUnload() {
 }
 
 void Party::OnLoop() {
-	if(Toggles["Enabled"].state || Toggles["LootEnabled"].state)
+	if (App.party.autoParty.toggle.isEnabled || App.party.autoCorpseLoot.toggle.isEnabled)
 		CheckParty();
 	if(D2CLIENT_GetUIState(0x16) && PartyHook->IsActive() == 0) {
 		PartyHook->SetBaseX(*p_D2CLIENT_PanelOffsetX + 20);
@@ -90,7 +88,7 @@ void Party::CheckParty() {
 				continue;
 			if (pData && pData->nCharFlags & PLAYER_TYPE_HARDCORE) {
 				CurrentParty[Party->szName] = true;
-				if (Toggles["LootEnabled"].state) {
+				if (App.party.autoCorpseLoot.toggle.isEnabled) {
 					string s(Party->szName);
 					if (LootingPermission.find(s) == LootingPermission.end()) {
 						//PrintText(1, "Enabling loot for %s.", s.c_str());
@@ -101,7 +99,7 @@ void Party::CheckParty() {
 					}
 				}
 			}
-			if ((Party->wPartyId == INVALID_PARTY_ID || Party->wPartyId != MyRoster->wPartyId) && Toggles["Enabled"].state) {
+			if ((Party->wPartyId == INVALID_PARTY_ID || Party->wPartyId != MyRoster->wPartyId) && App.party.autoParty.toggle.isEnabled) {
 				//PrintText(1, "Party->wPartyID=%hu, MyRoster->wPartyId=%hu, min_party_id=%hu", 
 				//		Party->wPartyId, MyRoster->wPartyId, current_min_party_id);
 				if(Party->dwPartyFlags & PARTY_INVITED_YOU) {
@@ -143,7 +141,7 @@ void Party::CheckParty() {
 
 		} while (Party = Party->pNext);
 		// Leave the party if we're in the wrong one
-		if (Toggles["Enabled"].state && current_min_party_id != INVALID_PARTY_ID 
+		if (App.party.autoParty.toggle.isEnabled && current_min_party_id != INVALID_PARTY_ID
 			&& MyRoster->wPartyId != current_min_party_id && MyRoster->wPartyId != INVALID_PARTY_ID) {
 			//PrintText(1, "Not in the right party!");
 			//PrintText(1, "min_party_id=%hu, MyRoster->wPartyId=%hu", current_min_party_id, MyRoster->wPartyId);
@@ -175,17 +173,6 @@ void Party::OnKey(bool up, BYTE key, LPARAM lParam, bool* block)  {
 		// There is no UI state for the gold dialogs, so we have to disable whenever
 		// stash/inventory are open.
 		return;
-	}
-
-	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
-	for (map<string,Toggle>::iterator it = Toggles.begin(); it != Toggles.end(); it++) {
-		if (key == (*it).second.toggle && !ctrlState) {
-			*block = true;
-			if (up) {
-				(*it).second.state = !(*it).second.state;
-			}
-			return;
-		}
 	}
 }
 

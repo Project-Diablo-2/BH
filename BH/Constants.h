@@ -5,6 +5,8 @@
 
 #define BH_VERSION "PD2 0.1"
 #define SETTINGS_TEXT "Settings"
+#define SETTINGS_SIZE_X 400
+#define SETTINGS_SIZE_Y 366
 
 #define CODE_PAGE 1252 // windows-1252	ANSI Latin 1; Western European (Windows)
 

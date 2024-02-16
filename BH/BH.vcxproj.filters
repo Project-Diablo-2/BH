@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="AsyncDrawBuffer.cpp" />
     <ClCompile Include="BH.cpp" />
-    <ClCompile Include="BitReader.cpp" />
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="D2Handlers.cpp" />
@@ -101,7 +100,6 @@
   <ItemGroup>
     <ClInclude Include="AsyncDrawBuffer.h" />
     <ClInclude Include="BH.h" />
-    <ClInclude Include="BitReader.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="CommonStructs.h" />
     <ClInclude Include="Config.h" />
