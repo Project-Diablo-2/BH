@@ -16,3 +16,4 @@ int __stdcall D2COMMON_GetSequenceIndex_STUB(UnitAny* pUnit);
 int __stdcall D2COMMON_GetFrameMinAccr_STUB(int nIndex, UnitAny* pUnit);
 void __stdcall D2CLIENT_GetItemFromPacket_NewGround_STUB(px9c* packet);
 void __stdcall D2CLIENT_GetItemFromPacketIntercept_NewGround_STUB();
+void __stdcall D2CLIENT_GetItemDescription_STUB(ItemsTxt* pItemTxtRec, wchar_t* pBuffer, UnitAny* pItem);

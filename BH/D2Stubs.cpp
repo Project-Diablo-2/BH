@@ -177,3 +177,17 @@ __declspec(naked) void __stdcall D2CLIENT_GetItemFromPacketIntercept_NewGround_S
 		retn
   }
 }
+
+__declspec(naked) void __stdcall D2CLIENT_GetItemDescription_STUB(ItemsTxt* pItemTxtRec, wchar_t* pBuffer, UnitAny* pItem)
+{
+	__asm
+	{
+		push ESI
+		mov EAX, [esp + 8]                                   // pItemTxtRec
+		mov ESI, [esp + 12]                                  // pBuffer
+		push[esp + 16]                                      // pItem
+		call D2CLIENT_GetItemDescription                     // 0x8D600
+		pop ESI
+		retn 12
+	}
+}

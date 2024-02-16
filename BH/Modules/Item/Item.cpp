@@ -75,6 +75,35 @@ std::vector<StatProperties*> AllStatList;
 std::vector<CharStats*> CharList;
 std::map<std::string, ItemAttributes*> ItemAttributeMap;
 
+std::vector<pair<int, int>> itemTypeToTblIndex = {
+	{ITEM_TYPE_STAFF, 4085},
+	{ITEM_TYPE_AXE, 4078},
+	{ITEM_TYPE_SWORD, 4079},
+	{ITEM_TYPE_KNIFE, 4080},
+	{ITEM_TYPE_MISSILE_POT, 4081},
+	{ITEM_TYPE_JAVELIN, 4082},
+	{ITEM_TYPE_SPEAR, 4083},
+	{ITEM_TYPE_BOW, 4084},
+	{ITEM_TYPE_POLEARM, 4086},
+	{ITEM_TYPE_CROSSBOW, 4087},
+	{ITEM_TYPE_CLAW, 21258},
+	{ITEM_TYPE_CLAW2, 21258},
+	{ITEM_TYPE_ORB, 4085},
+	{ITEM_TYPE_WAND, 4085},
+	{ITEM_TYPE_BLUNT, 4077},
+	{ITEM_TYPE_MACE, 4077},
+};
+
+std::map<int, int> weponSpeedToTblIndex = {
+	{0, 4088},
+	{1, 4089},
+	{2, 4090},
+	{3, 4091},
+	{4, 4092},
+	{5, 4093},
+	{6, 4094},
+};
+
 UnitAny* Item::viewingUnit;
 
 Patch* itemNamePatch = new Patch(Call, D2CLIENT, { 0x92366, 0x96736 }, (int)ItemName_Interception, 6);
@@ -474,6 +503,20 @@ void GetMiscAttributes()
 		if (ancestorTypes.find(ITEM_TYPE_RUNE) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_STACK_RUNE) != ancestorTypes.end()) {
 			miscFlags |= ITEM_GROUP_RUNE;
 		}
+		else if (ancestorTypes.find(ITEM_TYPE_RING) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_AMULET) != ancestorTypes.end()) {
+			miscFlags |= ITEM_GROUP_JEWELRY;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_CHARM) != ancestorTypes.end()) {
+			miscFlags |= ITEM_GROUP_CHARM;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_BOW_QUIVER) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_XBOW_QUIVER) != ancestorTypes.end())
+		{
+			miscFlags |= ITEM_GROUP_QUIVER;
+		}
+		else if (ancestorTypes.find(ITEM_TYPE_MAP) != ancestorTypes.end())
+		{
+			miscFlags |= ITEM_GROUP_MAP;
+		}
 
 		// Gem Quality
 		if (ancestorTypes.find(ITEM_TYPE_CHIPPED_GEM) != ancestorTypes.end()) {
@@ -813,15 +856,39 @@ int CreateUnitItemInfo(UnitItemInfo* uInfo, UnitAny* item) {
 	}
 }
 
-void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* item)
+void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
 {
+	ItemsTxt* itemTxt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
+	switch (nameSize)
+	{
+	case 127:
+		// Item names in the gamble screen
+		nameSize = MAX_ITEM_TEXT_SIZE;
+		break;
+	case 191:
+		// This is NPC buy popup that appears when you left click an item
+		// in their inventory. We just want to keep the default name here
+		return;
+	default:
+		// int overflow at DAT_6fbcff0c in D2CLIENT after 128 characters (only with alt pressed.)
+		// Other places may _technically_ work with >128 but we're better off standardizing IMO
+		if (!itemTxt || (itemTxt && itemTxt->bquest > 0))
+		{
+			// Quest items have an extra color code (eg: ÿc0ÿc4Horadric Cube)
+			nameSize = 124;
+			break;
+		}
+		nameSize = 128;
+		break;
+	}
+
 	char* szName = UnicodeToAnsi(name);
 	string itemName = szName;
-	char* code = D2COMMON_GetItemText(item->dwTxtFileNo)->szCode;
+	char* code = D2COMMON_GetItemText(pItem->dwTxtFileNo)->szCode;
 
 	if (App.lootfilter.advancedItemDisplay.toggle.isEnabled) {
 		UnitItemInfo uInfo;
-		if (!CreateUnitItemInfo(&uInfo, item)) {
+		if (!CreateUnitItemInfo(&uInfo, pItem)) {
 			GetItemName(&uInfo, itemName);
 		}
 		else {
@@ -829,7 +896,7 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* item)
 		}
 	}
 	else {
-		OrigGetItemName(item, itemName, code);
+		OrigGetItemName(pItem, itemName, code);
 	}
 
 	// Some common color codes for text strings (see TextColor enum):
@@ -845,12 +912,9 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* item)
 	// ÿc8 (orange)
 	// ÿc9 (yellow)
 
-	/* Test code to display item codes */
-	//string test3 = test_code;
-	//itemName += " {" + test3 + "}";
-
-	MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, itemName.c_str(), itemName.length(), name, itemName.length());
-	name[itemName.length()] = 0;  // null-terminate the string since MultiByteToWideChar doesn't
+	// The game adds the item color code _after_ this ItemNamePatch intercept, so we need to
+	// reduce the total allowed size to account for this
+	MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, itemName.c_str(), -1, name, nameSize - 4);
 	delete[] szName;
 }
 
@@ -1243,6 +1307,24 @@ static ItemsTxt* GetArmorText(UnitAny* pItem) {
 	return NULL;
 }
 
+bool ShouldShowIlvl(UnitItemInfo* uInfo)
+{
+	ItemAttributes* attrs = uInfo->attrs;
+	int quality = uInfo->item->pItemData->dwQuality;
+	if (quality != ITEM_QUALITY_SET && quality != ITEM_QUALITY_UNIQUE)
+	{
+		if (attrs->armorFlags & ITEM_GROUP_ALLARMOR ||
+			attrs->weaponFlags & ITEM_GROUP_ALLWEAPON ||
+			attrs->miscFlags & ITEM_GROUP_QUIVER ||
+			attrs->miscFlags & ITEM_GROUP_JEWELRY ||
+			attrs->miscFlags & ITEM_GROUP_CHARM)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 static UnitAny* lastItem;
 static DWORD previousFlags;
 
@@ -1253,6 +1335,19 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 	if (!pItem || pItem->dwType != UNIT_ITEM || CreateUnitItemInfo(&uInfo, pItem)) {
 		return; // unknown item code
 	}
+
+	// get the size of alvl/ilvl strings, so we can limit the custom item description length later
+	int ilvl = pItem->pItemData->dwItemLevel;
+	int alvl = GetAffixLevel((BYTE)pItem->pItemData->dwItemLevel, (BYTE)uInfo.attrs->qualityLevel, uInfo.attrs->magicLevel);
+	int quality = pItem->pItemData->dwQuality;
+
+	wchar_t alvlString[24];
+	wchar_t ilvlString[24];
+	// TODO: move these into patchstring
+	swprintf_s(alvlString, 24, L"%sAffix Level: %d\n", GetColorCode(TextColor::White).c_str(), alvl);
+	swprintf_s(ilvlString, 24, L"%sItem Level: %d\n", GetColorCode(TextColor::White).c_str(), pItem->pItemData->dwItemLevel);
+	int alvlLen = wcslen(alvlString);
+	int ilvlLen = wcslen(ilvlString);
 
 	if (App.lootfilter.advancedItemDisplay.toggle.isEnabled)
 	{
@@ -1281,6 +1376,495 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 
 		string desc = item_desc_cache.Get(&uInfo);
 		if (desc != "") {
+			UnitAny* pPlayer = D2CLIENT_GetPlayerUnit();
+			ItemsTxt* itemTxt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
+			if (!pPlayer || !itemTxt) {
+				return;
+			}
+			string itemName = GetItemName(pItem);
+			int maxTextLimit = ITEM_TEXT_SIZE_LIMIT;
+			maxTextLimit -= itemName.length() + 3; // color code added later
+			maxTextLimit -= wcslen(wTxt) + 3; // color code added later
+
+			bool isEthereal = (pItem->pItemData->dwFlags & ITEM_ETHEREAL) > 0;
+			bool hasSockets = (pItem->pItemData->dwFlags & ITEM_HASSOCKETS) > 0;
+
+			// Class item
+			int classItem = D2COMMON_10822_GetItemRequiredClass(pItem);
+			if (classItem != 7)
+			{
+				wchar_t classString[32];
+				swprintf_s(classString, 32, L"%s%s\n",
+					GetColorCode(pPlayer->dwTxtFileNo == classItem ? TextColor::White : TextColor::Red).c_str(),
+					D2LANG_GetLocaleText(classItem + 10917)
+				);
+				maxTextLimit -= wcslen(classString);
+			}
+
+			// Durability
+			int quiverType = D2COMMON_11144_GetQuiverType(pItem);
+			if (quiverType == 0)
+			{
+				int hasDurability = D2COMMON_10865_HasDurability(pItem);
+				if (hasDurability)
+				{
+					wchar_t durabilityString[32];
+					int minDurability = D2COMMON_GetUnitStat(pItem, STAT_DURABILITY, 0);
+					int maxDurability = D2COMMON_11116_GetMaxDurabilityFromUnit(pItem);
+					swprintf_s(durabilityString, 32, L"%s%s %d %s %d\n",
+						GetColorCode(TextColor::White).c_str(),
+						D2LANG_GetLocaleText(3457),
+						minDurability,
+						D2LANG_GetLocaleText(3463),
+						maxDurability
+					);
+					maxTextLimit -= wcslen(durabilityString);
+				}
+			}
+
+			// Quantity
+			if ((pItem->pItemData->dwFlags & ITEM_HASSOCKETS) == 0 && (uInfo.attrs->miscFlags & ITEM_GROUP_QUIVER) == 0)
+			{
+				int itemQuantity = D2COMMON_GetUnitStat(pItem, STAT_AMMOQUANTITY, 0);
+				bool mapQuantity = false;
+				if ((uInfo.attrs->miscFlags & ITEM_GROUP_MAP && uInfo.item->pItemData->dwQuality == ITEM_QUALITY_NORMAL)
+					|| (uInfo.attrs->miscFlags & ITEM_GROUP_MAP) == 0) {
+					mapQuantity = true;
+				}
+				if (itemQuantity && mapQuantity)
+				{
+					wchar_t itemQuantityString[32];
+					swprintf_s(itemQuantityString, 32, L"%s%s %d\n",
+						GetColorCode(TextColor::White).c_str(),
+						D2LANG_GetLocaleText(3462),
+						itemQuantity
+					);
+					maxTextLimit -= wcslen(itemQuantityString);
+				}
+			}
+
+			BOOL bStrength = -1;
+			BOOL bDexterity = -1;
+			BOOL bLevel = -1;
+			D2COMMON_10244_CheckRequirements(pItem, pPlayer, 0, &bStrength, &bDexterity, &bLevel);
+			// Level requirement
+			int reqLevel = D2COMMON_11015_GetItemLevelRequirement(pItem, pPlayer);
+			if (reqLevel > 1)
+			{
+				wchar_t reqLevelString[32];
+				swprintf_s(reqLevelString, 32, L"%s%s %d\n",
+					GetColorCode(bLevel == 0 ? TextColor::Red : TextColor::White).c_str(),
+					D2LANG_GetLocaleText(3469),
+					reqLevel
+				);
+				maxTextLimit -= wcslen(reqLevelString);
+			}
+
+			// Filled sockets
+			if (D2COMMON_10757_CheckIfSocketable(pItem))
+			{
+				Inventory* pInventory = pItem->pInventory;
+				if (pInventory)
+				{
+					bool runeQuote = false;
+					wchar_t runes[64] = L"";
+					UnitAny* pInvItem = D2COMMON_GetItemFromInventory(pInventory);
+					if (pInvItem) {
+						while (pInvItem) {
+							UnitAny* pItemUnit = D2COMMON_11147_UnitIsItem(pInvItem);
+							if (!pItemUnit) { break; }
+							if (D2COMMON_IsMatchingType(pItemUnit, ITEM_TYPE_RUNE)) {
+								ItemsTxt* itemRecord = D2COMMON_GetItemText(pItemUnit->dwTxtFileNo);
+								D2GemsTxt* gemRecord = D2COMMON_10806_DATATBLS_GetGemsTxtRecord(itemRecord->dwgemoffset);
+								if ((0 < itemRecord->dwgemoffset) && gemRecord) {
+									if (!runeQuote) { runeQuote = true; }
+									swprintf_s(runes, 64, L"%s%s", runes, AnsiToUnicode(gemRecord->szLetter));
+								}
+							}
+							pInvItem = D2COMMON_GetNextItemFromInventory(pInvItem);
+						}
+						if (runeQuote)
+						{
+							wchar_t runeString[64];
+							swprintf_s(runeString, 64, L"%s%s%s%s\n",
+								GetColorCode(TextColor::Gold).c_str(),
+								D2LANG_GetLocaleText(20506),
+								runes,
+								D2LANG_GetLocaleText(20506)
+							);
+							maxTextLimit -= wcslen(runeString);
+						}
+					}
+				}
+			}
+
+			if (uInfo.attrs->armorFlags & ITEM_GROUP_ALLARMOR || uInfo.attrs->weaponFlags & ITEM_GROUP_ALLWEAPON)
+			{
+				int reducedReq = D2COMMON_GetUnitStat(pItem, STAT_REDUCEDREQUIREMENTS, 0);
+				int reqStr = itemTxt->wreqstr;
+				int reqDex = itemTxt->wreqdex;
+				if (reducedReq)
+				{
+					reqStr += UTILITY_CalcPercent(itemTxt->wreqstr, reducedReq, 100);
+					reqDex += UTILITY_CalcPercent(itemTxt->wreqdex, reducedReq, 100);
+				}
+
+				// Strength requirement
+				if (reqStr)
+				{
+					if (isEthereal)
+					{
+						reqStr -= 10;
+					}
+					wchar_t reqStrString[32];
+					swprintf_s(reqStrString, 32, L"%s%s %d\n",
+						GetColorCode(bStrength == 0 ? TextColor::Red : TextColor::White).c_str(),
+						D2LANG_GetLocaleText(3458),
+						reqStr
+					);
+					maxTextLimit -= wcslen(reqStrString);
+				}
+
+				// Dexterity requirement
+				if (reqDex)
+				{
+					wchar_t reqDexString[32];
+					swprintf_s(reqDexString, 32, L"%s%s %d\n",
+						GetColorCode(bDexterity == 0 ? TextColor::Red : TextColor::White).c_str(),
+						D2LANG_GetLocaleText(3459),
+						reqDex
+					);
+					maxTextLimit -= wcslen(reqDexString);
+				}
+
+				// Ethereal and sockets
+				int itemSockets = D2COMMON_GetUnitStat(pItem, STAT_SOCKETS, 0);
+				if (isEthereal && hasSockets)
+				{
+					wchar_t ethSockString[64];
+					swprintf_s(ethSockString, 64, L"%s%s, %s (%d)\n",
+						GetColorCode(TextColor::Blue).c_str(),
+						D2LANG_GetLocaleText(22745),
+						D2LANG_GetLocaleText(3453),
+						itemSockets
+					);
+					maxTextLimit -= wcslen(ethSockString);
+				}
+				else if (isEthereal)
+				{
+					wchar_t ethString[64];
+					swprintf_s(ethString, 64, L"%s%s\n",
+						GetColorCode(TextColor::Blue).c_str(),
+						D2LANG_GetLocaleText(22745)
+					);
+					maxTextLimit -= wcslen(ethString);
+				}
+				else if (hasSockets)
+				{
+					wchar_t sockString[32];
+					swprintf_s(sockString, 32, L"%s%s (%d)\n",
+						GetColorCode(TextColor::Blue).c_str(),
+						D2LANG_GetLocaleText(3453),
+						itemSockets
+					);
+					maxTextLimit -= wcslen(sockString);
+				}
+
+				// Weapon Damage
+				if (uInfo.attrs->weaponFlags & ITEM_GROUP_ALLWEAPON)
+				{
+					// TODO: potion damage??
+					//if (D2COMMON_IsMatchingType(pItem, ITEM_TYPE_MISSILE_POT))
+					//{
+					//	
+					//}
+
+					int minDamage1h = D2COMMON_10823_GetMinDamageStat(pItem, 0);
+					int maxDamage1h = D2COMMON_10925_GetMaxDamageStat(pItem, 0);
+					int minDamage2h = D2COMMON_10823_GetMinDamageStat(pItem, 1);
+					int maxDamage2h = D2COMMON_10925_GetMaxDamageStat(pItem, 1);
+
+					int is1or2Handed = D2COMMON_10364_Is1Or2Handed(pPlayer, pItem);
+					if (is1or2Handed == 0)
+					{
+						int txtNumber = D2COMMON_10326_GetItemTxtFileNo(pItem);
+						if (txtNumber == 0)
+						{
+							// One-Hand Damage
+							if (minDamage1h || maxDamage1h)
+							{
+								wchar_t oneHandString[64];
+								swprintf_s(oneHandString, 64, L"%s%s %s%d %s %d\n",
+									GetColorCode(TextColor::White).c_str(),
+									D2LANG_GetLocaleText(3465),
+									GetColorCode(TextColor::Blue).c_str(), // Cheating a bit here. Assuming the weapon always has ED%
+									minDamage1h,
+									D2LANG_GetLocaleText(3464),
+									maxDamage1h
+								);
+								maxTextLimit -= wcslen(oneHandString);
+							}
+						}
+						else
+						{
+							// Two-Hand Damage
+							if (minDamage2h || maxDamage2h)
+							{
+								wchar_t twoHandString[64];
+								swprintf_s(twoHandString, 64, L"%s%s %s%d %s %d\n",
+									GetColorCode(TextColor::White).c_str(),
+									D2LANG_GetLocaleText(3466),
+									GetColorCode(TextColor::Blue).c_str(), // Cheating a bit here. Assuming the weapon always has ED%
+									minDamage2h,
+									D2LANG_GetLocaleText(3464),
+									maxDamage2h
+								);
+								maxTextLimit -= wcslen(twoHandString);
+							}
+						}
+					}
+					else
+					{
+						// Two-Hand Damage
+						// One-Hand Damage (Barb only)
+						if (minDamage2h || maxDamage2h)
+						{
+							wchar_t barbTwoHandString[64];
+							swprintf_s(barbTwoHandString, 64, L"%s%s %s%d %s %d\n",
+								GetColorCode(TextColor::White).c_str(),
+								D2LANG_GetLocaleText(3466),
+								GetColorCode(TextColor::Blue).c_str(), // Cheating a bit here. Assuming the weapon always has ED%
+								minDamage2h,
+								D2LANG_GetLocaleText(3464),
+								maxDamage2h
+							);
+							maxTextLimit -= wcslen(barbTwoHandString);
+						}
+						if (minDamage1h || maxDamage1h)
+						{
+							wchar_t barbOneHandString[64];
+							swprintf_s(barbOneHandString, 64, L"%s%s %s%d %s %d\n",
+								GetColorCode(TextColor::White).c_str(),
+								D2LANG_GetLocaleText(3465),
+								GetColorCode(TextColor::Blue).c_str(), // Cheating a bit here. Assuming the weapon always has ED%
+								minDamage1h,
+								D2LANG_GetLocaleText(3464),
+								maxDamage1h
+							);
+							maxTextLimit -= wcslen(barbOneHandString);
+						}
+
+					}
+
+					// Throwing Damage
+					if (D2COMMON_10711_ItemCheckIfThrowable(pItem))
+					{
+						int minDamageThrow = D2COMMON_10845_GetThrowMinDamageStat(pItem);
+						int maxDamageThrow = D2COMMON_10583_GetThrowMaxDamageStat(pItem);
+
+						wchar_t throwString[64];
+						swprintf_s(throwString, 64, L"%s%s %d %s %d\n",
+							GetColorCode(TextColor::White).c_str(),
+							D2LANG_GetLocaleText(3467),
+							minDamageThrow,
+							D2LANG_GetLocaleText(3464),
+							maxDamageThrow
+						);
+						maxTextLimit -= wcslen(throwString);
+					}
+
+					// Weapon Speed
+					int speedIndex = 0;
+					int isBow = -1;
+					int wepSpeedMod = 0;
+					int wepSpeed = D2COMMON_10592_GetWeaponAttackSpeed(pPlayer, pItem);
+					if (wepSpeed < 28) {
+						if (wepSpeed < 10) {
+							speedIndex = 1;
+						}
+						else {
+							if (D2COMMON_IsMatchingType(pItem, ITEM_TYPE_BOW) ||
+								D2COMMON_IsMatchingType(pItem, ITEM_TYPE_CROSSBOW)) {
+								isBow = 1;
+							}
+							else {
+								isBow = 0;
+							}
+
+							int dwTxtFileNo = pPlayer->dwTxtFileNo;
+							if (dwTxtFileNo) {
+								wepSpeed = (wepSpeed * 5) - 50;
+								int wepSpeedMod = (int)(p_D2CLIENT_WeaponSpeedModTable[isBow + dwTxtFileNo * 2]);
+								speedIndex = (int)(p_D2CLIENT_WeaponSpeedTable[wepSpeed + wepSpeedMod]);
+							}
+						}
+					}
+					else {
+						speedIndex = 5;
+					}
+
+					int itemTypeIndex = 0;
+					for (std::vector<pair<int, int>>::iterator it = itemTypeToTblIndex.begin(); it != itemTypeToTblIndex.end(); it++)
+					{
+						itemTypeIndex = D2COMMON_IsMatchingType(pItem, (*it).first);
+						if (itemTypeIndex)
+						{
+							itemTypeIndex = (*it).second;
+							break;
+						}
+					}
+
+					if (speedIndex && itemTypeIndex)
+					{
+						if (weponSpeedToTblIndex.find(speedIndex) != weponSpeedToTblIndex.end())
+						{
+							speedIndex = weponSpeedToTblIndex.at(speedIndex);
+
+							wchar_t wepSpeedString[128];
+							swprintf_s(wepSpeedString, 128, L"%s%s %s %s%s\n",
+								GetColorCode(TextColor::White).c_str(),
+								D2LANG_GetLocaleText(itemTypeIndex),
+								D2LANG_GetLocaleText(3996),
+								GetColorCode(TextColor::Blue).c_str(), // Cheating a bit here. Assuming the weapon always has IAS
+								D2LANG_GetLocaleText(speedIndex)
+							);
+							maxTextLimit -= wcslen(wepSpeedString);
+						}
+					}
+				}
+
+				// Shield Block
+				if (D2COMMON_IsMatchingType(pItem, ITEM_TYPE_ALLSHIELD))
+				{
+					CharStatsTxt* pCharStatsTxt = &(*p_D2COMMON_sgptDataTable)->pCharStatsTxt[pPlayer->dwTxtFileNo];
+					int blockChance = pCharStatsTxt->bBlockFactor + D2COMMON_GetUnitStat(pItem, STAT_TOBLOCK, 0);
+					int skillLevel = -1;
+
+					// Holy Shield bonus
+					Skill* pSkill = D2COMMON_10630_GetHighestLevelSkillFromUnitAndId(pPlayer, 117);
+					if (pSkill && D2COMMON_GetUnitState(pPlayer, 101))
+					{
+						skillLevel = D2COMMON_GetSkillLevel(pPlayer, pSkill, 1);
+						blockChance += D2COMMON_10832_CalcDM56(skillLevel, 117);
+					}
+
+					blockChance = blockChance > 75 ? 75 : blockChance;
+					if (blockChance != 0)
+					{
+						wchar_t blockString[32];
+						// All characters have a base block chance between 20-30%
+						// so this could only ever be false if those were dropped to 0 (more than likely unintended)
+						if (itemTxt->bblock < blockChance)
+						{
+							swprintf_s(blockString, 32, L"%s%s%s%s%d%%\n",
+								GetColorCode(TextColor::White).c_str(),
+								GetColorCode(TextColor::White).c_str(), // Not a bug, this is what the game actually does -_-
+								D2LANG_GetLocaleText(11018),
+								GetColorCode(TextColor::Blue).c_str(),
+								blockChance
+							);
+						}
+						else
+						{
+							swprintf_s(blockString, 32, L"%s%s%s%d%%\n",
+								GetColorCode(TextColor::White).c_str(),
+								GetColorCode(TextColor::White).c_str(), // Not a bug, this is what the game actually does -_-
+								D2LANG_GetLocaleText(11018),
+								blockChance
+							);
+						}
+						maxTextLimit -= wcslen(blockString);
+					}
+
+					// Smite Damage
+					if (pPlayer->dwTxtFileNo == 3 &&
+						(D2COMMON_10089(pItem) == 0 || D2COMMON_10822_GetItemRequiredClass(pItem) == 3))
+					{
+						int minSmite = itemTxt->bmindam;
+						int maxSmite = itemTxt->bmaxdam;
+						// Holy Shield Damage
+						if (pSkill && D2COMMON_GetUnitState(pPlayer, 101))
+						{
+							int hsMinDamage = D2COMMON_10567_GetMinPhysDamage(pPlayer, 117, skillLevel, 1);
+							int hsMaxDamage = D2COMMON_10297_GetMaxPhysDamage(pPlayer, 117, skillLevel, 1);
+							minSmite += (hsMinDamage >> 8);
+							maxSmite += (hsMaxDamage >> 8);
+						}
+
+						wchar_t smiteString[64];
+						swprintf_s(smiteString, 64, L"%s%s %d %s %d\n",
+							GetColorCode(TextColor::White).c_str(),
+							D2LANG_GetLocaleText(3468),
+							minSmite,
+							D2LANG_GetLocaleText(3464),
+							maxSmite
+						);
+						maxTextLimit -= wcslen(smiteString);
+					}
+				}
+
+				// Kick damage
+				if (D2COMMON_IsMatchingType(pItem, ITEM_TYPE_BOOTS) && pPlayer->dwTxtFileNo == 6)
+				{
+					int minKick = itemTxt->bmindam;
+					int maxKick = itemTxt->bmaxdam;
+
+					wchar_t kickString[64];
+					swprintf_s(kickString, 64, L"%s%s %d %s %d\n",
+						GetColorCode(TextColor::White).c_str(),
+						D2LANG_GetLocaleText(21782),
+						minKick,
+						D2LANG_GetLocaleText(3464),
+						maxKick
+					);
+					maxTextLimit -= wcslen(kickString);
+				}
+
+				// Defense
+				if (uInfo.attrs->armorFlags & ITEM_GROUP_ALLARMOR)
+				{
+					int itemDefense = D2COMMON_GetUnitStat(pItem, STAT_DEFENSE, 0);
+					if (itemDefense)
+					{
+						wchar_t defString[32];
+						swprintf_s(defString, 32, L"%s%s %s%d\n",
+							GetColorCode(TextColor::White).c_str(),
+							D2LANG_GetLocaleText(3461),
+							GetColorCode(TextColor::Blue).c_str(), // Cheating a bit here. Assuming the armor always has EDef%
+							itemDefense
+						);
+						maxTextLimit -= wcslen(defString);
+					}
+				}
+			}
+
+			// Item SpellDesc
+			if (itemTxt->wspelldescstr)
+			{
+				wchar_t spellDesc[128];
+				D2CLIENT_GetItemDescription_STUB(itemTxt, spellDesc, pItem);
+				maxTextLimit -= wcslen(spellDesc) + 3; // color code added later
+			}
+
+			// Item Level & Affix Level
+			if (App.lootfilter.showIlvl.toggle.isEnabled && ShouldShowIlvl(&uInfo))
+			{
+				if (ilvl != alvl && (quality == ITEM_QUALITY_MAGIC || quality == ITEM_QUALITY_RARE || quality == ITEM_QUALITY_CRAFT))
+				{
+					maxTextLimit -= alvlLen;
+				}
+				maxTextLimit -= ilvlLen;
+			}
+
+			maxTextLimit -= 3; // color addition in the wDesc swprintf_s below
+			maxTextLimit = maxTextLimit > MAX_ITEM_TEXT_SIZE ? MAX_ITEM_TEXT_SIZE : maxTextLimit;
+
+			if (desc.length() > maxTextLimit)
+			{
+				desc.resize(maxTextLimit - 4);
+				desc += "...";
+			}
+
 			static wchar_t wDesc[MAX_ITEM_TEXT_SIZE];
 			auto chars_written = MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, desc.c_str(), -1, wDesc, MAX_ITEM_TEXT_SIZE);
 
@@ -1338,29 +1922,17 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 		//}
 	}
 
-	int ilvl = pItem->pItemData->dwItemLevel;
-	int alvl = GetAffixLevel((BYTE)pItem->pItemData->dwItemLevel, (BYTE)uInfo.attrs->qualityLevel, uInfo.attrs->magicLevel);
-	int quality = pItem->pItemData->dwQuality;
-	// Add alvl
-	if (App.lootfilter.showIlvl.toggle.isEnabled)
+	if (App.lootfilter.showIlvl.toggle.isEnabled && ShouldShowIlvl(&uInfo))
 	{
+		// Add alvl
 		if (ilvl != alvl && (quality == ITEM_QUALITY_MAGIC || quality == ITEM_QUALITY_RARE || quality == ITEM_QUALITY_CRAFT)) {
 			int aLen = wcslen(wTxt);
-			swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen,
-				L"%sAffix Level: %d\n",
-				GetColorCode(TextColor::White).c_str(),
-				GetAffixLevel((BYTE)pItem->pItemData->dwItemLevel, (BYTE)uInfo.attrs->qualityLevel, uInfo.attrs->magicLevel));
+			swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen, alvlString);
 		}
-	}
 
-	// Add ilvl
-	if (App.lootfilter.showIlvl.toggle.isEnabled)
-	{
+		// Add ilvl
 		int aLen = wcslen(wTxt);
-		swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen,
-			L"%sItem Level: %d\n",
-			GetColorCode(TextColor::White).c_str(),
-			pItem->pItemData->dwItemLevel);
+		swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen, ilvlString);
 	}
 }
 
@@ -2252,6 +2824,7 @@ void __declspec(naked) ItemName_Interception()
 	__asm {
 		mov ecx, edi
 		mov edx, ebx
+		push[esp + 0x1bec]
 		call Item::ItemNamePatch
 		mov al, [ebp + 0x12a]
 		ret
@@ -2259,7 +2832,7 @@ void __declspec(naked) ItemName_Interception()
 }
 
 
-__declspec(naked) void __fastcall GetProperties_Interception()
+__declspec(naked) void __fastcall GetProperties_Interception()	// 3rd ItemProp func
 {
 	__asm
 	{
@@ -2275,7 +2848,7 @@ __declspec(naked) void __fastcall GetProperties_Interception()
 	Function is pretty simple so I decided to rewrite it.
 	@esp-0x20:	pItem
 */
-void __declspec(naked) GetItemPropertyStringDamage_Interception()
+void __declspec(naked) GetItemPropertyStringDamage_Interception()	// 1st ItemProp func
 {
 	__asm {
 		push[esp + 8]			// wOut
@@ -2296,7 +2869,7 @@ void __declspec(naked) GetItemPropertyStringDamage_Interception()
 	@edi pStatListEx
 	@esp-0x10 seems to always keep pItem *careful*
 */
-void __declspec(naked) GetItemPropertyString_Interception()
+void __declspec(naked) GetItemPropertyString_Interception()	// 2nd ItemProp func
 {
 	static DWORD rtn = 0; // if something is stupid but works then it's not stupid!
 	__asm

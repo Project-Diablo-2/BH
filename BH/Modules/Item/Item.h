@@ -78,7 +78,7 @@ public:
 	void OnKey(bool up, BYTE key, LPARAM lParam, bool* block);
 	void OnLeftClick(bool up, int x, int y, bool* block);
 
-	static void __fastcall ItemNamePatch(wchar_t* name, UnitAny* item);
+	static void __fastcall ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize);
 	static void OrigGetItemName(UnitAny* item, string& itemName, char* code);
 	static void __stdcall OnProperties(wchar_t* wTxt);
 	static BOOL __stdcall OnDamagePropertyBuild(UnitAny* pItem, DamageStats* pDmgStats, int nStat, wchar_t* wOut);
