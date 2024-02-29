@@ -525,6 +525,16 @@ struct CollMap {
 	WORD* pMapEnd;					//0x22
 };
 
+struct SMSGHANDLER_PARAMS {
+	HWND    hWindow;
+	UINT    nMessage;
+	WPARAM  wParam;
+	LPARAM  lParam;
+	UINT    nNotifyCode;
+	LPVOID  pExtra;
+	BOOL    bUseResult;
+	LRESULT lResult;
+};
 
 struct cStylePrefs
 {
@@ -539,153 +549,154 @@ struct cTextPrefs
 	DWORD dwSizeY;		//0x08
 };
 
-struct ControlText {
-	wchar_t* wText; //0x00
-	wchar_t* wText2;//0x04
-	DWORD _1[3];	//0x08
-	DWORD dwColor;	//0x14
+struct ControlText
+{
+	wchar_t* wText[5];	//0x00
+	DWORD dwColor;		//0x14
 	DWORD dwAlign;		//0x18
-	ControlText* pNext;//0x1C
+	ControlText* pNext;	//0x1C
 };
 
-struct ControlMsg {
+struct ControlMsg
+{
 	Control* pControl;
 	UINT uMsg;
 	WPARAM wParam;
 };
 
-/*struct Control {
-	DWORD dwType;                                                          //0x00
-	CellFile *pCellFile;                                                   //0x04
-	DWORD dwState;                                                         //0x08 0x05 - enabled, 0x04 - disabled, 0x03-0x00 - not visible
-	DWORD dwPosX;                                                          //0x0C
-	DWORD dwPosY;                                                          //0x10
-	DWORD dwSizeX;                                                         //0x14
-	DWORD dwSizeY;                                                         //0x18
-	BOOL(__fastcall *Draw)(Control*);								    //0x1C
-	BOOL(__fastcall *DrawEx)(Control*);						  	        //0x20 used by timer/popup
-	BOOL(__stdcall *Push)(ControlMsg*);							        //0x24
-	BOOL(__stdcall *Mouse)(ControlMsg*);				            		//0x28
-	BOOL(__stdcall *ListCheck)(ControlMsg*);                          	//0x2C used only by list
-	BOOL(__stdcall *Key)(ControlMsg*);							 	    //0x30 WM_CHAR MSG
-	BOOL(__stdcall *OnPress)(Control*);		                            //0x34 User Defined
-	BOOL(__fastcall*DrawAnim)(Control*);                          		//0x38 used by animimage
-	Control* pNext;                                                        //0x3C
+struct Control
+{
+	DWORD dwType;                                                       //0x00
+	CellFile *pCellFile;                                                //0x04
+	DWORD dwState;                                                      //0x08 0x05 - enabled, 0x04 - disabled, 0x03-0x00 - not visible
+	DWORD dwPosX;                                                       //0x0C
+	DWORD dwPosY;                                                       //0x10
+	DWORD dwSizeX;                                                      //0x14
+	DWORD dwSizeY;                                                      //0x18
+	BOOL(__fastcall* pfDraw)(Control*);									//0x1C
+	BOOL(__fastcall* pfInitialize)(Control*);							//0x20 used by timer/popup
+	BOOL(__stdcall* pfHandleMouseDown)(ControlMsg*);					//0x24
+	BOOL(__stdcall* pfHandleMouseUp)(ControlMsg*);				        //0x28
+	BOOL(__stdcall* pfHandleCharInput)(ControlMsg*);                    //0x2C used only by list
+	BOOL(__stdcall* pfHandleVirtualKeyInput)(ControlMsg*);				//0x30 WM_CHAR MSG
+	BOOL(__stdcall* OnPress)(Control*);		                            //0x34 User Defined
+	BOOL(__fastcall* DrawAnim)(Control*);                          		//0x38 used by animimage
+	Control* pNext;                                                     //0x3C
 };
 
-struct EditBox : Control //(size 0x284)
+struct EditBox : Control // (size 0x284) CONTROL_EDITBOX: 1
 {
-	//	 Control Header;														//0x00
+	//	 Control Header;												//0x00
 	DWORD dwLeftOffset;												    //0x40
-	DWORD dwTopOffset;													    //0x44
-	DWORD dwMaxLength;                                   	                //0x48
+	DWORD dwTopOffset;													//0x44
+	DWORD dwMaxLength;                                   	            //0x48
 	DWORD dwTextOffset;	                              		            //0x4C
-	DWORD dwTextLen;														//0x50 (strlen -1)
-	DWORD dwSelectEnd;                                                     //0x54
-	DWORD dwSelectStart;                                                   //0x58
+	DWORD dwTextLen;													//0x50 (strlen -1)
+	DWORD dwSelectEnd;                                                  //0x54
+	DWORD dwSelectStart;                                                //0x58
 	wchar_t wText[256];													//0x5C
-	DWORD dwCursorPos;										  			    //0x25C
-	DWORD dwEditFlags;														//0x260 0x08 allows multiline
-	BOOL(__stdcall *OnAccept)(char*);										//0x264
-	BOOL(__stdcall *InputHandle)(Control*, DWORD len, char* Key);			//0x268
-	BOOL(__stdcall *LengthHandle)(int aNull);								//0x26C hmm weird arg =  always 0
-	cStylePrefs Style;														//0x270
-	Control * pTabNext;													//0x278
-	Control * pTabPrev;													//0x27C
-	BOOL  bLeftButtonPressed;												//0x280
+	DWORD dwCursorPos;										  			//0x25C
+	DWORD dwEditFlags;													//0x260 0x08 allows multiline
+	BOOL(__stdcall *OnAccept)(char*);									//0x264
+	BOOL(__stdcall *InputHandle)(Control*, DWORD len, char* Key);		//0x268
+	BOOL(__stdcall *LengthHandle)(int aNull);							//0x26C hmm weird arg =  always 0
+	cStylePrefs Style;													//0x270
+	Control* pTabNext;													//0x278
+	Control* pTabPrev;													//0x27C
+	BOOL  bLeftButtonPressed;											//0x280
 };
 
-struct TextBox : Control // (size 0xAC)
+struct TextBox : Control // (size 0xAC)	CONTROL_TEXTBOX: 4
 {
-	//	 Control Header;									//0x00
+	//	 Control Header;							//0x00
 	DWORD dwLeftOffset;								//0x40
-	DWORD dwTopOffset;								    //0x44
-	ControlText* pFirstText;                           //0x48
-	ControlText* pLastText;                            //0x4C
-	ControlText* pSelectedText;                        //0x50
-	DWORD dwMaxLines;									//0x54
-	DWORD dwCurrentLine;								//0x58
-	DWORD dwTextFlags;									//0x5C 0x00 - left align 0x01 - SelectBox 0x2 - center 0x4 Create ScrollBar 0x40 - scrolling from right 0x80 - scrolling from bottom
-	DWORD dwSelectedItem;								//0x60
+	DWORD dwTopOffset;								//0x44
+	ControlText* pFirstText;                        //0x48
+	ControlText* pLastText;                         //0x4C
+	ControlText* pSelectedText;                     //0x50
+	DWORD dwMaxLines;								//0x54
+	DWORD dwCurrentLine;							//0x58
+	DWORD dwTextFlags;								//0x5C 0x00 - left align 0x01 - SelectBox 0x2 - center 0x4 Create ScrollBar 0x40 - scrolling from right 0x80 - scrolling from bottom
+	DWORD dwSelectedItem;							//0x60
 	DWORD dwFields;									//0x64
-	DWORD dwFieldXSize[5];								//0x68 for each field
-	DWORD dwFieldAlign[5];								//0x7C
+	DWORD dwFieldXSize[5];							//0x68 for each field
+	DWORD dwFieldAlign[5];							//0x7C
 	ScrollBar* ptScrollBar;							//0x90
-	cStylePrefs Style;									//0x94
-	DWORD dwMaxTextWidth;								//0x9C
-	DWORD dwMaxTextHeight;								//0xA0
-	DWORD dwInterline;									//0xA4
+	cStylePrefs Style;								//0x94
+	DWORD dwMaxTextWidth;							//0x9C
+	DWORD dwMaxTextHeight;							//0xA0
+	DWORD dwInterline;								//0xA4
 	DWORD dwInterline2;								//0xA8
 };
 
-struct Image : Control // (size 0x4C)
+struct Image : Control // (size 0x4C)	CONTROL_IMAGE: 2
 {
-	//	Control Header;										//0x00
-	DWORD CellFrame;									//0x40
-	DWORD TransLvl;										//0x44
-	void* _1;											//0x48 image struct?
+	//	Control Header;								//0x00
+	DWORD CellFrame;								//0x40
+	DWORD TransLvl;									//0x44
+	void* _1;										//0x48 image struct?
 };
 
-struct AnimImage : Control // 0x60
+struct AnimImage : Control // 0x60	CONTROL_ANIMIMAGE: 3
 {
-	//	Control Header;										//0x00
-	void* AnimStruct;									//0x40 pointer to struct which holds all cellfile frames
-	DWORD dwAnimSpeed;									//0x44
-	DWORD dwTickCount;									//0x48 creation time
-	DWORD dwCurrentFrame;								//0x4C
-	BOOL bisHovered;									//0x50
-	DWORD dwTransLvl;									//0x54
-	void(__stdcall *OnHover)(AnimImage*);				//0x58
-	BOOL bisAnimation;									//0x5C
+	//	Control Header;								//0x00
+	void* AnimStruct;								//0x40 pointer to struct which holds all cellfile frames
+	DWORD dwAnimSpeed;								//0x44
+	DWORD dwTickCount;								//0x48 creation time
+	DWORD dwCurrentFrame;							//0x4C
+	BOOL bisHovered;								//0x50
+	DWORD dwTransLvl;								//0x54
+	void(__stdcall *OnHover)(AnimImage*);			//0x58
+	BOOL bisAnimation;								//0x5C
 };
 
-struct Button : Control // (size 0x274)
+struct Button : Control // (size 0x274)	CONTROL_BUTTON: 6
 {
-	//	 Control Header;									//0x00
-	DWORD dwButtonFlags;								//0x40 0x00 - normal 0x01 - radio 0x02 - switch 0x04 - play sound 0x20 - sth with disabled/enabled 0x40 - multi line
-	DWORD dwIsPushed;									//0x44
-	BOOL  dwIsSwitched;                                //0x48
-	BOOL _1;			                                //0x4C
-	DWORD dwHotKey;                             	    //0x50
-	DWORD dwButtonType;                           		//0x54 0x00 - Normal Button, 0x01 - Switch Button 0x02 - Long Button
-	DWORD _2;	                                        //0x58
-	DWORD dwCellFrame;                                 //0x5C
-	DWORD dwFont;										//0x60  hardcoded
-	wchar_t wText[256];                              	//0x64
-	DWORD dwColor;										//0x264 hardcoded
+	//	 Control Header;							//0x00
+	DWORD dwButtonFlags;							//0x40 0x00 - normal 0x01 - radio 0x02 - switch 0x04 - play sound 0x20 - sth with disabled/enabled 0x40 - multi line
+	DWORD dwIsPushed;								//0x44
+	BOOL  dwIsSwitched;                             //0x48 // bIsCallbackPending
+	BOOL  nActivationCounter;						//0x4C
+	DWORD dwHotKey;                             	//0x50
+	DWORD dwButtonType; // nIsPressedFrameOffset    //0x54 0x00 - Normal Button, 0x01 - Switch Button 0x02 - Long Button
+	DWORD _2;	                                    //0x58
+	DWORD dwCellFrame;                              //0x5C  nBaseFrame
+	DWORD dwFont;									//0x60  hardcoded
+	wchar_t wText[256];                             //0x64
+	DWORD dwColor;									//0x264 hardcoded
 	BOOL(__stdcall *OnHover)(Button*);				//0x268
-	BOOL bisHovered;									//0x26C
-	DWORD dwStrTbl2ndLine;								//0x270
+	BOOL bisHovered;								//0x26C
+	DWORD dwStrTbl2ndLine;							//0x270
 };
 
-struct ScrollBar : Control // (size 0x60)
+struct ScrollBar : Control // (size 0x60)	CONTROL_SCROLLBAR: 5
 {
-	//	 Control Header;									//0x00
-	BOOL bMovedUp;	                                    //0x40
-	BOOL bMovedDown;	                                //0x44
-	DWORD dwScrollEntries;								//0x48
-	DWORD dwScrollPosition;                            //0x4C
-	DWORD dwClickStep;                                 //0x50
+	//	 Control Header;							//0x00
+	BOOL bMovedUp;	                                //0x40
+	BOOL bMovedDown;	                            //0x44
+	DWORD dwScrollEntries;							//0x48
+	DWORD dwScrollPosition;                         //0x4C
+	DWORD dwClickStep;                              //0x50
 	TextBox * ptParent;								//0x54
-	BOOL  bLeftButtonPressed;							//0x58
+	BOOL  bLeftButtonPressed;						//0x58
 	BOOL(__stdcall *Unk)(ControlMsg*);				//0x5C
 };
 
-struct List : Control // (size 0x6C)
+struct List : Control // (size 0x6C)	CONTROL_LIST: 7
 {
-	//	Control Header;										//0x00
-	DWORD dwFont;										//0x40
-	DWORD _2;											//0x44
-	DWORD _3;											//0x48
-	DWORD _4;											//0x4C
-	DWORD _5;											//0x50
-	DWORD _6;											//0x54
-	DWORD _7;											//0x58
-	DWORD _8;											//0x5C
-	DWORD _9;											//0x60
-	DWORD*_10;											//0x64
-	DWORD _11;											//0x68
-};*/
+	//	Control Header;								//0x00
+	DWORD dwFont;									//0x40
+	DWORD _2;										//0x44
+	DWORD _3;										//0x48
+	DWORD _4;										//0x4C
+	DWORD _5;										//0x50
+	DWORD _6;										//0x54
+	DWORD _7;										//0x58
+	DWORD _8;										//0x5C
+	DWORD _9;										//0x60
+	DWORD*_10;										//0x64
+	DWORD _11;										//0x68
+};
 
 struct D2Menu // size 0x18
 {

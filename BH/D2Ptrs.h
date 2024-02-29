@@ -507,9 +507,10 @@ FUNCPTR(D2MULTI, PrintChannelText, void __stdcall, (char* szText, DWORD dwColor)
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 VARPTR(D2MULTI, ChatBoxMsg, char*, 0x38F18, 0x1C150)
-VARPTR(D2MULTI, GameListControl, Control*, 0x39CC0, 0x39FF0)//1.13c - Unchanged
+VARPTR(D2MULTI, GameListControl, TextBox*, 0x39CC0, 0x39FF0)//1.13c - Unchanged
 VARPTR(D2MULTI, EditboxPreferences, ControlPreferences*, 0x19C60, 0x19C60)
-VARPTR(D2MULTI, PassBox, Control*, 0x39CD8, 0x3A060)
+VARPTR(D2MULTI, GameName, EditBox*, 0x39CD4)
+VARPTR(D2MULTI, PassBox, EditBox*, 0x39CD8, 0x3A060)
 VARPTR(D2MULTI, ChatInputBox, Control*, 0x3A0D0, 0x39FC0)
 
 
@@ -572,12 +573,20 @@ FUNCPTR(D2WIN, SetTextSize, DWORD __fastcall, (DWORD dwSize), -10184, -10047)
 FUNCPTR(D2WIN, SetControlText, void* __fastcall, (Control* box, wchar_t* txt), -10042, -10007)
 FUNCPTR(D2WIN, GetTextWidthFileNo, DWORD __fastcall, (wchar_t* wStr, DWORD* dwWidth, DWORD* dwFileNo), -10177, -10179)
 
-FUNCPTR(D2WIN, CreateEditBox, Control* __fastcall, (DWORD dwPosX, DWORD dwPosY, DWORD nWidth, DWORD nHeight, DWORD _3, DWORD _4, DWORD _5, BOOL(__stdcall* pCallback)(wchar_t* wText), DWORD _6, DWORD _7, ControlPreferences* pPreferences), 0x161B0, 0x11A10)//1.13c
-FUNCPTR(D2WIN, DestroyEditBox, VOID __fastcall, (Control* pControl), 0x159E0, 0xF320)//1.13c
-FUNCPTR(D2WIN, DestroyControl, VOID __stdcall, (Control* pControl), 0x18490, 0xE5F0)//1.13c
-FUNCPTR(D2WIN, SetEditBoxCallback, VOID __fastcall, (Control* pControl, BOOL(__stdcall* FunCallBack)(Control* pControl, DWORD dwInputType, char* pChar)), 0x13970, 0xF1D0)//1.13c
-FUNCPTR(D2WIN, SetEditBoxProc, void __fastcall, (Control* box, BOOL(__stdcall* FunCallBack)(Control*, DWORD, DWORD)), 0x13970, 0xF1D0)//Updated 1.13c
-FUNCPTR(D2WIN, SelectEditBoxText, void __fastcall, (Control* box), 0x13720, 0xEF80) //Updated 1.13c
+FUNCPTR(D2WIN, CreateEditBox, EditBox* __fastcall, (DWORD dwPosX, DWORD dwPosY, DWORD nWidth, DWORD nHeight, DWORD dwLeftOffset, DWORD dwTopOffset, CellFile* pCellFile, BOOL(__stdcall* pCallback)(wchar_t* wText), DWORD(__stdcall* a9)(SMSGHANDLER_PARAMS*), DWORD nEditBoxFlags, ControlPreferences* pPreferences), 0x161B0, 0x11A10)//1.13c #10057
+FUNCPTR(D2WIN, DestroyEditBox, VOID __fastcall, (Control* pControl), 0x159E0, 0xF320)//1.13c #10048
+FUNCPTR(D2WIN, BUTTON_Create, Button* __fastcall, (DWORD nX, DWORD nY, DWORD nWidth, DWORD nHeight, CellFile* pCellFile, BOOL(__stdcall* pCallback)(SMSGHANDLER_PARAMS*), DWORD nActivationVirtualKey, DWORD nBaseFrame, DWORD nFlags, WORD nStringId, BOOL(__stdcall* pfUpdateHoverState)(SMSGHANDLER_PARAMS*)), -10068)
+FUNCPTR(D2WIN, BUTTON_Destroy, VOID __fastcall, (Control* pControl), -10155)
+FUNCPTR(D2WIN, BUTTON_IsPressed, BOOL __fastcall, (Button* pControl), -10003)
+FUNCPTR(D2WIN, BUTTON_SetIsPressed, VOID __fastcall, (Button* pControl, int isPressed), -10097)
+
+FUNCPTR(D2WIN, CONTROL_ToggleThirdFlag, VOID __fastcall, (Control* pControl, int bSet), -10131)
+FUNCPTR(D2WIN, DestroyControl, VOID __stdcall, (Control* pControl), 0x18490, 0xE5F0)//1.13c #10050
+FUNCPTR(D2WIN, EDITBOX_SetNextAndPrevious, VOID __fastcall, (EditBox* pEditBox1, EditBox* pEditBox2), -10146)
+// TODO: Combine, these two are the same
+FUNCPTR(D2WIN, SetEditBoxCallback, VOID __fastcall, (EditBox* pControl, BOOL(__stdcall* FunCallBack)(EditBox* pControl, DWORD dwInputType, char* pChar)), 0x13970, 0xF1D0)//1.13c #10170
+FUNCPTR(D2WIN, SetEditBoxProc, void __fastcall, (Control* box, BOOL(__stdcall* FunCallBack)(Control*, DWORD, DWORD)), 0x13970, 0xF1D0)//Updated 1.13c # 10170
+FUNCPTR(D2WIN, SelectEditBoxText, void __fastcall, (Control* box), 0x13720, 0xEF80) //Updated 1.13c # 10021
 FUNCPTR(D2WIN, InitMPQ, DWORD __stdcall, (char* dll, const char* mpqfile, char* mpqname, int v4, int v5), 0x7E60, 0x7E50)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

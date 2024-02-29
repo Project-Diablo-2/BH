@@ -69,6 +69,9 @@ struct BHApp {
 				{"*hc", "7"}
 			}
 		};
+		SettingsBool showNormalDiff = { true, true };
+		SettingsBool showNightmareDiff = { true, true };
+		SettingsBool showHellDiff = { true, true };
 	} bnet;
 
 	struct {

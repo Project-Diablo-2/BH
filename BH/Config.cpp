@@ -149,6 +149,10 @@ void Config::SaveConfig()
 	jsonBnet["fail_to_join"] = App.bnet.failToJoin.value;
 	jsonBnet["game_list_refresh"] = App.bnet.refreshTime.value;
 	jsonBnet["whisper_color"] = App.bnet.whisperColor.values;
+	jsonBnet["show_normal_difficulty"] = App.bnet.showNormalDiff.value;
+	jsonBnet["show_nightmare_difficulty"] = App.bnet.showNightmareDiff.value;
+	jsonBnet["show_hell_difficulty"] = App.bnet.showHellDiff.value;
+
 	App.jsonConfig["bnet"] = jsonBnet;
 
 	// General settings
@@ -302,6 +306,9 @@ void Config::LoadConfig()
 	App.bnet.failToJoin.value =			GetInt("/bnet"_json_pointer, "fail_to_join", App.bnet.failToJoin);
 	App.bnet.refreshTime.value =		GetInt("/bnet"_json_pointer, "game_list_refresh", App.bnet.refreshTime);
 	App.bnet.whisperColor.values =		GetAssoc("/bnet"_json_pointer, "whisper_color", App.bnet.whisperColor);
+	App.bnet.showNormalDiff.value =		GetBool("/bnet"_json_pointer, "show_normal_difficulty", App.bnet.showNormalDiff);
+	App.bnet.showNightmareDiff.value =	GetBool("/bnet"_json_pointer, "show_nightmare_difficulty", App.bnet.showNightmareDiff);
+	App.bnet.showHellDiff.value =		GetBool("/bnet"_json_pointer, "show_hell_difficulty", App.bnet.showHellDiff);
 
 	// General settings
 	App.general.reloadConfig.hotkey =		GetKey("/general"_json_pointer, "reload_config", App.general.reloadConfig);

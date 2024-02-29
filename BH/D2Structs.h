@@ -153,40 +153,6 @@ struct ControlPreferences
 	// ..
 };
 
-struct Control {
-	DWORD dwType;					//0x00
-	CellFile* pCellFile;				//0x04
-	DWORD dwDisabled;				//0x08
-	DWORD dwPosX;					//0x0C
-	DWORD dwPosY;					//0x10
-	DWORD dwSizeX;					//0x14
-	DWORD dwSizeY;					//0x18
-	VOID(__fastcall* Initialize)(Control* pControl);//0x1c
-	DWORD _3;						//0x20
-	DWORD* _4;						//0x24
-	DWORD* _5;						//0x28
-	DWORD _6;						//0x2C
-	DWORD* _7;						//0x30
-	DWORD* _8;						//0x34
-	DWORD _9;						//0x38
-	Control* pNext;					//0x3C
-	DWORD _10;						//0x40
-	DWORD dwMaxLength;				//0x44
-	union {
-		ControlText* pFirstText;		//0x48
-		DWORD dwScrollEntries;		//0x48
-	};
-	union {
-		ControlText* pLastText;		//0x4C
-		DWORD dwScrollPosition;		//0x4C
-	};
-	ControlText* pSelectedText;		//0x50
-	DWORD dwSelectEnd;				//0x54
-	DWORD dwSelectStart;				//0x58
-	wchar_t wText[0x1A];				//0x5C
-	Control* pChildControl;			//0x90
-};
-
 #pragma pack(push)
 #pragma pack(1)
 

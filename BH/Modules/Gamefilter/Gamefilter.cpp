@@ -10,7 +10,10 @@ using namespace std;
 list<GameListEntry*> Gamefilter::gameList;
 vector<GameListEntry*> Gamefilter::filterVector;
 vector<wchar_t*> Gamefilter::gServerVector;
-Control* Gamefilter::filterBox;
+EditBox* Gamefilter::filterBox;
+Button* Gamefilter::filterNorm;
+Button* Gamefilter::filterNightmare;
+Button* Gamefilter::filterHell;
 int Gamefilter::refreshTime;
 
 Patch* createGameBox = new Patch(Call, D2MULTI, { 0x149EF, 0xAD8F }, (int)D2MULTI_CreateGameBox_Interception, 5);
@@ -55,14 +58,14 @@ void Gamefilter::OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket) {
 	//S>C 0x19 MCP_CHARLIST2
 	if (pPacket[0] == 0x19 || pPacket[0] == 0x17) {
 		unsigned int nChars = *reinterpret_cast<int*>(pPacket + 3);
-		for (Control* pControl = *p_D2WIN_FirstControl; pControl; pControl = pControl->pNext)
+		for (TextBox* pControl = (TextBox*)*p_D2WIN_FirstControl; pControl; pControl = (TextBox*)pControl->pNext)
 		{
-			if (pControl->dwType == 4 && pControl->pChildControl && pControl->pChildControl->dwType == 5) {
-				pControl->dwSelectEnd = nChars;
-				pControl->dwSelectStart = 0;
+			if (pControl->dwType == 4 && pControl->ptScrollBar && pControl->ptScrollBar->dwType == 5) {
+				pControl->dwMaxLines = nChars;
+				pControl->dwCurrentLine = 0;
 
-				pControl->pChildControl->dwScrollPosition = 0;
-				pControl->pChildControl->dwScrollEntries = nChars > 8 ? (unsigned int)(ceil((nChars - 8) / 2.0)) : 0;
+				pControl->ptScrollBar->dwScrollPosition = 0;
+				pControl->ptScrollBar->dwScrollEntries = nChars > 8 ? (unsigned int)(ceil((nChars - 8) / 2.0)) : 0;
 			}
 		}
 	}
@@ -112,16 +115,16 @@ void Gamefilter::OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket) {
 			memset(pText, NULL, sizeof(ControlText));
 
 			pText->dwColor = 4;
-			pText->wText = new wchar_t[64];
-			pText->wText2 = new wchar_t[12];
+			pText->wText[0] = new wchar_t[64];
+			pText->wText[1] = new wchar_t[12];
 
-			memset(pText->wText, NULL, 64);
-			memset(pText->wText2, NULL, 12);
+			memset(pText->wText[0], NULL, 64);
+			memset(pText->wText[1], NULL, 12);
 
 			wstring wGameName(pEntry->sGameName.begin(), pEntry->sGameName.end());
 
-			wcscpy_s(pText->wText, 64, wGameName.c_str());
-			pText->wText2[0] = pEntry->bPlayers + 0x30;
+			wcscpy_s(pText->wText[0], 64, wGameName.c_str());
+			pText->wText[1][0] = pEntry->bPlayers + 0x30;
 
 			if ((*p_D2MULTI_GameListControl)->pFirstText)
 			{
@@ -134,8 +137,8 @@ void Gamefilter::OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket) {
 				(*p_D2MULTI_GameListControl)->pSelectedText = pText;
 			}
 
-			(*p_D2MULTI_GameListControl)->dwSelectEnd += 1;
-			(*p_D2MULTI_GameListControl)->pChildControl->dwScrollEntries = (*p_D2MULTI_GameListControl)->dwSelectEnd > 9 ? (*p_D2MULTI_GameListControl)->dwSelectEnd - 9 : 0;
+			(*p_D2MULTI_GameListControl)->dwMaxLines += 1;
+			(*p_D2MULTI_GameListControl)->ptScrollBar->dwScrollEntries = (*p_D2MULTI_GameListControl)->dwMaxLines > 9 ? (*p_D2MULTI_GameListControl)->dwMaxLines - 9 : 0;
 			filterVector.push_back(pEntry);
 
 			if (::toupper(pEntry->sGameDesc[0]) == 'G' && ::toupper(pEntry->sGameDesc[1]) == 'S')
@@ -188,7 +191,7 @@ void Gamefilter::OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket) {
 	return;
 }
 
-BOOL __stdcall Gamefilter::Filterbox_InputHandler(Control* pControl, DWORD dwLength, CHAR* pChar)
+BOOL __stdcall Gamefilter::Filterbox_InputHandler(EditBox* pControl, DWORD dwLength, CHAR* pChar)
 {
 	wstring wInput(pControl->wText);
 
@@ -197,6 +200,8 @@ BOOL __stdcall Gamefilter::Filterbox_InputHandler(Control* pControl, DWORD dwLen
 	if (dwLength > 0)
 		sFilter += *pChar;
 
+	// TODO: when backspacing a filter, "\b" is added to the end of the string
+	// which breaks the output (no games shown).
 	for (unsigned int i = 0; i < sFilter.length(); i++)
 		sFilter[i] = ::toupper(sFilter[i]);
 
@@ -207,9 +212,63 @@ BOOL __stdcall Gamefilter::Filterbox_InputHandler(Control* pControl, DWORD dwLen
 
 BOOL __stdcall Gamefilter::Filterbox_ReturnHandler(wchar_t* wText)
 {
+	return TRUE;
+}
+
+BOOL __stdcall Gamefilter::FilterButtonNormal_Callback(SMSGHANDLER_PARAMS* pMsg)
+{
+	App.bnet.showNormalDiff.value = !App.bnet.showNormalDiff.value;
+	App.config->SaveConfig();
+
+	int isPressed = D2WIN_BUTTON_IsPressed(filterNorm);
+	if (isPressed)
+	{
+		D2WIN_BUTTON_SetIsPressed(filterNorm, 1);
+	}
+	else
+	{
+		D2WIN_BUTTON_SetIsPressed(filterNorm, 0);
+	}
 
 	return TRUE;
 }
+
+BOOL __stdcall Gamefilter::FilterButtonNightmare_Callback(SMSGHANDLER_PARAMS* pMsg)
+{
+	App.bnet.showNightmareDiff.value = !App.bnet.showNightmareDiff.value;
+	App.config->SaveConfig();
+
+	int isPressed = D2WIN_BUTTON_IsPressed(filterNightmare);
+	if (isPressed)
+	{
+		D2WIN_BUTTON_SetIsPressed(filterNightmare, 1);
+	}
+	else
+	{
+		D2WIN_BUTTON_SetIsPressed(filterNightmare, 0);
+	}
+
+	return TRUE;
+}
+
+BOOL __stdcall Gamefilter::FilterButtonHell_Callback(SMSGHANDLER_PARAMS* pMsg)
+{
+	App.bnet.showHellDiff.value = !App.bnet.showHellDiff.value;
+	App.config->SaveConfig();
+
+	int isPressed = D2WIN_BUTTON_IsPressed(filterHell);
+	if (isPressed)
+	{
+		D2WIN_BUTTON_SetIsPressed(filterHell, 1);
+	}
+	else
+	{
+		D2WIN_BUTTON_SetIsPressed(filterHell, 0);
+	}
+
+	return TRUE;
+}
+
 
 VOID Gamefilter::CreateGamelist(VOID)
 {
@@ -224,11 +283,20 @@ VOID Gamefilter::CreateGamelist(VOID)
 
 	}
 
-	filterBox = D2WIN_CreateEditBox(599, 185, 145, 41, 7, NULL, NULL, Gamefilter::Filterbox_ReturnHandler, NULL, NULL, (ControlPreferences*)p_D2MULTI_EditboxPreferences);
+	filterBox = D2WIN_CreateEditBox(599, 185, 155, 20, 7, -3, NULL, Gamefilter::Filterbox_ReturnHandler, 0, NULL, (ControlPreferences*)p_D2MULTI_EditboxPreferences);
 	filterBox->pCellFile = D2CLIENT_LoadUiImage("DATA\\GLOBAL\\UI\\FrontEnd\\textbox2");
 	D2WIN_SetEditBoxCallback(filterBox, Gamefilter::Filterbox_InputHandler);
 	filterBox->dwMaxLength = 0x12;
-	//filterBox->Initialize(filterBox);
+
+	//filterNorm =		D2WIN_BUTTON_Create(425, 173, 15, 16, NULL, Gamefilter::FilterButtonNormal_Callback, 0, 0, 2, NULL, NULL);
+	//filterNightmare =	D2WIN_BUTTON_Create(425 + 40, 173, 15, 16, NULL, Gamefilter::FilterButtonNightmare_Callback, 0, 0, 2, NULL, NULL);
+	//filterHell =		D2WIN_BUTTON_Create(425 + 80, 173, 15, 16, NULL, Gamefilter::FilterButtonHell_Callback, 0, 0, 2, NULL, NULL);
+	//filterNorm->pCellFile = D2CLIENT_LoadUiImage("DATA\\GLOBAL\\UI\\BIGMENU\\joingameclickbox");
+	//filterNightmare->pCellFile = D2CLIENT_LoadUiImage("DATA\\GLOBAL\\UI\\BIGMENU\\joingameclickbox");
+	//filterHell->pCellFile = D2CLIENT_LoadUiImage("DATA\\GLOBAL\\UI\\BIGMENU\\joingameclickbox");
+	//D2WIN_BUTTON_SetIsPressed(filterNorm, App.bnet.showNormalDiff.value);
+	//D2WIN_BUTTON_SetIsPressed(filterNightmare, App.bnet.showNightmareDiff.value);
+	//D2WIN_BUTTON_SetIsPressed(filterHell, App.bnet.showHellDiff.value);
 }
 
 VOID __stdcall Gamefilter::DestroyGamelist(Control* pControl)
@@ -251,6 +319,21 @@ VOID __stdcall Gamefilter::DestroyGamelist(Control* pControl)
 
 			filterBox = NULL;
 		}
+		//if (filterNorm)
+		//{
+		//	D2WIN_BUTTON_Destroy(filterNorm);
+		//	filterNorm = NULL;
+		//}
+		//if (filterNightmare)
+		//{
+		//	D2WIN_BUTTON_Destroy(filterNightmare);
+		//	filterNightmare = NULL;
+		//}
+		//if (filterHell)
+		//{
+		//	D2WIN_BUTTON_Destroy(filterHell);
+		//	filterHell = NULL;
+		//}
 	}
 
 	D2WIN_DestroyControl(pControl);
@@ -260,11 +343,18 @@ void Gamefilter::OnOOGDraw() {
 	// filterBox is instantiated in the create game box handler, so we can't
 	// draw the join game screen until we have it
 	if ((*p_D2MULTI_GameListControl) && filterBox) {
+		// Allow tabbing between all 3 boxes
+		if ((*p_D2MULTI_GameName) && (*p_D2MULTI_PassBox))
+		{
+			D2WIN_EDITBOX_SetNextAndPrevious(*p_D2MULTI_GameName, *p_D2MULTI_PassBox);
+			D2WIN_EDITBOX_SetNextAndPrevious(*p_D2MULTI_PassBox, filterBox);
+			D2WIN_EDITBOX_SetNextAndPrevious(filterBox, *p_D2MULTI_GameName);
+		}
 		wstringstream wFilterStream;
 		wstring wFilterString = L"Games: ";
 		wstring wFilter = filterBox->wText;
 
-		wFilterStream << (int)(*p_D2MULTI_GameListControl)->dwSelectEnd;
+		wFilterStream << (int)(*p_D2MULTI_GameListControl)->dwMaxLines;
 		wFilterString += wFilterStream.str().c_str();
 		wFilterString += L"/";
 		wFilterStream.str(L"");
@@ -277,7 +367,7 @@ void Gamefilter::OnOOGDraw() {
 
 		if (App.bnet.showDifficulty.value || App.bnet.showGameserver.value) {
 			D2WIN_SetTextSize(6);
-			DWORD dwListStart = (*p_D2MULTI_GameListControl)->dwSelectStart;
+			DWORD dwListStart = (*p_D2MULTI_GameListControl)->dwCurrentLine;
 			DWORD dwListEnd = filterVector.size() > 9 ? dwListStart + 9 : filterVector.size();
 			for (unsigned int i = dwListStart; i < dwListEnd; i++)
 			{
@@ -298,6 +388,11 @@ void Gamefilter::OnOOGDraw() {
 				}
 			}
 		}
+		// Difficulty Filter buttons
+		//D2WIN_DrawText(L"N", 445, 173, White, -1);
+		//D2WIN_DrawText(L"NM", 485, 173, Blue, -1);
+		//D2WIN_DrawText(L"H", 525, 173, Red, -1);
+
 		D2WIN_SetTextSize(dwOldSize);
 	}
 }
@@ -313,20 +408,20 @@ void Gamefilter::BuildGameList(string sFilter)
 		(*p_D2MULTI_GameListControl)->pFirstText = NULL;
 		(*p_D2MULTI_GameListControl)->pLastText = NULL;
 		(*p_D2MULTI_GameListControl)->pSelectedText = NULL;
-		(*p_D2MULTI_GameListControl)->dwSelectEnd = 0;
-		(*p_D2MULTI_GameListControl)->dwSelectStart = 0;
-		(*p_D2MULTI_GameListControl)->dwMaxLength = 0;
+		(*p_D2MULTI_GameListControl)->dwMaxLines = 0;
+		(*p_D2MULTI_GameListControl)->dwCurrentLine = 0;
+		(*p_D2MULTI_GameListControl)->dwTopOffset = 0;
 
-		(*p_D2MULTI_GameListControl)->pChildControl->dwMaxLength = 0;
-		(*p_D2MULTI_GameListControl)->pChildControl->dwScrollPosition = 0;
-		(*p_D2MULTI_GameListControl)->pChildControl->dwScrollEntries = 0;
+		(*p_D2MULTI_GameListControl)->ptScrollBar->bMovedDown = 0;
+		(*p_D2MULTI_GameListControl)->ptScrollBar->dwScrollPosition = 0;
+		(*p_D2MULTI_GameListControl)->ptScrollBar->dwScrollEntries = 0;
 
 		while (pText)
 		{
 			ControlText* pNext = pText->pNext;
 
-			delete[] pText->wText;
-			delete[] pText->wText2;
+			delete[] pText->wText[0];
+			delete[] pText->wText[1];
 			delete pText;
 
 			pText = pNext;
@@ -346,16 +441,16 @@ void Gamefilter::BuildGameList(string sFilter)
 				memset(pText, NULL, sizeof(ControlText));
 
 				pText->dwColor = 4;
-				pText->wText = new wchar_t[64];
-				pText->wText2 = new wchar_t[12];
+				pText->wText[0] = new wchar_t[64];
+				pText->wText[1] = new wchar_t[12];
 
-				memset(pText->wText, NULL, 64);
-				memset(pText->wText2, NULL, 12);
+				memset(pText->wText[0], NULL, 64);
+				memset(pText->wText[1], NULL, 12);
 
 				wstring wGameName((*ListEntry)->sGameName.begin(), (*ListEntry)->sGameName.end());
 
-				wcscpy_s(pText->wText, 64, wGameName.c_str());
-				pText->wText2[0] = (*ListEntry)->bPlayers + 0x30;
+				wcscpy_s(pText->wText[0], 64, wGameName.c_str());
+				pText->wText[1][0] = (*ListEntry)->bPlayers + 0x30;
 
 				if ((*p_D2MULTI_GameListControl)->pFirstText)
 				{
@@ -369,8 +464,8 @@ void Gamefilter::BuildGameList(string sFilter)
 				}
 
 
-				(*p_D2MULTI_GameListControl)->dwSelectEnd += 1;
-				(*p_D2MULTI_GameListControl)->pChildControl->dwScrollEntries = (*p_D2MULTI_GameListControl)->dwSelectEnd > 9 ? (*p_D2MULTI_GameListControl)->dwSelectEnd - 9 : 0;
+				(*p_D2MULTI_GameListControl)->dwMaxLines += 1;
+				(*p_D2MULTI_GameListControl)->ptScrollBar->dwScrollEntries = (*p_D2MULTI_GameListControl)->dwMaxLines > 9 ? (*p_D2MULTI_GameListControl)->dwMaxLines - 9 : 0;
 				filterVector.push_back(*ListEntry);
 
 				if (::toupper((*ListEntry)->sGameDesc[0]) == 'G' && ::toupper((*ListEntry)->sGameDesc[1]) == 'S')
