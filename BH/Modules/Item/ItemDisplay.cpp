@@ -35,16 +35,16 @@ std::vector<std::string> colorreps =
 	"ÿc3",
 	"ÿc4",
 	"ÿc5",
-	"ÿc6",
+	*p_D2GFX_RenderMode != 4 ? "ÿc6" : "\xFF""c\x02",
 	"ÿc7",
 	"ÿc8",
 	"ÿc9",
 	"ÿc;",
 	"ÿc:",
-	"\xFF""c\x06",
-	"\xFF""c\x07",
-	"\xFF""c\x09",
-	"\xFF""c\x0C"
+	*p_D2GFX_RenderMode != 4 ? "ÿc1" : "\xFF""c\x06",
+	*p_D2GFX_RenderMode != 4 ? "ÿc2" : "\xFF""c\x07",
+	*p_D2GFX_RenderMode != 4 ? "ÿc3" : "\xFF""c\x09",
+	*p_D2GFX_RenderMode != 4 ? "ÿc5" : "\xFF""c\x0C"
 };
 
 // All colors here must also be defined in MAP_COLOR_REPLACEMENTS
@@ -55,16 +55,16 @@ std::vector<std::string> colorreps =
 	{"BLUE", "ÿc3"},		\
 	{"GOLD", "ÿc4"},		\
 	{"GRAY", "ÿc5"},		\
-	{"BLACK", "ÿc6"},		\
+	{"BLACK", *p_D2GFX_RenderMode != 4 ? "ÿc6" : "\xFF" "c\x02"},		\
 	{"TAN", "ÿc7"},			\
 	{"ORANGE", "ÿc8"},		\
 	{"YELLOW", "ÿc9"},		\
 	{"PURPLE", "ÿc;"},		\
 	{"DARK_GREEN", "ÿc:"},	\
-	{"CORAL", "\xFF" "c\x06"},		\
-	{"SAGE", "\xFF" "c\x07"},		\
-	{"TEAL", "\xFF" "c\x09"},		\
-	{"LIGHT_GRAY", "\xFF" "c\x0C"}
+	{"CORAL", *p_D2GFX_RenderMode != 4 ? "ÿc1" : "\xFF" "c\x06"},		\
+	{"SAGE", *p_D2GFX_RenderMode != 4 ? "ÿc2" : "\xFF" "c\x07"},		\
+	{"TEAL", *p_D2GFX_RenderMode != 4 ? "ÿc3" : "\xFF" "c\x09"},		\
+	{"LIGHT_GRAY", *p_D2GFX_RenderMode != 4 ? "ÿc5" : "\xFF" "c\x0C"}
 
 #define MAP_COLOR_WHITE     0x20
 

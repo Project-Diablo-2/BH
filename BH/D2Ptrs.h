@@ -252,6 +252,8 @@ VARPTR(D2CLIENT, NoPickUp, DWORD, 0x11C2F0, 0x11D574) // unused but I want to ad
 VARPTR(D2CLIENT, ChatMsg, wchar_t*, 0x11EC80, 0x11D650)
 
 VARPTR(D2CLIENT, HoverItem, UnitAny*, 0x11BC38);
+VARPTR(D2CLIENT, WeaponSpeedTable, int*, 0xE0F78)
+VARPTR(D2CLIENT, WeaponSpeedModTable, int*, 0xE10E0)
 
 VARPTR(D2CLIENT, MapId, DWORD, 0x11C310)
 VARPTR(D2CLIENT, ScreenCovered, DWORD, 0x11C414) // 1 = Right Side Covered 2 = Left Side Covered 3 = Both Sides Covered
@@ -278,6 +280,7 @@ ASMPTR(D2CLIENT, ShopAction_I, 0x47D60, 0x7D030)
 
 ASMPTR(D2CLIENT, GetUnitName_I, 0xA5D90, 0x622E0)
 ASMPTR(D2CLIENT, GetItemDesc_I, 0x560B0, 0x2E380)
+ASMPTR(D2CLIENT, GetItemDescription, 0x8D600);
 
 ASMPTR(D2CLIENT, AssignPlayer_I, 0xA7630, 0x63C70)
 
@@ -387,6 +390,29 @@ FUNCPTR(D2COMMON, IsTownByRoom, BOOL __stdcall, (Room1* pRoom1), -10057, -10691)
 FUNCPTR(D2COMMON, GetCursorItem, UnitAny* __stdcall, (Inventory* pInv), -11017);
 FUNCPTR(D2COMMON, ITEMS_GetRunesTxtRecordFromItem, RunesTxt* __stdcall, (UnitAny* pItem), -10918);
 
+FUNCPTR(D2COMMON, 10089, int __stdcall, (UnitAny* pItem), -10089);
+FUNCPTR(D2COMMON, 10244_CheckRequirements, int __stdcall, (UnitAny* pItem, UnitAny* pUnit, BOOL bEquipping, BOOL* bStrength, BOOL* bDexterity, BOOL* bLevel), -10244);
+FUNCPTR(D2COMMON, 10326_GetItemTxtFileNo, int __stdcall, (UnitAny* pItem), -10326);
+FUNCPTR(D2COMMON, 10364_Is1Or2Handed, int __stdcall, (UnitAny* pUnit, UnitAny* pItem), -10364);
+FUNCPTR(D2COMMON, 10567_GetMinPhysDamage, int __stdcall, (UnitAny* pUnit, int nSkillId, int nSkillLevel, BOOL a4), -10567);
+FUNCPTR(D2COMMON, 10297_GetMaxPhysDamage, int __stdcall, (UnitAny* pUnit, int nSkillId, int nSkillLevel, BOOL a4), -10297);
+FUNCPTR(D2COMMON, 10592_GetWeaponAttackSpeed, int __stdcall, (UnitAny* pUnit, UnitAny* pItem), -10592);
+FUNCPTR(D2COMMON, 10711_ItemCheckIfThrowable, int __stdcall, (UnitAny* pItem), -10711)
+FUNCPTR(D2COMMON, 10757_CheckIfSocketable, int __stdcall, (UnitAny* pItem), -10757)
+FUNCPTR(D2COMMON, 10822_GetItemRequiredClass, int __stdcall, (UnitAny* pItem), -10822);
+FUNCPTR(D2COMMON, 10823_GetMinDamageStat, int __stdcall, (UnitAny* pItem, int b2Handed), -10823);
+FUNCPTR(D2COMMON, 10925_GetMaxDamageStat, int __stdcall, (UnitAny* pItem, int b2Handed), -10925);
+FUNCPTR(D2COMMON, 10845_GetThrowMinDamageStat, int __stdcall, (UnitAny* pItem), -10845);
+FUNCPTR(D2COMMON, 10583_GetThrowMaxDamageStat, int __stdcall, (UnitAny* pItem), -10583);
+FUNCPTR(D2COMMON, 10630_GetHighestLevelSkillFromUnitAndId, Skill* __fastcall, (UnitAny* pItem, int nSkillId), -10630);
+FUNCPTR(D2COMMON, 10806_DATATBLS_GetGemsTxtRecord, D2GemsTxt* __stdcall, (int nGemId), -10806);
+FUNCPTR(D2COMMON, 10832_CalcDM56, int __stdcall, (int nSkillLevel, int nSkillId), -10832);
+FUNCPTR(D2COMMON, 10865_HasDurability, int __stdcall, (UnitAny* pItem), -10865);
+FUNCPTR(D2COMMON, 11015_GetItemLevelRequirement, int __stdcall, (UnitAny* pItem, UnitAny* pUnit), -11015);
+FUNCPTR(D2COMMON, 11116_GetMaxDurabilityFromUnit, int __stdcall, (UnitAny* pItem), -11116);
+FUNCPTR(D2COMMON, 11144_GetQuiverType, int __stdcall, (UnitAny* pItem), -11144);
+FUNCPTR(D2COMMON, 11147_UnitIsItem, UnitAny* __stdcall, (UnitAny* pItem), -11147);
+
 FUNCPTR(D2COMMON, 10819_UNITS_UpdateUnitAnimRate, void __stdcall, (UnitAny* pUnit, char* szFile, int nLine), -10819);
 FUNCPTR(D2COMMON, 10031_UNITS_GetFrameBonus, int __stdcall, (UnitAny* pUnit), -10031);
 FUNCPTR(D2COMMON, 10595_UNITS_InitUnitMode, BOOL __stdcall, (UnitAny* pUnit), -10595);
@@ -454,6 +480,9 @@ VARPTR(D2NET, CriticalPacketSection, CRITICAL_SECTION, 0xB400, 0xB400) // unused
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // D2Gfx Ordinals
 ////////////////////////////////////////////////////////////////////////////////////////////////
+
+// 1-2: Software, 3: DDraw, 4:Glide, 5:OpenGL, 6:Direct3d, 7:RAVE
+VARPTR(D2GFX, RenderMode, int, 0x11258)
 
 FUNCPTR(D2GFX, DrawLine, void __stdcall, (int X1, int Y1, int X2, int Y2, DWORD dwColor, DWORD dwUnk), -10010, -10013)
 FUNCPTR(D2GFX, DrawRectangle, void __stdcall, (int X1, int Y1, int X2, int Y2, DWORD dwColor, DWORD dwTrans), -10014, -10028)
@@ -543,7 +572,7 @@ FUNCPTR(D2WIN, SetTextSize, DWORD __fastcall, (DWORD dwSize), -10184, -10047)
 FUNCPTR(D2WIN, SetControlText, void* __fastcall, (Control* box, wchar_t* txt), -10042, -10007)
 FUNCPTR(D2WIN, GetTextWidthFileNo, DWORD __fastcall, (wchar_t* wStr, DWORD* dwWidth, DWORD* dwFileNo), -10177, -10179)
 
-FUNCPTR(D2WIN, CreateEditBox, Control* __fastcall, (DWORD dwPosX, DWORD dwPosY, DWORD _1, DWORD _2, DWORD _3, DWORD _4, DWORD _5, BOOL(__stdcall* pCallback)(wchar_t* wText), DWORD _6, DWORD _7, ControlPreferences* pPreferences), 0x161B0, 0x11A10)//1.13c
+FUNCPTR(D2WIN, CreateEditBox, Control* __fastcall, (DWORD dwPosX, DWORD dwPosY, DWORD nWidth, DWORD nHeight, DWORD _3, DWORD _4, DWORD _5, BOOL(__stdcall* pCallback)(wchar_t* wText), DWORD _6, DWORD _7, ControlPreferences* pPreferences), 0x161B0, 0x11A10)//1.13c
 FUNCPTR(D2WIN, DestroyEditBox, VOID __fastcall, (Control* pControl), 0x159E0, 0xF320)//1.13c
 FUNCPTR(D2WIN, DestroyControl, VOID __stdcall, (Control* pControl), 0x18490, 0xE5F0)//1.13c
 FUNCPTR(D2WIN, SetEditBoxCallback, VOID __fastcall, (Control* pControl, BOOL(__stdcall* FunCallBack)(Control* pControl, DWORD dwInputType, char* pChar)), 0x13970, 0xF1D0)//1.13c

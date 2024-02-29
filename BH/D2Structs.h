@@ -534,6 +534,29 @@ struct ItemData {
 	UnitAny* pOwner;				//0x84
 };
 
+struct D2PropertyStrc
+{
+	DWORD nProperty;					//0x00
+	DWORD nLayer;						//0x04
+	DWORD nMin;						//0x08
+	DWORD nMax;						//0x0C
+};
+
+struct D2GemsTxt
+{
+	char szName[32];						//0x00
+	char szLetter[8];						//0x20
+	union
+	{
+		DWORD dwItemCode;				//0x28
+		char szItemCode[4];					//0x28
+	};
+	WORD wStringId;						//0x2C
+	BYTE nNumMods;						//0x2E
+	BYTE nTransForm;						//0x2F
+	D2PropertyStrc pProperties[3][3];		//0x30
+};
+
 struct ItemText {
 	wchar_t szName2[0x40];			//0x00
 	union {
