@@ -15,6 +15,7 @@ Button* Gamefilter::filterNorm;
 Button* Gamefilter::filterNightmare;
 Button* Gamefilter::filterHell;
 int Gamefilter::refreshTime;
+std::string sLastFilter;
 
 Patch* createGameBox = new Patch(Call, D2MULTI, { 0x149EF, 0xAD8F }, (int)D2MULTI_CreateGameBox_Interception, 5);
 Patch* destoryGameList = new Patch(Call, D2MULTI, { 0x11DC3, 0x8413 }, (int)Gamefilter::DestroyGamelist, 5);
@@ -69,6 +70,7 @@ void Gamefilter::OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket) {
 			}
 		}
 	}
+	//S>C 0x05 MCP_GAMELIST
 	if (pPacket[0] == 0x05 && filterBox)
 	{
 		wstring wFilter(filterBox->wText);
@@ -80,8 +82,9 @@ void Gamefilter::OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket) {
 		pEntry->dwIndex = *(DWORD*)&pPacket[3];
 		pEntry->bPlayers = pPacket[7];
 		pEntry->dwStatus = *(DWORD*)&pPacket[8];
-		pEntry->sGameName = reinterpret_cast<CHAR*>(pPacket + 12);
-		pEntry->sGameDesc = reinterpret_cast<CHAR*>(pPacket + 13 + pEntry->sGameName.length());
+		pEntry->gs = pPacket[12];	// This is not part of the original 1.13c packet
+		pEntry->sGameName = reinterpret_cast<CHAR*>(pPacket + 13);
+		pEntry->sGameDesc = reinterpret_cast<CHAR*>(pPacket + 14 + pEntry->sGameName.length());
 
 		if (pEntry->bPlayers == 0)
 		{
@@ -101,6 +104,20 @@ void Gamefilter::OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket) {
 				}
 		}
 
+		bool showDifficulty;
+		if (pEntry->dwStatus & 0x1000)
+		{
+			showDifficulty = App.bnet.showNightmareDiff.value;
+		}
+		else if (pEntry->dwStatus & 0x2000)
+		{
+			showDifficulty = App.bnet.showHellDiff.value;
+		}
+		else
+		{
+			showDifficulty = App.bnet.showNormalDiff.value;
+		}
+
 		string sGameName;
 
 		for (unsigned int i = 0; i < sFilter.length(); i++)
@@ -108,8 +125,9 @@ void Gamefilter::OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket) {
 
 		for (unsigned int i = 0; i < pEntry->sGameName.length(); i++)
 			sGameName += ::toupper(pEntry->sGameName[i]);
+		sLastFilter = sFilter;
 
-		if (wFilter.empty() || strstr(sGameName.c_str(), sFilter.c_str()))
+		if ((wFilter.empty() || strstr(sGameName.c_str(), sFilter.c_str())) && showDifficulty)
 		{
 			ControlText* pText = new ControlText;
 			memset(pText, NULL, sizeof(ControlText));
@@ -141,45 +159,39 @@ void Gamefilter::OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket) {
 			(*p_D2MULTI_GameListControl)->ptScrollBar->dwScrollEntries = (*p_D2MULTI_GameListControl)->dwMaxLines > 9 ? (*p_D2MULTI_GameListControl)->dwMaxLines - 9 : 0;
 			filterVector.push_back(pEntry);
 
-			if (::toupper(pEntry->sGameDesc[0]) == 'G' && ::toupper(pEntry->sGameDesc[1]) == 'S')
+			// TODO: remove this switch
+			switch (pEntry->gs + 1)
 			{
-				switch (pEntry->sGameDesc[3])
-				{
-				case '1':
-					gServerVector.push_back(L"gs1");
-					break;
-				case '2':
-					gServerVector.push_back(L"gs2");
-					break;
-				case '3':
-					gServerVector.push_back(L"gs3");
-					break;
-				case '4':
-					gServerVector.push_back(L"gs4");
-					break;
-				case '5':
-					gServerVector.push_back(L"gs5");
-					break;
-				case '6':
-					gServerVector.push_back(L"gs6");
-					break;
-				case '7':
-					gServerVector.push_back(L"gs7");
-					break;
-				case '8':
-					gServerVector.push_back(L"gs8");
-					break;
-				case '9':
-					gServerVector.push_back(L"gs9");
-					break;
-				default:
-					gServerVector.push_back(L"");
-					break;
-				}
-			}
-			else
-			{
+			case 1:
+				gServerVector.push_back(L"gs1");
+				break;
+			case 2:
+				gServerVector.push_back(L"gs2");
+				break;
+			case 3:
+				gServerVector.push_back(L"gs3");
+				break;
+			case 4:
+				gServerVector.push_back(L"gs4");
+				break;
+			case 5:
+				gServerVector.push_back(L"gs5");
+				break;
+			case 6:
+				gServerVector.push_back(L"gs6");
+				break;
+			case 7:
+				gServerVector.push_back(L"gs7");
+				break;
+			case 8:
+				gServerVector.push_back(L"gs8");
+				break;
+			case 9:
+				gServerVector.push_back(L"gs9");
+				break;
+			default:
 				gServerVector.push_back(L"");
+				break;
 			}
 		}
 
@@ -197,13 +209,20 @@ BOOL __stdcall Gamefilter::Filterbox_InputHandler(EditBox* pControl, DWORD dwLen
 
 	string sFilter(wInput.begin(), wInput.end());
 
-	if (dwLength > 0)
+	if (dwLength == 0 && *pChar != '\b')
+	{
 		sFilter += *pChar;
+	}
+	else if (dwLength > 0 && *pChar != '\b')
+	{
+		sFilter += *pChar;
+	}
 
-	// TODO: when backspacing a filter, "\b" is added to the end of the string
-	// which breaks the output (no games shown).
 	for (unsigned int i = 0; i < sFilter.length(); i++)
+	{
 		sFilter[i] = ::toupper(sFilter[i]);
+	}
+	sLastFilter = sFilter;
 
 	Gamefilter::BuildGameList(sFilter);
 
@@ -221,14 +240,9 @@ BOOL __stdcall Gamefilter::FilterButtonNormal_Callback(SMSGHANDLER_PARAMS* pMsg)
 	App.config->SaveConfig();
 
 	int isPressed = D2WIN_BUTTON_IsPressed(filterNorm);
-	if (isPressed)
-	{
-		D2WIN_BUTTON_SetIsPressed(filterNorm, 1);
-	}
-	else
-	{
-		D2WIN_BUTTON_SetIsPressed(filterNorm, 0);
-	}
+	D2WIN_BUTTON_SetIsPressed(filterNorm, isPressed ? 1 : 0);
+
+	Gamefilter::BuildGameList(sLastFilter);
 
 	return TRUE;
 }
@@ -239,14 +253,9 @@ BOOL __stdcall Gamefilter::FilterButtonNightmare_Callback(SMSGHANDLER_PARAMS* pM
 	App.config->SaveConfig();
 
 	int isPressed = D2WIN_BUTTON_IsPressed(filterNightmare);
-	if (isPressed)
-	{
-		D2WIN_BUTTON_SetIsPressed(filterNightmare, 1);
-	}
-	else
-	{
-		D2WIN_BUTTON_SetIsPressed(filterNightmare, 0);
-	}
+	D2WIN_BUTTON_SetIsPressed(filterNightmare, isPressed ? 1 : 0);
+
+	Gamefilter::BuildGameList(sLastFilter);
 
 	return TRUE;
 }
@@ -257,14 +266,9 @@ BOOL __stdcall Gamefilter::FilterButtonHell_Callback(SMSGHANDLER_PARAMS* pMsg)
 	App.config->SaveConfig();
 
 	int isPressed = D2WIN_BUTTON_IsPressed(filterHell);
-	if (isPressed)
-	{
-		D2WIN_BUTTON_SetIsPressed(filterHell, 1);
-	}
-	else
-	{
-		D2WIN_BUTTON_SetIsPressed(filterHell, 0);
-	}
+	D2WIN_BUTTON_SetIsPressed(filterHell, isPressed ? 1 : 0);
+
+	Gamefilter::BuildGameList(sLastFilter);
 
 	return TRUE;
 }
@@ -288,15 +292,15 @@ VOID Gamefilter::CreateGamelist(VOID)
 	D2WIN_SetEditBoxCallback(filterBox, Gamefilter::Filterbox_InputHandler);
 	filterBox->dwMaxLength = 0x12;
 
-	//filterNorm =		D2WIN_BUTTON_Create(425, 173, 15, 16, NULL, Gamefilter::FilterButtonNormal_Callback, 0, 0, 2, NULL, NULL);
-	//filterNightmare =	D2WIN_BUTTON_Create(425 + 40, 173, 15, 16, NULL, Gamefilter::FilterButtonNightmare_Callback, 0, 0, 2, NULL, NULL);
-	//filterHell =		D2WIN_BUTTON_Create(425 + 80, 173, 15, 16, NULL, Gamefilter::FilterButtonHell_Callback, 0, 0, 2, NULL, NULL);
-	//filterNorm->pCellFile = D2CLIENT_LoadUiImage("DATA\\GLOBAL\\UI\\BIGMENU\\joingameclickbox");
-	//filterNightmare->pCellFile = D2CLIENT_LoadUiImage("DATA\\GLOBAL\\UI\\BIGMENU\\joingameclickbox");
-	//filterHell->pCellFile = D2CLIENT_LoadUiImage("DATA\\GLOBAL\\UI\\BIGMENU\\joingameclickbox");
-	//D2WIN_BUTTON_SetIsPressed(filterNorm, App.bnet.showNormalDiff.value);
-	//D2WIN_BUTTON_SetIsPressed(filterNightmare, App.bnet.showNightmareDiff.value);
-	//D2WIN_BUTTON_SetIsPressed(filterHell, App.bnet.showHellDiff.value);
+	filterNorm =		D2WIN_BUTTON_Create(425, 173, 15, 16, NULL, Gamefilter::FilterButtonNormal_Callback, 0, 0, 2, NULL, NULL);
+	filterNightmare =	D2WIN_BUTTON_Create(425 + 40, 173, 15, 16, NULL, Gamefilter::FilterButtonNightmare_Callback, 0, 0, 2, NULL, NULL);
+	filterHell =		D2WIN_BUTTON_Create(425 + 80, 173, 15, 16, NULL, Gamefilter::FilterButtonHell_Callback, 0, 0, 2, NULL, NULL);
+	filterNorm->pCellFile = D2CLIENT_LoadUiImage("DATA\\GLOBAL\\UI\\BIGMENU\\joingameclickbox");
+	filterNightmare->pCellFile = D2CLIENT_LoadUiImage("DATA\\GLOBAL\\UI\\BIGMENU\\joingameclickbox");
+	filterHell->pCellFile = D2CLIENT_LoadUiImage("DATA\\GLOBAL\\UI\\BIGMENU\\joingameclickbox");
+	D2WIN_BUTTON_SetIsPressed(filterNorm, App.bnet.showNormalDiff.value);
+	D2WIN_BUTTON_SetIsPressed(filterNightmare, App.bnet.showNightmareDiff.value);
+	D2WIN_BUTTON_SetIsPressed(filterHell, App.bnet.showHellDiff.value);
 }
 
 VOID __stdcall Gamefilter::DestroyGamelist(Control* pControl)
@@ -319,21 +323,21 @@ VOID __stdcall Gamefilter::DestroyGamelist(Control* pControl)
 
 			filterBox = NULL;
 		}
-		//if (filterNorm)
-		//{
-		//	D2WIN_BUTTON_Destroy(filterNorm);
-		//	filterNorm = NULL;
-		//}
-		//if (filterNightmare)
-		//{
-		//	D2WIN_BUTTON_Destroy(filterNightmare);
-		//	filterNightmare = NULL;
-		//}
-		//if (filterHell)
-		//{
-		//	D2WIN_BUTTON_Destroy(filterHell);
-		//	filterHell = NULL;
-		//}
+		if (filterNorm)
+		{
+			D2WIN_BUTTON_Destroy(filterNorm);
+			filterNorm = NULL;
+		}
+		if (filterNightmare)
+		{
+			D2WIN_BUTTON_Destroy(filterNightmare);
+			filterNightmare = NULL;
+		}
+		if (filterHell)
+		{
+			D2WIN_BUTTON_Destroy(filterHell);
+			filterHell = NULL;
+		}
 	}
 
 	D2WIN_DestroyControl(pControl);
@@ -389,9 +393,9 @@ void Gamefilter::OnOOGDraw() {
 			}
 		}
 		// Difficulty Filter buttons
-		//D2WIN_DrawText(L"N", 445, 173, White, -1);
-		//D2WIN_DrawText(L"NM", 485, 173, Blue, -1);
-		//D2WIN_DrawText(L"H", 525, 173, Red, -1);
+		D2WIN_DrawText(L"N", 445, 173, White, -1);
+		D2WIN_DrawText(L"NM", 485, 173, Blue, -1);
+		D2WIN_DrawText(L"H", 525, 173, Red, -1);
 
 		D2WIN_SetTextSize(dwOldSize);
 	}
@@ -429,12 +433,26 @@ void Gamefilter::BuildGameList(string sFilter)
 
 		for (list<GameListEntry*>::iterator ListEntry = gameList.begin(); ListEntry != gameList.end(); ListEntry++)
 		{
+			bool showDifficulty;
+			if ((*ListEntry)->dwStatus & 0x1000)
+			{
+				showDifficulty = App.bnet.showNightmareDiff.value;
+			}
+			else if ((*ListEntry)->dwStatus & 0x2000)
+			{
+				showDifficulty = App.bnet.showHellDiff.value;
+			}
+			else
+			{
+				showDifficulty = App.bnet.showNormalDiff.value;
+			}
+
 			string sGameName((*ListEntry)->sGameName.c_str());
 
 			for (UINT i = 0; i < sGameName.length(); i++)
 				sGameName[i] = ::toupper(sGameName[i]);
 
-			if (strstr(sGameName.c_str(), sFilter.c_str()))
+			if (strstr(sGameName.c_str(), sFilter.c_str()) && showDifficulty)
 			{
 
 				ControlText* pText = new ControlText;
@@ -468,33 +486,39 @@ void Gamefilter::BuildGameList(string sFilter)
 				(*p_D2MULTI_GameListControl)->ptScrollBar->dwScrollEntries = (*p_D2MULTI_GameListControl)->dwMaxLines > 9 ? (*p_D2MULTI_GameListControl)->dwMaxLines - 9 : 0;
 				filterVector.push_back(*ListEntry);
 
-				if (::toupper((*ListEntry)->sGameDesc[0]) == 'G' && ::toupper((*ListEntry)->sGameDesc[1]) == 'S')
+				// TODO: remove this switch
+				switch ((*ListEntry)->gs + 1)
 				{
-					switch ((*ListEntry)->sGameDesc[2])
-					{
-					case '1':
-						gServerVector.push_back(L"gs1");
-						break;
-					case '2':
-						gServerVector.push_back(L"gs2");
-						break;
-					case '3':
-						gServerVector.push_back(L"gs3");
-						break;
-					case '4':
-						gServerVector.push_back(L"gs4");
-						break;
-					case '5':
-						gServerVector.push_back(L"gs5");
-						break;
-					default:
-						gServerVector.push_back(L"gs1");
-						break;
-					}
-				}
-				else
-				{
+				case 1:
 					gServerVector.push_back(L"gs1");
+					break;
+				case 2:
+					gServerVector.push_back(L"gs2");
+					break;
+				case 3:
+					gServerVector.push_back(L"gs3");
+					break;
+				case 4:
+					gServerVector.push_back(L"gs4");
+					break;
+				case 5:
+					gServerVector.push_back(L"gs5");
+					break;
+				case 6:
+					gServerVector.push_back(L"gs6");
+					break;
+				case 7:
+					gServerVector.push_back(L"gs7");
+					break;
+				case 8:
+					gServerVector.push_back(L"gs8");
+					break;
+				case 9:
+					gServerVector.push_back(L"gs9");
+					break;
+				default:
+					gServerVector.push_back(L"");
+					break;
 				}
 
 			}

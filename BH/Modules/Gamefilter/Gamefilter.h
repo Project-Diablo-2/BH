@@ -10,6 +10,7 @@ struct GameListEntry
 	DWORD dwIndex;
 	BYTE bPlayers;
 	DWORD dwStatus;
+	BYTE gs;
 	std::string sGameName;
 	std::string sGameDesc;
 };
