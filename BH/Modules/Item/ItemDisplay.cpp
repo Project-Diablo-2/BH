@@ -944,34 +944,139 @@ void GetItemName(UnitItemInfo* uInfo,
 	name.assign(new_name);
 }
 
-void SubstituteNameVariables(UnitItemInfo* uInfo,
-	string& name,
-	const string& action_name,
-	BOOL          bLimit)
+string NameVarSockets(UnitItemInfo* uInfo)
 {
-	char origName[MAX_ITEM_TEXT_SIZE], sockets[4], code[5], ilvl[4], alvl[4], craftalvl[4], runename[16] = "", runenum[4] = "0";
-	char gemtype[16] = "", gemlevel[16] = "", sellValue[16] = "", statVal[16] = "", qty[4] = "";
-	char lvlreq[4], wpnspd[4], rangeadder[4], allres[4], ed[4];
+	char sockets[4] = "";
+	sprintf_s(sockets, "%d", D2COMMON_GetUnitStat(uInfo->item, STAT_SOCKETS, 0));
+	return 	sockets;
+}
 
-	UnitAny* item = uInfo->item;
-	ItemsTxt* txt = D2COMMON_GetItemText(item->dwTxtFileNo);
-	char* szCode = txt->szCode;  // TODO: uInfo already has this, can we remove?
-	code[0] = szCode[0];
-	code[1] = szCode[1] != ' ' ? szCode[1] : 0;
-	code[2] = szCode[2] != ' ' ? szCode[2] : 0;
-	code[3] = szCode[3] != ' ' ? szCode[3] : 0;
-	code[4] = '\0';
+string NameVarRuneNum(UnitItemInfo* uInfo)
+{
+	char runenum[4] = "0";
+	if (IsRune(uInfo->attrs))
+		sprintf_s(runenum, "%d", RuneNumberFromItemCode(uInfo->itemCode));
+	return runenum;
+}
 
-	int fRes = D2COMMON_GetUnitStat(item, STAT_FIRERESIST, 0);
-	int lRes = D2COMMON_GetUnitStat(item, STAT_LIGHTNINGRESIST, 0);
-	int cRes = D2COMMON_GetUnitStat(item, STAT_COLDRESIST, 0);
-	int pRes = D2COMMON_GetUnitStat(item, STAT_POISONRESIST, 0);
+string NameVarRuneName(UnitItemInfo* uInfo)
+{
+	// TODO: removes " Rune" from the rune name. Pretty likely to break on non-english strings
+	// Utilize D2LANG_GetLocaleText(20473) area?
+	char runename[16] = "";
+	if (IsRune(uInfo->attrs))
+	{
+		sprintf_s(runename, uInfo->attrs->name.substr(0, uInfo->attrs->name.find(' ')).c_str());
+	}
+	return runename;
+}
+
+string NameVarGemLevel(UnitItemInfo* uInfo)
+{
+	char gemlevel[16] = "";
+	if (IsGem(uInfo->attrs))
+		sprintf_s(gemlevel, "%s", GetGemLevelString(GetGemLevel(uInfo->attrs)));
+	return gemlevel;
+}
+
+string NameVarGemType(UnitItemInfo* uInfo)
+{
+	char gemtype[16] = "";
+	if (IsGem(uInfo->attrs))
+		sprintf_s(gemtype, "%s", GetGemTypeString(GetGemType(uInfo->attrs)));
+	return gemtype;
+}
+
+string NameVarIlvl(UnitItemInfo* uInfo)
+{
+	char ilvl[4] = "0";
+	sprintf_s(ilvl, "%d", uInfo->item->pItemData->dwItemLevel);
+	return ilvl;
+}
+
+string NameVarAlvl(UnitItemInfo* uInfo)
+{
+	char alvl[4] = "0";
+	int alvl_int = GetAffixLevel(
+		uInfo->attrs->qualityLevel,
+		uInfo->item->pItemData->dwItemLevel,
+		uInfo->attrs->magicLevel
+	);
+	sprintf_s(alvl, "%d", alvl_int);
+	return alvl;
+}
+
+string NameVarCraftAlvl(UnitItemInfo* uInfo)
+{
+	char craftalvl[4] = "0";
+	int clvl = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
+
+	int craft_alvl = GetAffixLevel(
+		(int)(0.5 * clvl) + (int)(0.5 * uInfo->item->pItemData->dwItemLevel),
+		uInfo->attrs->qualityLevel,
+		uInfo->attrs->magicLevel
+	);
+	sprintf_s(craftalvl, "%d", craft_alvl);
+	return craftalvl;
+}
+
+string NameVarLevelReq(UnitItemInfo* uInfo)
+{
+	char lvlreq[4] = "0";
+	sprintf_s(lvlreq, "%d", GetRequiredLevel(uInfo->item));
+	return lvlreq;
+}
+
+string NameVarWeaponSpeed(ItemsTxt* itemTxt)
+{
+	char wpnspd[4] = "0";
+	sprintf_s(wpnspd, "%d", itemTxt->dwspeed);
+	return wpnspd;
+}
+
+string NameVarRangeAdder(ItemsTxt* itemTxt)
+{
+	char rangeadder[4] = "0";
+	sprintf_s(rangeadder, "%d", itemTxt->brangeadder);
+	return rangeadder;
+}
+
+string NameVarSellValue(UnitItemInfo* uInfo,
+	ItemsTxt* itemTxt)
+{
+	char sellvalue[16] = "";
+	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
+	if (pUnit && itemTxt->bquest == 0)
+		sprintf_s(sellvalue, "%d", D2COMMON_GetItemPrice(pUnit, uInfo->item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1));
+	return sellvalue;
+}
+
+string NameVarQty(UnitItemInfo* uInfo)
+{
+	char qty[4] = "0";
+	sprintf_s(qty, "%d", D2COMMON_GetUnitStat(uInfo->item, STAT_AMMOQUANTITY, 0));
+	return qty;
+}
+
+string NameVarAllRes(UnitItemInfo* uInfo)
+{
+	char allres[4] = "0";
+	int fRes = D2COMMON_GetUnitStat(uInfo->item, STAT_FIRERESIST, 0);
+	int lRes = D2COMMON_GetUnitStat(uInfo->item, STAT_LIGHTNINGRESIST, 0);
+	int cRes = D2COMMON_GetUnitStat(uInfo->item, STAT_COLDRESIST, 0);
+	int pRes = D2COMMON_GetUnitStat(uInfo->item, STAT_POISONRESIST, 0);
 	int minres = 0;
 	if (fRes && lRes && cRes && pRes)
 	{
 		minres = min(min(fRes, lRes), min(cRes, pRes));
 	}
 	sprintf_s(allres, "%d", minres);
+	return allres;
+}
+
+string NameVarEd(UnitItemInfo* uInfo)
+{
+	char ed[4] = "0";
 
 	// Either enhanced defense or enhanced damage depending on item type
 	WORD stat;
@@ -988,116 +1093,29 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		value += D2COMMON_GetStatValueFromStatList(pStatList, stat, 0);
 	}
 	sprintf_s(ed, "%d", value);
+	return ed;
+}
 
-	auto qlvl_int = uInfo->attrs->qualityLevel;
-	auto ilvl_int = item->pItemData->dwItemLevel;
-	auto mlvl_int = uInfo->attrs->magicLevel;
-	auto alvl_int = GetAffixLevel(
-		ilvl_int,
-		qlvl_int,
-		mlvl_int
-	);
-	auto clvl_int = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
+// Dynamic variables; can be further split if needed in the future
+void ReplaceStatSkillVars(UnitItemInfo* uInfo,
+	string& name)
+{
+	char statVal[16] = "0";
 
-	sprintf_s(sockets, "%d", D2COMMON_GetUnitStat(item, STAT_SOCKETS, 0));
-	sprintf_s(ilvl, "%d", ilvl_int);
-	sprintf_s(alvl, "%d", alvl_int);
-	sprintf_s(origName, "%s", name.c_str());
-
-	auto craft_alvl = GetAffixLevel(
-		(int)(0.5 * clvl_int) + (int)(0.5 * ilvl_int),
-		qlvl_int,
-		mlvl_int
-	);
-	sprintf_s(craftalvl, "%d", craft_alvl);
-
-	sprintf_s(lvlreq, "%d", GetRequiredLevel(uInfo->item));
-	sprintf_s(wpnspd, "%d", txt->dwspeed); //Add these as matchable stats too, maybe?
-	sprintf_s(rangeadder, "%d", txt->brangeadder);
-	sprintf_s(qty, "%d", D2COMMON_GetUnitStat(item, STAT_AMMOQUANTITY, 0));
-
-	bool inShop = false;
-	if (item->pItemData->pOwnerInventory != 0 && // Skip on ground items
-		find(begin(ShopNPCs), end(ShopNPCs), item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs))
-		inShop = true;
-
-	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
-	if (pUnit && txt->bquest == 0) { sprintf_s(sellValue, "%d", D2COMMON_GetItemPrice(pUnit, item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1)); }
-
-	ItemAttributes* attrs = ItemAttributeMap[code];  // TODO: uInfo already has this, can we replace?
-	if (IsRune(attrs))
-	{
-		sprintf_s(runenum, "%d", RuneNumberFromItemCode(code));
-		// TODO: removes " Rune" from the rune name. Pretty likely to break on non-english strings
-		sprintf_s(runename, attrs->name.substr(0, attrs->name.find(' ')).c_str());
-	}
-	else if (IsGem(attrs))
-	{
-		sprintf_s(gemlevel, "%s", GetGemLevelString(GetGemLevel(uInfo->attrs)));
-		sprintf_s(gemtype, "%s", GetGemTypeString(GetGemType(uInfo->attrs)));
-	}
-	ActionReplace replacements[] = {
-		{ "NAME", origName },
-		{ "SOCKETS", sockets },
-		{ "RUNENUM", runenum },
-		{ "RUNENAME", runename },
-		{ "GEMLEVEL", gemlevel },
-		{ "GEMTYPE", gemtype },
-		{ "ILVL", ilvl },
-		{ "ALVL", alvl },
-		{ "CRAFTALVL", craftalvl },
-		{ "LVLREQ", lvlreq },
-		{ "WPNSPD", wpnspd },
-		{ "RANGE", rangeadder },
-		{ "CODE", code },
-		{ "NL", "\n" },
-		{ "PRICE", sellValue },
-		{ "QTY", qty },
-		{ "RES", allres},
-		{ "ED", ed},
-		COLOR_REPLACEMENTS
-	};
-	int nColorCodesSize = 0;
-	name.assign(action_name);
-	for (int n = 0; n < sizeof(replacements) / sizeof(replacements[0]); n++)
-	{
-		while (name.find("%" + replacements[n].key + "%") != string::npos)
-		{
-			if (bLimit && replacements[n].key == "NL")
-			{
-				// Allow %NL% on identified, magic+ item names, and items within shops
-				if ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
-					(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0) ||
-					inShop)
-				{
-					name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, replacements[n].value);
-				}
-				// Remove it on everything else
-				else
-				{
-					name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, "");
-				}
-			}
-			else
-			{
-				name.replace(name.find("%" + replacements[n].key + "%"), replacements[n].key.length() + 2, replacements[n].value);
-			}
-		}
-	}
 	// Replace named stat output strings with their STAT# counterpart
 	map<string, int>::iterator it;
 	for (it = stat_id_map.begin(); it != stat_id_map.end(); it++)
 	{
-		while (name.find("%" + it->first + "%") != string::npos)
+		while (name.find(it->first) != string::npos)
 		{
-			name.replace(name.find("%" + it->first + "%"), it->first.length() + 2, "%STAT" + std::to_string(it->second) + "%");
+			name.replace(name.find(it->first), it->first.length(), "STAT" + std::to_string(it->second));
 		}
 	}
 
 	// stat & skill replacements
-	if (name.find("%STAT") != string::npos)
+	if (name.find("STAT") != string::npos)
 	{
-		std::regex  stat_reg("%STAT([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::regex  stat_reg("STAT([0-9]{1,4})", std::regex_constants::ECMAScript);
 		std::smatch stat_match;
 
 		while (std::regex_search(name, stat_match, stat_reg))
@@ -1106,7 +1124,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			statVal[0] = '\0';
 			if (stat <= (int)STAT_MAX)
 			{
-				auto value = D2COMMON_GetUnitStat(item, stat, 0);
+				auto value = D2COMMON_GetUnitStat(uInfo->item, stat, 0);
 				// Hp and mana need adjusting
 				if (stat == STAT_MAXHP || stat == STAT_MAXMANA)
 				{
@@ -1133,9 +1151,9 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				statVal);
 		}
 	}
-	else if (name.find("%SK") != string::npos)
+	if (name.find("SK") != string::npos)
 	{
-		std::regex  stat_reg("%SK([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::regex  stat_reg("SK([0-9]{1,4})", std::regex_constants::ECMAScript);
 		std::smatch stat_match;
 
 		while (std::regex_search(name, stat_match, stat_reg))
@@ -1144,7 +1162,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			statVal[0] = '\0';
 			if (stat2 <= (int)SKILL_MAX)
 			{
-				auto value = D2COMMON_GetUnitStat(item, STAT_SINGLESKILL, stat2);
+				auto value = D2COMMON_GetUnitStat(uInfo->item, STAT_SINGLESKILL, stat2);
 				sprintf_s(statVal, "%d", value);
 			}
 			name.replace(
@@ -1153,9 +1171,9 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				statVal);
 		}
 	}
-	else if (name.find("%OS") != string::npos)
+	if (name.find("OS") != string::npos)
 	{
-		std::regex  stat_reg("%OS([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::regex  stat_reg("OS([0-9]{1,4})", std::regex_constants::ECMAScript);
 		std::smatch stat_match;
 
 		while (std::regex_search(name, stat_match, stat_reg))
@@ -1164,7 +1182,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			statVal[0] = '\0';
 			if (stat2 <= (int)SKILL_MAX)
 			{
-				auto value = D2COMMON_GetUnitStat(item, STAT_NONCLASSSKILL, stat2);
+				auto value = D2COMMON_GetUnitStat(uInfo->item, STAT_NONCLASSSKILL, stat2);
 				sprintf_s(statVal, "%d", value);
 			}
 			name.replace(
@@ -1173,9 +1191,9 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				statVal);
 		}
 	}
-	else if (name.find("%CLSK") != string::npos)
+	if (name.find("CLSK") != string::npos)
 	{
-		std::regex  stat_reg("%CLSK([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::regex  stat_reg("CLSK([0-9]{1,4})", std::regex_constants::ECMAScript);
 		std::smatch stat_match;
 
 		while (std::regex_search(name, stat_match, stat_reg))
@@ -1184,7 +1202,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			statVal[0] = '\0';
 			if (stat2 <= (int)SKILL_MAX)
 			{
-				auto value = D2COMMON_GetUnitStat(item, STAT_CLASSSKILLS, stat2);
+				auto value = D2COMMON_GetUnitStat(uInfo->item, STAT_CLASSSKILLS, stat2);
 				sprintf_s(statVal, "%d", value);
 			}
 			name.replace(
@@ -1193,9 +1211,9 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				statVal);
 		}
 	}
-	else if (name.find("%TABSK") != string::npos)
+	if (name.find("TABSK") != string::npos)
 	{
-		std::regex  stat_reg("%TABSK([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::regex  stat_reg("TABSK([0-9]{1,4})", std::regex_constants::ECMAScript);
 		std::smatch stat_match;
 
 		while (std::regex_search(name, stat_match, stat_reg))
@@ -1204,7 +1222,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			statVal[0] = '\0';
 			if (stat2 <= (int)SKILL_MAX)
 			{
-				auto value = D2COMMON_GetUnitStat(item, STAT_SKILLTAB, stat2);
+				auto value = D2COMMON_GetUnitStat(uInfo->item, STAT_SKILLTAB, stat2);
 				sprintf_s(statVal, "%d", value);
 			}
 			name.replace(
@@ -1213,9 +1231,9 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				statVal);
 		}
 	}
-	else if (name.find("%MULTI") != string::npos)
+	if (name.find("MULTI") != string::npos)
 	{
-		std::regex  stat_reg("%MULTI([0-9]{1,4}),([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::regex  stat_reg("MULTI([0-9]{1,4}),([0-9]{1,4})", std::regex_constants::ECMAScript);
 		std::smatch stat_match;
 
 		while (std::regex_search(name, stat_match, stat_reg))
@@ -1225,7 +1243,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			statVal[0] = '\0';
 			if (stat <= (int)STAT_MAX)
 			{
-				auto value = D2COMMON_GetUnitStat(item, stat, stat2);
+				auto value = D2COMMON_GetUnitStat(uInfo->item, stat, stat2);
 				sprintf_s(statVal, "%d", value);
 			}
 			name.replace(
@@ -1234,9 +1252,9 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				statVal);
 		}
 	}
-	else if (name.find("%CHARSTAT") != string::npos)
+	if (name.find("CHARSTAT") != string::npos)
 	{
-		std::regex  stat_reg("%CHARSTAT([0-9]{1,4})%", std::regex_constants::ECMAScript);
+		std::regex  stat_reg("CHARSTAT([0-9]{1,4})", std::regex_constants::ECMAScript);
 		std::smatch stat_match;
 
 		while (std::regex_search(name, stat_match, stat_reg))
@@ -1253,6 +1271,92 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				stat_match[0].length(),
 				statVal);
 		}
+	}
+}
+
+void SubstituteNameVariables(UnitItemInfo* uInfo,
+	string& name,
+	const string& action_name,
+	BOOL          bLimit)
+{
+	char origName[MAX_ITEM_TEXT_SIZE];
+	sprintf_s(origName, "%s", name.c_str());
+
+	ItemsTxt* itemTxt = D2COMMON_GetItemText(uInfo->item->dwTxtFileNo);
+
+	ActionReplace replacements[] = {
+		{ "NAME", origName},
+		{ "SOCKETS", NameVarSockets(uInfo).c_str()},
+		{ "RUNENUM", NameVarRuneNum(uInfo).c_str() },
+		{ "RUNENAME", NameVarRuneName(uInfo).c_str() },
+		{ "GEMLEVEL", NameVarGemLevel(uInfo).c_str() },
+		{ "GEMTYPE", NameVarGemType(uInfo).c_str() },
+		{ "ILVL", NameVarIlvl(uInfo).c_str() },
+		{ "ALVL", NameVarAlvl(uInfo).c_str() },
+		{ "CRAFTALVL", NameVarCraftAlvl(uInfo).c_str() },
+		{ "LVLREQ", NameVarLevelReq(uInfo).c_str() },
+		{ "WPNSPD", NameVarWeaponSpeed(itemTxt).c_str() },
+		{ "RANGE", NameVarRangeAdder(itemTxt).c_str() },
+		{ "CODE", uInfo->itemCode },
+		{ "NL", "\n" },
+		{ "PRICE", NameVarSellValue(uInfo, itemTxt).c_str() },
+		{ "QTY", NameVarQty(uInfo).c_str() },
+		{ "RES", NameVarAllRes(uInfo).c_str() },
+		{ "ED", NameVarEd(uInfo).c_str() },
+	COLOR_REPLACEMENTS
+	};
+
+	int nColorCodesSize = 0;
+	name.assign(action_name);
+
+	bool inShop = false;
+	if (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
+		find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs))
+		inShop = true;
+
+	// Concat replacements list into a regex string to avoid accidental matches with stray % symbols
+	string reListString = "";
+	for (int n = 0; n < sizeof(replacements) / sizeof(replacements[0]); n++)
+	{
+		reListString += replacements[n].key;
+		if (n < sizeof(replacements))
+			reListString += "|";
+	}
+
+	std::regex  var_reg("%(" + reListString + ")%", std::regex_constants::ECMAScript);
+	std::smatch var_match;
+
+	while (std::regex_search(name, var_match, var_reg))
+	{
+		string varString = var_match[1];
+		transform(varString.begin(), varString.end(), varString.begin(), ::toupper);
+		for (int n = sizeof(replacements) / sizeof(replacements[0]) - 1; n >= 0; --n) // Reverse order to avoid premature matching (eg RANGE vs ORANGE)
+		{
+			while (varString.find(replacements[n].key) != string::npos)
+			{
+				if (bLimit && replacements[n].key == "NL")
+				{
+					// Allow %NL% on identified, magic+ item names, and items within shops
+					if ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
+						(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0) ||
+						inShop)
+					{
+						varString.replace(varString.find(replacements[n].key), replacements[n].key.length() + 2, replacements[n].value);
+					}
+					// Remove it on everything else
+					else
+					{
+						varString.replace(varString.find(replacements[n].key), replacements[n].key.length() + 2, "");
+					}
+				}
+				else
+				{
+					varString.replace(varString.find(replacements[n].key), replacements[n].key.length(), replacements[n].value);
+				}
+			}
+		}
+		ReplaceStatSkillVars(uInfo, varString);
+		name.replace(name.find(var_match[0]), var_match[0].length(), varString);
 	}
 
 	int lengthLimit = 0;
