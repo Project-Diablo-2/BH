@@ -3080,3 +3080,33 @@ void HandleUnknownItemCode(char* code,
 	}
 }
 
+bool ItemPassesAnyRuleList(UnitAny* pItem, vector<Rule*>& list)
+{
+	DWORD dwFlags = pItem->pItemData->dwFlags;
+	char* code = D2COMMON_GetItemText(pItem->dwTxtFileNo)->szCode;
+	UnitItemInfo uInfo;
+	uInfo.item = pItem;
+	uInfo.itemCode[0] = code[0];
+	uInfo.itemCode[1] = code[1] != ' ' ? code[1] : 0;
+	uInfo.itemCode[2] = code[2] != ' ' ? code[2] : 0;
+	uInfo.itemCode[3] = code[3] != ' ' ? code[3] : 0;
+	uInfo.itemCode[4] = 0;
+	auto foundAttribute = ItemAttributeMap.find(uInfo.itemCode);
+	if (foundAttribute != ItemAttributeMap.end()) {
+		uInfo.attrs = foundAttribute->second;
+		for (vector<Rule*>::iterator it = list.begin(); it != list.end(); it++) {
+			int filterLevel = Item::GetFilterLevel();
+			if (filterLevel != 0 && (*it)->action.pingLevel < filterLevel && (*it)->action.pingLevel != -1) continue;
+
+			if ((*it)->Evaluate(&uInfo)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool ItemPassesAnyMapRule(UnitAny* pItem)
+{
+	return ItemPassesAnyRuleList(pItem, MapRuleList);
+}

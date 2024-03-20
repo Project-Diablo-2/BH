@@ -972,3 +972,4 @@ BYTE GetAffixLevel(BYTE ilvl,
 BYTE GetRequiredLevel(UnitAny* item);
 BYTE RuneNumberFromItemCode(char* code);
 int GetStatFromList(UnitItemInfo* uInfo, int itemStat);
+bool ItemPassesAnyMapRule(UnitAny* item);

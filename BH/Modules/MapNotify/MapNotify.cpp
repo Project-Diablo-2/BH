@@ -62,40 +62,22 @@ void MapNotify::OnDraw() {
 	for (Room1* room1 = player->pAct->pRoom1; room1; room1 = room1->pRoomNext) {
 		for (UnitAny* unit = room1->pUnitFirst; unit; unit = unit->pListNext) {
 			if (unit->dwType == UNIT_ITEM && (unit->dwFlags & UNITFLAG_NO_EXPERIENCE) == 0x0) {
-				DWORD dwFlags = unit->pItemData->dwFlags;
-				char* code = D2COMMON_GetItemText(unit->dwTxtFileNo)->szCode;
-				UnitItemInfo uInfo;
-				uInfo.item = unit;
-				uInfo.itemCode[0] = code[0];
-				uInfo.itemCode[1] = code[1] != ' ' ? code[1] : 0;
-				uInfo.itemCode[2] = code[2] != ' ' ? code[2] : 0;
-				uInfo.itemCode[3] = code[3] != ' ' ? code[3] : 0;
-				uInfo.itemCode[4] = 0;
-				if (ItemAttributeMap.find(uInfo.itemCode) != ItemAttributeMap.end()) {
-					uInfo.attrs = ItemAttributeMap[uInfo.itemCode];
-					for (vector<Rule*>::iterator it = MapRuleList.begin(); it != MapRuleList.end(); it++) {
-						int filterLevel = Item::GetFilterLevel();
-						if (filterLevel != 0 && (*it)->action.pingLevel < filterLevel && (*it)->action.pingLevel != -1) continue;
-
-						if ((*it)->Evaluate(&uInfo)) {
-							if ((unit->dwFlags & UNITFLAG_REVEALED) == 0x0
-								&& App.lootfilter.detailedNotifications.toggle.isEnabled) {
-								if (App.legacy.closeNotifications.toggle.isEnabled || (dwFlags & ITEM_NEW)) {
-									std::string itemName = GetItemName(unit);
-									regex trimName("^\\s*(?:(?:\\s*?)(ÿc[0123456789;:]))*\\s*(.*?\\S)\\s*(?:ÿc[0123456789;:])*\\s*$");	// Matches on leading/trailing spaces (skips most color codes)
-									itemName = regex_replace(itemName, trimName, "$1$2");												// Trims the matched spaces from notifications
-									size_t start_pos = 0;
-									while ((start_pos = itemName.find('\n', start_pos)) != std::string::npos) {
-										itemName.replace(start_pos, 1, " - ");
-										start_pos += 3;
-									}
-									PrintText(ItemColorFromQuality(unit->pItemData->dwQuality), "%s", itemName.c_str());
-								}
+				if (ItemPassesAnyMapRule(unit)) {
+					if ((unit->dwFlags & UNITFLAG_REVEALED) == 0x0
+						&& App.lootfilter.detailedNotifications.toggle.isEnabled) {
+						if (App.legacy.closeNotifications.toggle.isEnabled || (unit->pItemData->dwFlags & ITEM_NEW)) {
+							std::string itemName = GetItemName(unit);
+							regex trimName("^\\s*(?:(?:\\s*?)(ÿc[0123456789;:]))*\\s*(.*?\\S)\\s*(?:ÿc[0123456789;:])*\\s*$");	// Matches on leading/trailing spaces (skips most color codes)
+							itemName = regex_replace(itemName, trimName, "$1$2");												// Trims the matched spaces from notifications
+							size_t start_pos = 0;
+							while ((start_pos = itemName.find('\n', start_pos)) != std::string::npos) {
+								itemName.replace(start_pos, 1, " - ");
+								start_pos += 3;
 							}
-							unit->dwFlags |= UNITFLAG_REVEALED;
-							break;
+							PrintText(ItemColorFromQuality(unit->pItemData->dwQuality), "%s", itemName.c_str());
 						}
 					}
+					unit->dwFlags |= UNITFLAG_REVEALED;
 				}
 			}
 			unit->dwFlags |= UNITFLAG_NO_EXPERIENCE;
