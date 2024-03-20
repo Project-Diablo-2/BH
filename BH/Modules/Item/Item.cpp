@@ -808,11 +808,7 @@ void Item::OnLoop() {
 			for (UnitAny* pItem = unit->pInventory->pLastItem; pItem && !(pItem->dwFlags & UNITFLAG_REVEALED); pItem = pItem->pItemData->pPrevInvItem) {
 				if (ItemPassesAnyVendorRule(pItem)) {
 					std::string itemName = GetItemName(pItem);
-					size_t start_pos = 0;
-					while ((start_pos = itemName.find('\n', start_pos)) != std::string::npos) {
-						itemName.replace(start_pos, 1, " - ");
-						start_pos += 3;
-					}
+					TransformItemNameForPrint(itemName);
 					PrintText(ItemColorFromQuality(pItem->pItemData->dwQuality), "%s", itemName.c_str());
 				}
 				pItem->dwFlags |= UNITFLAG_REVEALED;
