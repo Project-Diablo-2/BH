@@ -815,6 +815,7 @@ struct SkillReplace
 struct Action
 {
 	bool   stopProcessing;
+	bool   vendor;
 	string name;
 	string description;
 	int    colorOnMap;
@@ -834,6 +835,7 @@ struct Action
 		notifyColor(UNDEFINED_COLOR),
 		pingLevel(-1),
 		stopProcessing(true),
+		vendor(false),
 		name(""),
 		description("")
 	{
@@ -973,3 +975,4 @@ BYTE GetRequiredLevel(UnitAny* item);
 BYTE RuneNumberFromItemCode(char* code);
 int GetStatFromList(UnitItemInfo* uInfo, int itemStat);
 bool ItemPassesAnyMapRule(UnitAny* item);
+bool ItemPassesAnyVendorRule(UnitAny* item);
