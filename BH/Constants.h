@@ -667,6 +667,18 @@ enum Font
 #define STAT_CURSE_EFFECTIVENESS		504
 
 ///////////////////////////////////////////////////
+// States
+///////////////////////////////////////////////////
+#define STATE_ITEMSET1				165
+#define STATE_ITEMSET2				166
+#define STATE_ITEMSET3				167
+#define STATE_ITEMSET4				168
+#define STATE_ITEMSET5				169
+#define STATE_ITEMSET6				170
+#define STATE_RUNEWORD				171
+#define ITEMSET_STATES				[STATE_ITEMSET1, STATE_ITEMSET2, STATE_ITEMSET3, STATE_ITEMSET4, STATE_ITEMSET5, STATE_ITEMSET6]
+
+///////////////////////////////////////////////////
 // Unit Enchantments
 ///////////////////////////////////////////////////
 #define ENCH_EXTRA_STRONG			5
