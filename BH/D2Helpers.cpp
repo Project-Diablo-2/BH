@@ -332,6 +332,14 @@ std::string GetItemName(UnitAny* item) {
 	return UnicodeToAnsi(buffer);
 }
 
+void TransformItemNameForPrint(std::string& name) {
+	size_t start_pos = 0;
+	while ((start_pos = name.find('\n', start_pos)) != std::string::npos) {
+		name.replace(start_pos, 1, " - ");
+		start_pos += 3;
+	}
+}
+
 bool IsTown(DWORD levelId) {
 	switch (levelId) {
 	case 1:

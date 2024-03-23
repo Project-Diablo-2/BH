@@ -28,6 +28,7 @@ bool SendSyncMsg();
 
 std::string GetItemCode(int dwTxtFileNo);
 std::string GetItemName(UnitAny* item);
+void TransformItemNameForPrint(std::string& name);
 bool IsTown(DWORD levelId);
 
 bool IsGameReady();
