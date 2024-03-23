@@ -749,6 +749,7 @@ void Item::ChangeFilterLevels(int newLevel) {
 		PrintText(TextColor::Gold, "Filter level: ÿc0%s", ItemFilterNames[App.lootfilter.filterLevel.uValue].c_str());
 
 	ResetCaches();
+	App.config->SaveConfig();
 }
 
 void Item::OnUnload() {

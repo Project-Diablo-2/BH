@@ -243,7 +243,7 @@ void GameSettings::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 		*block = true;
 		if (up)
 			return;
-		BH::settingsUI->SetMinimized(true);
+		BH::settingsUI->SetMinimized(true, true);
 		return;
 	}
 }

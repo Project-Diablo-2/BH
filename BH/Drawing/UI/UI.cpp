@@ -20,10 +20,10 @@ UI::UI(std::string name, unsigned int xSize, unsigned int ySize) {
 	SetMinimizedX(App.bhui.minimizedX.value);
 	SetMinimizedY(App.bhui.minimizedY.value);
 	if (App.bhui.isMinimized.value) {
-		SetMinimized(true);
+		SetMinimized(true, false);
 		Minimized.push_back(this);
 	} else {
-		SetMinimized(false);
+		SetMinimized(false, false);
 	}
 	SetActive(false);
 	zOrder = UIs.size();
@@ -168,10 +168,10 @@ void UI::OnDraw() {
 	}
 }
 
-void UI::SetDragged(bool state, bool write_file) {
+void UI::SetDragged(bool state, bool writeFile) {
 	Lock(); 
 	dragged = state; 
-	if (!state && write_file) {
+	if (!state && writeFile) {
 		App.bhui.openedX.value = GetX();
 		App.bhui.openedY.value = GetY();
 		App.bhui.minimizedX.value = GetMinimizedX();
@@ -185,7 +185,7 @@ void UI::SetDragged(bool state) {
     SetDragged(state, false);
 }
 
-void UI::SetMinimized(bool newState) { 
+void UI::SetMinimized(bool newState, bool writeFile) {
 	if (newState == minimized) 
 		return; 
 	Lock();  
@@ -195,7 +195,10 @@ void UI::SetMinimized(bool newState) {
 		Minimized.remove(this);
 	minimized = newState;
 	App.bhui.isMinimized.value = newState;
-	App.config->SaveConfig();
+	if (writeFile)
+	{
+		App.config->SaveConfig();
+	}
 	Unlock(); 
 };
 
@@ -221,7 +224,7 @@ bool UI::OnLeftClick(bool up, unsigned int mouseX, unsigned int mouseY) {
 			if(GetAsyncKeyState(VK_CONTROL))
 			{
 				if (up) {
-					SetMinimized(false);
+					SetMinimized(false, true);
 					Sort(this);
 				}
 				return true;
@@ -290,7 +293,7 @@ bool UI::OnRightClick(bool up, unsigned int mouseX, unsigned int mouseY) {
 	}
 	if (InTitle(mouseX, mouseY) && !IsMinimized()) {
 		if (up) 
-			SetMinimized(true);
+			SetMinimized(true, true);
 		return true;
 	}
 	return false;

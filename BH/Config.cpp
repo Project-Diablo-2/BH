@@ -135,6 +135,32 @@ std::map<std::string, std::string> Config::GetAssoc(json::json_pointer sectionKe
 	return val;
 }
 
+static HMODULE pd2Handle;
+static FARPROC refreshProc;
+typedef BOOL(__cdecl* bhConfigMessage_t)();
+static bhConfigMessage_t bhConfigMessage = NULL;
+
+BOOL __stdcall SendReloadMessage()
+{
+	if (!bhConfigMessage)
+	{
+		pd2Handle = GetModuleHandleA("ProjectDiablo.dll");
+		if (pd2Handle)
+		{
+			refreshProc = GetProcAddress(pd2Handle, "TriggerBHReload");
+			bhConfigMessage = refreshProc ? (bhConfigMessage_t)refreshProc : NULL;
+		}
+	}
+
+	if (bhConfigMessage)
+	{
+		return bhConfigMessage();
+	}
+
+	return FALSE;
+}
+
+bool bCreateFile = false;
 
 void Config::SaveConfig()
 {
@@ -281,20 +307,69 @@ void Config::SaveConfig()
 	std::ofstream fout(App.jsonFile);
 	fout << std::setw(4) << App.jsonConfig << std::endl;
 	fout.close();
+
+	if (bCreateFile)
+	{
+		std::ofstream foutBak(App.jsonBackup);
+		foutBak << std::setw(4) << App.jsonConfig << std::endl;
+		foutBak.close();
+	}
+	SendReloadMessage();
 }
 
 
 void Config::LoadConfig()
 {
-	bool bCreateFile = false;
 	std::ifstream ifile(App.jsonFile);
-	if (!ifile) {
+	if (!ifile)
+	{
 		std::ofstream output(App.jsonFile);
 		output << "{}";
+		output.close();
 		bCreateFile = true;
 	}
+	std::ifstream ibakfile(App.jsonBackup);
+	if (!ibakfile)
+	{
+		std::ofstream outputBak(App.jsonBackup);
+		outputBak << "{}";
+		outputBak.close();
+	}
 
-	App.jsonConfig = json::parse(std::ifstream{ App.jsonFile });
+	try
+	{
+		App.jsonConfig = json::parse(std::ifstream{ App.jsonFile });
+
+		if (!bCreateFile)
+		{
+			std::ofstream foutBak(App.jsonBackup);
+			foutBak << std::setw(4) << App.jsonConfig << std::endl;
+			foutBak.close();
+		}
+	}
+	catch (const json::parse_error&)
+	{
+		try
+		{
+			App.jsonConfig = json::parse(std::ifstream{ App.jsonBackup });
+
+			std::ofstream fout(App.jsonFile);
+			fout << std::setw(4) << App.jsonConfig << std::endl;
+			fout.close();
+		}
+		catch (const json::parse_error&)
+		{
+			std::ofstream output(App.jsonFile);
+			output << "{}";
+			output.close();
+			std::ofstream outputBak(App.jsonBackup);
+			outputBak << "{}";
+			outputBak.close();
+			bCreateFile = true;
+
+			App.jsonConfig = json::parse(std::ifstream{ App.jsonFile });
+		}
+	}
 
 	// Bnet settings
 	App.bnet.autofillLastGame.value =	GetBool("/bnet"_json_pointer, "autofill_last_game", App.bnet.autofillLastGame);
@@ -384,8 +459,13 @@ void Config::LoadConfig()
 	App.bhui.sizeY.value =				GetInt("/bh_ui"_json_pointer, "size_y", App.bhui.sizeY);
 
 
-	if (bCreateFile) {
+	if (bCreateFile)
+	{
 		SaveConfig();
+	}
+	else
+	{
+		SendReloadMessage();
 	}
 
 	App.hotkeyToggles = {

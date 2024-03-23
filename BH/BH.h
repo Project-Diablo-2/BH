@@ -43,6 +43,7 @@ struct BHApp {
 	Config* config;
 	json jsonConfig;
 	std::string jsonFile = "BH.json";
+	std::string jsonBackup = "BH.json.bak";
 
 	struct {
 		SettingsBool isMinimized = { true, true };
