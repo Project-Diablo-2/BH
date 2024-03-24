@@ -956,12 +956,25 @@ void GetItemName(UnitItemInfo* uInfo,
 	string& name);
 void SubstituteNameVariables(UnitItemInfo* uInfo,
 	string& name,
-	Action* action,
-	BOOL          bLimit);
-void SubstituteNameVariables(UnitItemInfo* uInfo,
-	string& name,
 	const string& action_name,
 	BOOL          bLimit);
+void ReplaceStatSkillVars(UnitItemInfo* uInfo, string& name);
+string NameVarSockets(UnitItemInfo* uInfo);
+string NameVarRuneNum(UnitItemInfo* uInfo);
+string NameVarRuneName(UnitItemInfo* uInfo);
+string NameVarGemLevel(UnitItemInfo* uInfo);
+string NameVarGemType(UnitItemInfo* uInfo);
+string NameVarIlvl(UnitItemInfo* uInfo);
+string NameVarAlvl(UnitItemInfo* uInfo);
+string NameVarCraftAlvl(UnitItemInfo* uInfo);
+string NameVarLevelReq(UnitItemInfo* uInfo);
+string NameVarWeaponSpeed(ItemsTxt* itemTxt);
+string NameVarRangeAdder(ItemsTxt* itemTxt);
+string NameVarSellValue(UnitItemInfo* uInfo, ItemsTxt* itemTxt);
+string NameVarQty(UnitItemInfo* uInfo);
+string NameVarAllRes(UnitItemInfo* uInfo);
+string NameVarEd(UnitItemInfo* uInfo);
+
 BYTE GetAffixLevel(BYTE ilvl,
 	BYTE qlvl,
 	BYTE mlvl);
