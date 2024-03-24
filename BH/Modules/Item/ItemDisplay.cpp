@@ -712,7 +712,10 @@ std::map<std::string, FilterCondition> condition_map =
 
 };
 
-std::map<std::string, int> stat_id_map =
+
+// Beware of potential match intercepts with these
+// Processed from first to last (EDEF before DEF, ARPER before AR, etc)
+std::vector<pair<std::string, int>> stat_id_map =
 {
 	{"EDEF", STAT_ENHANCEDDEFENSE},
 	{"EDAM", STAT_ENHANCEDMAXIMUMDAMAGE},
@@ -1103,12 +1106,13 @@ void ReplaceStatSkillVars(UnitItemInfo* uInfo,
 	char statVal[16] = "0";
 
 	// Replace named stat output strings with their STAT# counterpart
-	map<string, int>::iterator it;
+	// Matching the prefixed % symbol to avoid intercepting matches from non-numbered variables
+	std::vector<pair<string, int>>::iterator it;
 	for (it = stat_id_map.begin(); it != stat_id_map.end(); it++)
 	{
-		while (name.find(it->first) != string::npos)
+		while (name.find("%" + it->first) != string::npos)
 		{
-			name.replace(name.find(it->first), it->first.length(), "STAT" + std::to_string(it->second));
+			name.replace(name.find("%" + it->first), it->first.length() + 1, "%STAT" + std::to_string(it->second));
 		}
 	}
 
@@ -1326,11 +1330,14 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	std::regex  var_reg("%(" + reListString + ")%", std::regex_constants::ECMAScript);
 	std::smatch var_match;
 
+	// TODO: Unify handling of numbered and non-numbered variables
+	ReplaceStatSkillVars(uInfo, name);
+
 	while (std::regex_search(name, var_match, var_reg))
 	{
 		string varString = var_match[1];
 		transform(varString.begin(), varString.end(), varString.begin(), ::toupper);
-		for (int n = sizeof(replacements) / sizeof(replacements[0]) - 1; n >= 0; --n) // Reverse order to avoid premature matching (eg RANGE vs ORANGE)
+		for (int n = sizeof(replacements) / sizeof(replacements[0]) - 1; n >= 0; --n) // Reverse order to avoid intercepting matches (eg RANGE vs ORANGE)
 		{
 			while (varString.find(replacements[n].key) != string::npos)
 			{
@@ -1355,7 +1362,6 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 				}
 			}
 		}
-		ReplaceStatSkillVars(uInfo, varString);
 		name.replace(name.find(var_match[0]), var_match[0].length(), varString);
 	}
 
