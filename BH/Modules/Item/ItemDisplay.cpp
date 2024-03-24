@@ -2966,7 +2966,7 @@ int GetStatFromList(UnitItemInfo* uInfo, int itemStat)
 
 	if (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD)
 	{
-		StatList* pStateStatList = D2COMMON_GetStateStatList(uInfo->item, 171);  // 171=runeword
+		StatList* pStateStatList = D2COMMON_GetStateStatList(uInfo->item, STATE_RUNEWORD);
 		if (pStateStatList)
 		{
 			value += D2COMMON_GetStatValueFromStatList(pStateStatList, itemStat, 0);

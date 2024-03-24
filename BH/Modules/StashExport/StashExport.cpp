@@ -614,7 +614,7 @@ static JSONObject* DEFAULT_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStats, Item
 
 	if (checkFlag(pItem, ITEM_RUNEWORD))
 	{
-		StatList* pStatList = D2COMMON_GetStateStatList(pItem, 171);  // 171=runeword
+		StatList* pStatList = D2COMMON_GetStateStatList(pItem, STATE_RUNEWORD);
 		statVal += D2COMMON_GetStatValueFromStatList(pStatList, statId, statLayer);
 	}
 
@@ -639,7 +639,7 @@ static JSONObject* DAMAGE_PERCENT_FUNCTION(UnitAny* pItem, ItemsTxtStat itemStat
 	int statVal = D2COMMON_GetStatValueFromStatList(pStatList, STAT_ENHANCEDMINIMUMDAMAGE, 0);
 	if (checkFlag(pItem, ITEM_RUNEWORD))
 	{
-		StatList* pStatList = D2COMMON_GetStateStatList(pItem, 171);  // 171=runeword
+		StatList* pStatList = D2COMMON_GetStateStatList(pItem, STATE_RUNEWORD);
 		statVal += D2COMMON_GetStatValueFromStatList(pStatList, STAT_ENHANCEDMINIMUMDAMAGE, param);
 	}
 
