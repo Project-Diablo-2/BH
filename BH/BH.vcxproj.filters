@@ -72,6 +72,9 @@
     <ClCompile Include="Modules\Gamefilter\Gamefilter.cpp">
       <Filter>Modules\Gamefilter</Filter>
     </ClCompile>
+    <ClCompile Include="Modules\Gamefilter\ParsedFilterString.cpp">
+      <Filter>Modules\Gamefilter</Filter>
+    </ClCompile>
     <ClCompile Include="Modules\Item\Item.cpp">
       <Filter>Modules\Item</Filter>
     </ClCompile>
@@ -175,6 +178,9 @@
       <Filter>Modules\ChatColor</Filter>
     </ClInclude>
     <ClInclude Include="Modules\Gamefilter\Gamefilter.h">
+      <Filter>Modules\Gamefilter</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Gamefilter\ParsedFilterString.h">
       <Filter>Modules\Gamefilter</Filter>
     </ClInclude>
     <ClInclude Include="Modules\Item\Item.h">
