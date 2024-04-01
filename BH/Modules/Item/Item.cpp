@@ -1842,7 +1842,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 			// Item SpellDesc
 			if (itemTxt->wspelldescstr)
 			{
-				wchar_t spellDesc[128];
+				wchar_t spellDesc[256];
 				D2CLIENT_GetItemDescription_STUB(itemTxt, spellDesc, pItem);
 				maxTextLimit -= wcslen(spellDesc) + 3; // color code added later
 			}
