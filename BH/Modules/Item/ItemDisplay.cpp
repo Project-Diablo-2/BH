@@ -26,26 +26,6 @@
 	{"STAT62", STAT_MANALEECH},		\
 	{"REPLIFE", STAT_REPLENISHLIFE},
 
-// For ignoring size
-std::vector<std::string> colorreps =
-{
-	"ÿc0",
-	"ÿc1",
-	"ÿc2",
-	"ÿc3",
-	"ÿc4",
-	"ÿc5",
-	*p_D2GFX_RenderMode != 4 ? "ÿc6" : "\xFF""c\x02",
-	"ÿc7",
-	"ÿc8",
-	"ÿc9",
-	"ÿc;",
-	"ÿc:",
-	*p_D2GFX_RenderMode != 4 ? "ÿc1" : "\xFF""c\x06",
-	*p_D2GFX_RenderMode != 4 ? "ÿc2" : "\xFF""c\x07",
-	*p_D2GFX_RenderMode != 4 ? "ÿc3" : "\xFF""c\x09",
-	*p_D2GFX_RenderMode != 4 ? "ÿc5" : "\xFF""c\x0C"
-};
 
 // All colors here must also be defined in MAP_COLOR_REPLACEMENTS
 #define COLOR_REPLACEMENTS	\
@@ -1259,7 +1239,7 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	if (bLimit)
 	{
 		// Calc the extra size from colors
-		std::regex color_reg(join(colorreps, "|"), std::regex_constants::ECMAScript);
+		std::regex color_reg("ÿc[0-9;:\\x01-\\x1F]", std::regex_constants::ECMAScript);
 		auto       color_matches = std::sregex_iterator(name.begin(), name.end(), color_reg);
 		auto       color_end = std::sregex_iterator();
 		auto       match_count = std::distance(color_matches, color_end);
