@@ -1069,10 +1069,10 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 			}
 		}
 		// Remove leading or trailing new lines from %CL% keywords
-		if (replacements[n].key == "CL")
+		if (replacements[n].key == "CL" && !name.empty())
 		{
 			if (name.front() == '\n') { name.erase(0, 1); }
-			if (name.back() == '\n') { name.erase(name.size() - 1, 1); }
+			if (!name.empty() && name.back() == '\n') { name.erase(name.size() - 1, 1); }
 		}
 	}
 
