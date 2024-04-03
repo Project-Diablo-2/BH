@@ -42,6 +42,11 @@ enum ConditionType
 class Condition
 {
 public:
+	enum CircuitType {
+		AND = 1,
+		OR = 2
+	};
+
 	Condition()
 	{
 	}
@@ -64,6 +69,7 @@ public:
 		Condition* arg1,
 		Condition* arg2);
 
+	BYTE circuitType = 0;
 	BYTE conditionType;
 private:
 	virtual bool EvaluateInternal(UnitItemInfo* uInfo,
@@ -126,7 +132,7 @@ private:
 class AndOperator : public Condition
 {
 public:
-	AndOperator() { conditionType = CT_BinaryOperator; };
+	AndOperator() { conditionType = CT_BinaryOperator; circuitType = Condition::CircuitType::AND; };
 private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
@@ -136,7 +142,7 @@ private:
 class OrOperator : public Condition
 {
 public:
-	OrOperator() { conditionType = CT_BinaryOperator; };
+	OrOperator() { conditionType = CT_BinaryOperator; circuitType = Condition::CircuitType::OR; };
 private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
@@ -834,11 +840,26 @@ struct Action
 	}
 };
 
+struct ConditionEvalNode {
+	Condition* condition;
+	size_t lhs;
+	size_t rhs;
+
+	ConditionEvalNode(Condition* condition, size_t lhs, size_t rhs) :
+		condition(condition),
+		lhs(lhs),
+		rhs(rhs)
+	{
+	}
+};
+
 struct Rule
 {
 	vector<Condition*> conditions;
 	Action             action;
 	vector<Condition*> conditionStack;
+	size_t root;
+	vector<ConditionEvalNode> nodes;
 
 	Rule(vector<Condition*>& inputConditions,
 		string* str);
@@ -850,6 +871,10 @@ struct Rule
 		if (conditions.size() == 0)
 		{
 			return true; // a rule with no conditions always matches
+		}
+
+		if (root != -1 && nodes.size() > 0) {
+			return EvaluateTree(uInfo);
 		}
 
 		bool retval;
@@ -887,6 +912,11 @@ struct Rule
 		catch (...) { retval = false; }
 		return retval;
 	}
+
+	bool EvaluateTree(UnitItemInfo* uInfo);
+private:
+	bool Convert();
+	bool EvaluateTreeInternal(UnitItemInfo* uInfo, size_t id);
 };
 
 class ItemDescLookupCache : public RuleLookupCache<string>

@@ -1455,6 +1455,89 @@ Rule::Rule(vector<Condition*>& inputConditions,
 	Condition::ProcessConditions(inputConditions, conditions);
 	BuildAction(str, &action);
 	conditionStack.reserve(conditions.size()); // TODO: too large?
+	if (!Convert()) {
+		root = -1;
+	}
+}
+
+bool Rule::Convert() {
+	nodes.clear();
+	nodes.reserve(conditions.size());
+	vector<size_t> stack;
+	stack.reserve(nodes.capacity());
+	for (Condition* condition : conditions) {
+		nodes.emplace_back(condition, -1, -1);
+		const size_t id = nodes.size() - 1;
+		auto& node = nodes[id];
+		switch (condition->conditionType) {
+		case CT_Operand: {
+			stack.push_back(id);
+			break;
+		}
+		case CT_BinaryOperator: {
+			if (stack.size() < 2) {
+				return false;
+			}
+			node.rhs = stack.back();
+			stack.pop_back();
+			node.lhs = stack.back();
+			stack.pop_back();
+			stack.push_back(id);
+			break;
+		}
+		case CT_NegationOperator: {
+			if (stack.size() < 1) {
+				return false;
+			}
+			node.lhs = stack.back();
+			stack.pop_back();
+			stack.push_back(id);
+			break;
+		}
+		default:
+			return false;
+		}
+	}
+	if (stack.size() != 1) {
+		return false;
+	}
+	root = stack.back();
+	const auto& node = nodes[root];
+	if (node.condition->conditionType == CT_BinaryOperator) {
+		return node.lhs != -1 && node.rhs != -1;
+	}
+	if (node.condition->conditionType == CT_NegationOperator) {
+		return node.lhs != -1;
+	}
+	return true;
+}
+
+bool Rule::EvaluateTree(UnitItemInfo* uInfo) {
+	return root != -1 && EvaluateTreeInternal(uInfo, root);
+}
+
+bool Rule::EvaluateTreeInternal(UnitItemInfo* uInfo, size_t id) {
+	const auto& node = nodes[id];
+	switch (node.condition->conditionType) {
+	case CT_Operand: {
+		return node.condition->Evaluate(uInfo, NULL, NULL);
+	}
+	case CT_BinaryOperator: {
+		if (node.condition->circuitType == Condition::CircuitType::AND) {
+			return EvaluateTreeInternal(uInfo, node.lhs) && EvaluateTreeInternal(uInfo, node.rhs);
+		}
+		if (node.condition->circuitType == Condition::CircuitType::OR) {
+			return EvaluateTreeInternal(uInfo, node.lhs) || EvaluateTreeInternal(uInfo, node.rhs);
+		}
+		// and, or are the only binary ops
+		return false;
+	}
+	case CT_NegationOperator: {
+		return !EvaluateTreeInternal(uInfo, node.lhs);
+	}
+	default:
+		return false;
+	}
 }
 
 void BuildAction(string* str,
