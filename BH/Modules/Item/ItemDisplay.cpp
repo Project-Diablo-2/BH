@@ -1454,7 +1454,6 @@ Rule::Rule(vector<Condition*>& inputConditions,
 {
 	Condition::ProcessConditions(inputConditions, conditions);
 	BuildAction(str, &action);
-	conditionStack.reserve(conditions.size()); // TODO: too large?
 	if (!Convert()) {
 		root = -1;
 	}

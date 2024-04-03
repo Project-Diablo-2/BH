@@ -857,7 +857,6 @@ struct Rule
 {
 	vector<Condition*> conditions;
 	Action             action;
-	vector<Condition*> conditionStack;
 	size_t root;
 	vector<ConditionEvalNode> nodes;
 
@@ -865,7 +864,6 @@ struct Rule
 		string* str);
 
 	// TODO: Should this really be defined in the header? This will force it to be inlined AFAIK. -ybd
-	// Evaluate conditions which are in Reverse Polish Notation
 	bool Evaluate(UnitItemInfo* uInfo)
 	{
 		if (conditions.size() == 0)
@@ -873,44 +871,7 @@ struct Rule
 			return true; // a rule with no conditions always matches
 		}
 
-		if (root != -1 && nodes.size() > 0) {
-			return EvaluateTree(uInfo);
-		}
-
-		bool retval;
-		try
-		{
-			// conditionStack was previously declared on the stack within this function. This caused
-			// excessive allocaiton calls and was limiting the speed of the item display (causing
-			// frame rate drops with complex item displays while ALT was held down). Moving this vector
-			// to the object level, preallocating size, and using the resize(0) method to clear avoids
-			// excessive reallocation.
-			conditionStack.resize(0);
-			for (unsigned int i = 0; i < conditions.size(); i++)
-			{
-				Condition* input = conditions[i];
-				if (input->conditionType == CT_Operand) { conditionStack.push_back(input); }
-				else if (input->conditionType == CT_BinaryOperator || input->conditionType == CT_NegationOperator)
-				{
-					Condition* arg1 = NULL, * arg2 = NULL;
-					if (conditionStack.size() < 1) { return false; }
-					arg1 = conditionStack.back();
-					conditionStack.pop_back();
-					if (input->conditionType == CT_BinaryOperator)
-					{
-						if (conditionStack.size() < 1) { return false; }
-						arg2 = conditionStack.back();
-						conditionStack.pop_back();
-					}
-					if (input->Evaluate(uInfo, arg1, arg2)) { conditionStack.push_back(trueCondition); }
-					else { conditionStack.push_back(falseCondition); }
-				}
-			}
-			if (conditionStack.size() == 1) { retval = conditionStack[0]->Evaluate(uInfo, NULL, NULL); }
-			else { retval = false; }
-		}
-		catch (...) { retval = false; }
-		return retval;
+		return EvaluateTree(uInfo);
 	}
 
 	bool EvaluateTree(UnitItemInfo* uInfo);
