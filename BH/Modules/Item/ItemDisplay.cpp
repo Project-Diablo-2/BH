@@ -872,8 +872,8 @@ string ItemNameLookupCache::make_cached_T(UnitItemInfo* uInfo,
 	const string& name)
 {
 	string new_name(name);
-	if (new_name.front() == ' ') { new_name.erase(0, 1); }					// removes one leading space (happens on magic items without a prefix)
-	if (new_name.back() == ' ') { new_name.erase(new_name.size() - 1, 1); }	// removes one trailing space (happens on magic items without a suffix)
+	if (!new_name.empty() && new_name.front() == ' ') { new_name.erase(0, 1); }					// removes one leading space (happens on magic items without a prefix)
+	if (!new_name.empty() && new_name.back() == ' ') { new_name.erase(new_name.size() - 1, 1); }	// removes one trailing space (happens on magic items without a suffix)
 	for (vector<Rule*>::const_iterator it = RuleList.begin(); it != RuleList.end(); it++)
 	{
 		if ((*it)->Evaluate(uInfo))
