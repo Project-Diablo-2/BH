@@ -2586,8 +2586,15 @@ bool EquippedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	bool is_equipped = false;
 	if (uInfo->item->pItemData->pOwnerInventory)
 	{
-		if (uInfo->item->pItemData->pOwnerInventory->dwOwnerId == D2CLIENT_GetPlayerUnit()->dwUnitId || 
-			uInfo->item->pItemData->pOwnerInventory->dwOwnerId == D2CLIENT_GetMercUnit()->dwUnitId)
+		UnitAny* pMerc = nullptr;
+		UnitAny* pPlayer = D2CLIENT_GetPlayerUnit();
+		if (D2CLIENT_GetUIState(UI_MERC))
+		{
+			pMerc = D2CLIENT_GetMercUnit();
+		}
+
+		if ((pPlayer && uInfo->item->pItemData->pOwnerInventory->dwOwnerId == pPlayer->dwUnitId) ||
+			(pMerc && uInfo->item->pItemData->pOwnerInventory->dwOwnerId == pMerc->dwUnitId))
 		{
 			if (uInfo->item->pItemData->BodyLocation > 0 && uInfo->item->pItemData->ItemLocation == STORAGE_NULL)
 			{
