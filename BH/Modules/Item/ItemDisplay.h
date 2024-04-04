@@ -42,6 +42,11 @@ enum ConditionType
 class Condition
 {
 public:
+	enum CircuitType {
+		AND = 1,
+		OR = 2
+	};
+
 	Condition()
 	{
 	}
@@ -64,6 +69,7 @@ public:
 		Condition* arg1,
 		Condition* arg2);
 
+	BYTE circuitType = 0;
 	BYTE conditionType;
 private:
 	virtual bool EvaluateInternal(UnitItemInfo* uInfo,
@@ -126,7 +132,7 @@ private:
 class AndOperator : public Condition
 {
 public:
-	AndOperator() { conditionType = CT_BinaryOperator; };
+	AndOperator() { conditionType = CT_BinaryOperator; circuitType = Condition::CircuitType::AND; };
 private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
@@ -136,7 +142,7 @@ private:
 class OrOperator : public Condition
 {
 public:
-	OrOperator() { conditionType = CT_BinaryOperator; };
+	OrOperator() { conditionType = CT_BinaryOperator; circuitType = Condition::CircuitType::OR; };
 private:
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
@@ -834,17 +840,30 @@ struct Action
 	}
 };
 
+struct ConditionEvalNode {
+	Condition* condition;
+	size_t lhs;
+	size_t rhs;
+
+	ConditionEvalNode(Condition* condition, size_t lhs, size_t rhs) :
+		condition(condition),
+		lhs(lhs),
+		rhs(rhs)
+	{
+	}
+};
+
 struct Rule
 {
 	vector<Condition*> conditions;
 	Action             action;
-	vector<Condition*> conditionStack;
+	size_t root;
+	vector<ConditionEvalNode> nodes;
 
 	Rule(vector<Condition*>& inputConditions,
 		string* str);
 
 	// TODO: Should this really be defined in the header? This will force it to be inlined AFAIK. -ybd
-	// Evaluate conditions which are in Reverse Polish Notation
 	bool Evaluate(UnitItemInfo* uInfo)
 	{
 		if (conditions.size() == 0)
@@ -852,41 +871,13 @@ struct Rule
 			return true; // a rule with no conditions always matches
 		}
 
-		bool retval;
-		try
-		{
-			// conditionStack was previously declared on the stack within this function. This caused
-			// excessive allocaiton calls and was limiting the speed of the item display (causing
-			// frame rate drops with complex item displays while ALT was held down). Moving this vector
-			// to the object level, preallocating size, and using the resize(0) method to clear avoids
-			// excessive reallocation.
-			conditionStack.resize(0);
-			for (unsigned int i = 0; i < conditions.size(); i++)
-			{
-				Condition* input = conditions[i];
-				if (input->conditionType == CT_Operand) { conditionStack.push_back(input); }
-				else if (input->conditionType == CT_BinaryOperator || input->conditionType == CT_NegationOperator)
-				{
-					Condition* arg1 = NULL, * arg2 = NULL;
-					if (conditionStack.size() < 1) { return false; }
-					arg1 = conditionStack.back();
-					conditionStack.pop_back();
-					if (input->conditionType == CT_BinaryOperator)
-					{
-						if (conditionStack.size() < 1) { return false; }
-						arg2 = conditionStack.back();
-						conditionStack.pop_back();
-					}
-					if (input->Evaluate(uInfo, arg1, arg2)) { conditionStack.push_back(trueCondition); }
-					else { conditionStack.push_back(falseCondition); }
-				}
-			}
-			if (conditionStack.size() == 1) { retval = conditionStack[0]->Evaluate(uInfo, NULL, NULL); }
-			else { retval = false; }
-		}
-		catch (...) { retval = false; }
-		return retval;
+		return EvaluateTree(uInfo);
 	}
+
+	bool EvaluateTree(UnitItemInfo* uInfo);
+private:
+	bool Convert();
+	bool EvaluateTreeInternal(UnitItemInfo* uInfo, size_t id);
 };
 
 class ItemDescLookupCache : public RuleLookupCache<string>
