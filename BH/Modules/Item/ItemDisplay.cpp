@@ -851,7 +851,7 @@ string ItemDescLookupCache::make_cached_T(UnitItemInfo* uInfo)
 	{
 		if ((*it)->Evaluate(uInfo))
 		{
-			SubstituteNameVariables(uInfo, new_name, (*it)->action.description, FALSE);
+			SubstituteNameVariables(uInfo, new_name, (*it)->action.description, FALSE, (*it)->action.stopProcessing);
 			if ((*it)->action.stopProcessing) { break; }
 		}
 	}
@@ -881,7 +881,7 @@ string ItemNameLookupCache::make_cached_T(UnitItemInfo* uInfo,
 	{
 		if ((*it)->Evaluate(uInfo))
 		{
-			SubstituteNameVariables(uInfo, new_name, (*it)->action.name, TRUE);
+			SubstituteNameVariables(uInfo, new_name, (*it)->action.name, TRUE, (*it)->action.stopProcessing);
 			if ((*it)->action.stopProcessing) { break; }
 		}
 	}
@@ -1263,7 +1263,8 @@ void ReplaceStatSkillVars(UnitItemInfo* uInfo,
 void SubstituteNameVariables(UnitItemInfo* uInfo,
 	string& name,
 	const string& action_name,
-	BOOL          bLimit)
+	BOOL          bLimit,
+    BOOL          last_rule)
 {
 	char origName[MAX_ITEM_TEXT_SIZE];
 	sprintf_s(origName, "%s", name.c_str());
@@ -1284,8 +1285,6 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		{ "WPNSPD", NameVarWeaponSpeed(itemTxt).c_str() },
 		{ "RANGE", NameVarRangeAdder(itemTxt).c_str() },
 		{ "CODE", uInfo->itemCode },
-		{ "NL", "\n" },
-		{ "CL", "\n" },
 		{ "LBRACE", "{" },
 		{ "RBRACE", "}" },
 		{ "PRICE", NameVarSellValue(uInfo, itemTxt).c_str() },
@@ -1315,8 +1314,6 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	std::regex  var_reg("%(" + reListString + ")%", std::regex_constants::ECMAScript);
 	std::smatch var_match;
 
-	// TODO: Unify handling of numbered and non-numbered variables
-	ReplaceStatSkillVars(uInfo, name);
 
 	while (std::regex_search(name, var_match, var_reg))
 	{
@@ -1326,35 +1323,51 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		{
 			while (varString.find(replacements[n].key) != string::npos)
 			{
-				if (bLimit && (replacements[n].key == "NL" || replacements[n].key == "CL"))
-				{
-					// Allow %NL% and %CL% on identified, magic+ item names, and items within shops
-					if ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
-						(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0) ||
-						inShop)
-					{
-						varString.replace(varString.find(replacements[n].key), replacements[n].key.length() + 2, replacements[n].value);
-					}
-					// Remove it on everything else
-					else
-					{
-						varString.replace(varString.find(replacements[n].key), replacements[n].key.length() + 2, "");
-					}
-				}
-				else
-				{
-					varString.replace(varString.find(replacements[n].key), replacements[n].key.length(), replacements[n].value);
-				}
-
-				// Remove leading or trailing new lines from %CL% keywords
-				if (replacements[n].key == "CL" && !name.empty())
-				{
-					if (name.front() == '\n') { name.erase(0, 1); }
-					if (!name.empty() && name.back() == '\n') { name.erase(name.size() - 1, 1); }
-				}
+				varString.replace(varString.find(replacements[n].key), replacements[n].key.length(), replacements[n].value);
 			}
 		}
 		name.replace(name.find(var_match[0]), var_match[0].length(), varString);
+	}
+
+	// TODO: Unify handling of numbered and non-numbered variables
+	ReplaceStatSkillVars(uInfo, name);
+
+	bool nlAllowed = (uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0  &&
+					 (uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC ||
+					  (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0   ||
+					  inShop);
+
+	if (!name.empty() && (!bLimit || nlAllowed))
+	{
+		// Replace allowed %CL%s with unused character to avoid limit breaches
+		while (name.find("%CL%") != string::npos)
+			name.replace(name.find("%CL%"), 4, "\r");
+		// Replace allowed %NL%s with new lines
+		while (name.find("%NL%") != string::npos)
+			name.replace(name.find("%NL%"), 4, "\n");
+
+		if (last_rule)
+		{
+			// Collapse paired CLs
+			while (name.find("\r\r") != string::npos)
+				name.replace(name.find("\r\r"), 2, "\r");
+			// Delete leading/trailing CLs
+			if (name.find("\r") == 0)
+				name.erase(0, 1);
+			if (name.rfind("\r") == name.size() - 1)
+				name.resize(name.size() - 1);
+			// Convert to new line
+			while (name.find("\r") != string::npos)
+				name.replace(name.find("\r"), 1, "\n");
+		}
+	}
+	else
+	{
+		// Remove unallowed %NL%s and %CL%s
+		while (name.find("%NL%") != string::npos)
+			name.replace(name.find("%NL%"), 4, "");
+		while (name.find("%CL%") != string::npos)
+			name.replace(name.find("%CL%"), 4, "");
 	}
 
 	int lengthLimit = 0;
