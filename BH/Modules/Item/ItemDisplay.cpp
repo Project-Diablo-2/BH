@@ -1116,13 +1116,12 @@ void ReplaceStatSkillVars(UnitItemInfo* uInfo,
 	char statVal[16] = "0";
 
 	// Replace named stat output strings with their STAT# counterpart
-	// Matching the prefixed % symbol to avoid intercepting matches from non-numbered variables
 	std::vector<pair<string, int>>::iterator it;
 	for (it = stat_id_map.begin(); it != stat_id_map.end(); it++)
 	{
-		while (name.find("%" + it->first) != string::npos)
+		while (name.find("%" + it->first + "%") != string::npos)
 		{
-			name.replace(name.find("%" + it->first), it->first.length() + 1, "%STAT" + std::to_string(it->second));
+			name.replace(name.find("%" + it->first + "%"), it->first.length() + 2, "%STAT" + std::to_string(it->second) + "%");
 		}
 	}
 
