@@ -851,9 +851,23 @@ string ItemDescLookupCache::make_cached_T(UnitItemInfo* uInfo)
 	{
 		if ((*it)->Evaluate(uInfo))
 		{
-			SubstituteNameVariables(uInfo, new_name, (*it)->action.description, FALSE, (*it)->action.stopProcessing);
+			SubstituteNameVariables(uInfo, new_name, (*it)->action.description, FALSE);
 			if ((*it)->action.stopProcessing) { break; }
 		}
+	}
+	if (!new_name.empty())
+	{
+		// Collapse paired CLs
+		while (new_name.find("\r\r") != string::npos)
+			new_name.replace(new_name.find("\r\r"), 2, "\r");
+		// Delete leading/trailing CLs
+		if (new_name.find("\r") == 0)
+			new_name.erase(0, 1);
+		if (new_name.rfind("\r") == new_name.size() - 1)
+			new_name.resize(new_name.size() - 1);
+		// Convert to new line
+		while (new_name.find("\r") != string::npos)
+			new_name.replace(new_name.find("\r"), 1, "\n");
 	}
 	return new_name;
 }
@@ -881,9 +895,23 @@ string ItemNameLookupCache::make_cached_T(UnitItemInfo* uInfo,
 	{
 		if ((*it)->Evaluate(uInfo))
 		{
-			SubstituteNameVariables(uInfo, new_name, (*it)->action.name, TRUE, (*it)->action.stopProcessing);
+			SubstituteNameVariables(uInfo, new_name, (*it)->action.name, TRUE);
 			if ((*it)->action.stopProcessing) { break; }
 		}
+	}
+	if (!new_name.empty())
+	{
+		// Collapse paired CLs
+		while (new_name.find("\r\r") != string::npos)
+			new_name.replace(new_name.find("\r\r"), 2, "\r");
+		// Delete leading/trailing CLs
+		if (new_name.find("\r") == 0)
+			new_name.erase(0, 1);
+		if (new_name.rfind("\r") == new_name.size() - 1)
+			new_name.resize(new_name.size() - 1);
+		// Convert to new line
+		while (new_name.find("\r") != string::npos)
+			new_name.replace(new_name.find("\r"), 1, "\n");
 	}
 	return new_name;
 }
@@ -1263,8 +1291,7 @@ void ReplaceStatSkillVars(UnitItemInfo* uInfo,
 void SubstituteNameVariables(UnitItemInfo* uInfo,
 	string& name,
 	const string& action_name,
-	BOOL          bLimit,
-    BOOL          last_rule)
+	BOOL          bLimit)
 {
 	char origName[MAX_ITEM_TEXT_SIZE];
 	sprintf_s(origName, "%s", name.c_str());
@@ -1332,10 +1359,9 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	// TODO: Unify handling of numbered and non-numbered variables
 	ReplaceStatSkillVars(uInfo, name);
 
-	bool nlAllowed = (uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0  &&
-					 (uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC ||
-					  (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0   ||
-					  inShop);
+	bool nlAllowed = ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0  &&
+					 (uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0)) ||
+					 inShop;
 
 	if (!name.empty() && (!bLimit || nlAllowed))
 	{
@@ -1345,21 +1371,6 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		// Replace allowed %NL%s with new lines
 		while (name.find("%NL%") != string::npos)
 			name.replace(name.find("%NL%"), 4, "\n");
-
-		if (last_rule)
-		{
-			// Collapse paired CLs
-			while (name.find("\r\r") != string::npos)
-				name.replace(name.find("\r\r"), 2, "\r");
-			// Delete leading/trailing CLs
-			if (name.find("\r") == 0)
-				name.erase(0, 1);
-			if (name.rfind("\r") == name.size() - 1)
-				name.resize(name.size() - 1);
-			// Convert to new line
-			while (name.find("\r") != string::npos)
-				name.replace(name.find("\r"), 1, "\n");
-		}
 	}
 	else
 	{

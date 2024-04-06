@@ -948,8 +948,7 @@ void GetItemName(UnitItemInfo* uInfo,
 void SubstituteNameVariables(UnitItemInfo* uInfo,
 	string& name,
 	const string& action_name,
-	BOOL          bLimit,
-	BOOL          last_rule);
+	BOOL          bLimit);
 void ReplaceStatSkillVars(UnitItemInfo* uInfo, string& name);
 string NameVarSockets(UnitItemInfo* uInfo);
 string NameVarRuneNum(UnitItemInfo* uInfo);
