@@ -855,20 +855,8 @@ string ItemDescLookupCache::make_cached_T(UnitItemInfo* uInfo)
 			if ((*it)->action.stopProcessing) { break; }
 		}
 	}
-	if (!new_name.empty())
-	{
-		// Collapse paired CLs
-		while (new_name.find("\r\r") != string::npos)
-			new_name.replace(new_name.find("\r\r"), 2, "\r");
-		// Delete leading/trailing CLs
-		if (new_name.find("\r") == 0)
-			new_name.erase(0, 1);
-		if (new_name.rfind("\r") == new_name.size() - 1)
-			new_name.resize(new_name.size() - 1);
-		// Convert to new line
-		while (new_name.find("\r") != string::npos)
-			new_name.replace(new_name.find("\r"), 1, "\n");
-	}
+	if (!new_name.empty()) { TrimItemText(uInfo, new_name, FALSE); }
+
 	return new_name;
 }
 
@@ -899,20 +887,8 @@ string ItemNameLookupCache::make_cached_T(UnitItemInfo* uInfo,
 			if ((*it)->action.stopProcessing) { break; }
 		}
 	}
-	if (!new_name.empty())
-	{
-		// Collapse paired CLs
-		while (new_name.find("\r\r") != string::npos)
-			new_name.replace(new_name.find("\r\r"), 2, "\r");
-		// Delete leading/trailing CLs
-		if (new_name.find("\r") == 0)
-			new_name.erase(0, 1);
-		if (new_name.rfind("\r") == new_name.size() - 1)
-			new_name.resize(new_name.size() - 1);
-		// Convert to new line
-		while (new_name.find("\r") != string::npos)
-			new_name.replace(new_name.find("\r"), 1, "\n");
-	}
+	if (!new_name.empty()) { TrimItemText(uInfo, new_name, TRUE); }
+
 	return new_name;
 }
 
@@ -1292,7 +1268,8 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	const string& action_name,
 	BOOL          bLimit)
 {
-	char origName[MAX_ITEM_TEXT_SIZE];
+	char origName[1024];
+	if (name.size() > 1023) { name.resize(1023); }
 	sprintf_s(origName, "%s", name.c_str());
 
 	ItemsTxt* itemTxt = D2COMMON_GetItemText(uInfo->item->dwTxtFileNo);
@@ -1323,10 +1300,8 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	int nColorCodesSize = 0;
 	name.assign(action_name);
 
-	bool inShop = false;
-	if (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
-		find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs))
-		inShop = true;
+	bool inShop = (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
+		find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs));
 
 	// Concat replacements list into a regex string to avoid accidental matches with stray % symbols
 	string reListString = "";
@@ -1379,7 +1354,25 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		while (name.find("%CL%") != string::npos)
 			name.replace(name.find("%CL%"), 4, "");
 	}
+}
 
+void TrimItemText(UnitItemInfo* uInfo,
+	string& name,
+	BOOL bLimit)
+{
+	// Collapse paired CLs
+	while (name.find("\r\r") != string::npos)
+		name.replace(name.find("\r\r"), 2, "\r");
+	// Delete leading/trailing CLs
+	if (name.find("\r") == 0)
+		name.erase(0, 1);
+	if (name.rfind("\r") == name.size() - 1)
+		name.resize(name.size() - 1);
+	// Convert to new line
+	while (name.find("\r") != string::npos)
+		name.replace(name.find("\r"), 1, "\n");
+
+	int nColorCodesSize = 0;
 	int lengthLimit = 0;
 	if (bLimit)
 	{
@@ -1389,6 +1382,9 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		auto       color_end = std::sregex_iterator();
 		auto       match_count = std::distance(color_matches, color_end);
 		nColorCodesSize += 3 * match_count;
+
+		bool inShop = (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
+			find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs));
 
 		// Increase limit for shop items
 		lengthLimit = inShop ? MAX_ITEM_TEXT_SIZE : MAX_ITEM_NAME_SIZE;

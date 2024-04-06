@@ -945,6 +945,9 @@ inline bool IntegerCompare(int Lvalue,
 	int Rvalue);
 void GetItemName(UnitItemInfo* uInfo,
 	string& name);
+void TrimItemText(UnitItemInfo* uInfo,
+	string& name,
+	BOOL bLimit);
 void SubstituteNameVariables(UnitItemInfo* uInfo,
 	string& name,
 	const string& action_name,
