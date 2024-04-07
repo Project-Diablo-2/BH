@@ -850,6 +850,7 @@ int CreateUnitItemInfo(UnitItemInfo* uInfo, UnitAny* item) {
 	uInfo->item = item;
 	if (ItemAttributeMap.find(std::string(uInfo->itemCode)) != ItemAttributeMap.end()) {
 		uInfo->attrs = ItemAttributeMap[std::string(uInfo->itemCode)];
+		uInfo->attrs->staffmodClass = D2COMMON_10957_GetStaffMods(uInfo->item);
 		return 0;
 	}
 	else {

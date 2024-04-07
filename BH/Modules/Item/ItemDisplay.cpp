@@ -1337,6 +1337,10 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 					 (uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0)) ||
 					 inShop;
 
+	// Check if non-mag item capable of having staffmods
+	bool nmagStaffmod = ((uInfo->item->pItemData->dwQuality == ITEM_QUALITY_NORMAL || uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR) &&
+						uInfo->attrs->staffmodClass < CLASS_NA);
+
 	if (!name.empty() && (!bLimit || nlAllowed))
 	{
 		// Replace allowed %CL%s with unused character to avoid limit breaches
@@ -1345,6 +1349,18 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		// Replace allowed %NL%s with new lines
 		while (name.find("%NL%") != string::npos)
 			name.replace(name.find("%NL%"), 4, "\n");
+	}
+	else if (!name.empty() && nmagStaffmod)
+	{
+		// Replace first new line and remove all others
+		if (name.find("%NL%") != string::npos && name.find("\n") == string::npos)
+			name.replace(name.find("%NL%"), 4, "\n");
+		if (name.find("%CL%") != string::npos && name.find("\n") == string::npos)
+			name.replace(name.find("%CL%"), 4, "\n");
+		while (name.find("%NL%") != string::npos)
+			name.replace(name.find("%NL%"), 4, "");
+		while (name.find("%CL%") != string::npos)
+			name.replace(name.find("%CL%"), 4, "");
 	}
 	else
 	{
