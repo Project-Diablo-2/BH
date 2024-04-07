@@ -1338,7 +1338,9 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 					 inShop;
 
 	// Check if non-mag item capable of having staffmods
-	bool nmagStaffmod = ((uInfo->item->pItemData->dwQuality == ITEM_QUALITY_NORMAL || uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR) &&
+	bool nmagStaffmod = ((uInfo->item->pItemData->dwQuality == ITEM_QUALITY_INFERIOR ||
+		                  uInfo->item->pItemData->dwQuality == ITEM_QUALITY_NORMAL || 
+		                  uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR) &&
 						uInfo->attrs->staffmodClass < CLASS_NA);
 
 	if (!name.empty() && (!bLimit || nlAllowed))
