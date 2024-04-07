@@ -408,6 +408,7 @@ FUNCPTR(D2COMMON, 10630_GetHighestLevelSkillFromUnitAndId, Skill* __fastcall, (U
 FUNCPTR(D2COMMON, 10806_DATATBLS_GetGemsTxtRecord, D2GemsTxt* __stdcall, (int nGemId), -10806);
 FUNCPTR(D2COMMON, 10832_CalcDM56, int __stdcall, (int nSkillLevel, int nSkillId), -10832);
 FUNCPTR(D2COMMON, 10865_HasDurability, int __stdcall, (UnitAny* pItem), -10865);
+FUNCPTR(D2COMMON, 10957_GetStaffMods, int __stdcall, (UnitAny* pItem), -10957);
 FUNCPTR(D2COMMON, 11015_GetItemLevelRequirement, int __stdcall, (UnitAny* pItem, UnitAny* pUnit), -11015);
 FUNCPTR(D2COMMON, 11116_GetMaxDurabilityFromUnit, int __stdcall, (UnitAny* pItem), -11116);
 FUNCPTR(D2COMMON, 11144_GetQuiverType, int __stdcall, (UnitAny* pItem), -11144);

@@ -851,10 +851,12 @@ string ItemDescLookupCache::make_cached_T(UnitItemInfo* uInfo)
 	{
 		if ((*it)->Evaluate(uInfo))
 		{
-			SubstituteNameVariables(uInfo, new_name, (*it)->action.description, FALSE, (*it)->action.stopProcessing);
+			SubstituteNameVariables(uInfo, new_name, (*it)->action.description, FALSE);
 			if ((*it)->action.stopProcessing) { break; }
 		}
 	}
+	if (!new_name.empty()) { TrimItemText(uInfo, new_name, FALSE); }
+
 	return new_name;
 }
 
@@ -881,10 +883,12 @@ string ItemNameLookupCache::make_cached_T(UnitItemInfo* uInfo,
 	{
 		if ((*it)->Evaluate(uInfo))
 		{
-			SubstituteNameVariables(uInfo, new_name, (*it)->action.name, TRUE, (*it)->action.stopProcessing);
+			SubstituteNameVariables(uInfo, new_name, (*it)->action.name, TRUE);
 			if ((*it)->action.stopProcessing) { break; }
 		}
 	}
+	if (!new_name.empty()) { TrimItemText(uInfo, new_name, TRUE); }
+
 	return new_name;
 }
 
@@ -1088,13 +1092,12 @@ void ReplaceStatSkillVars(UnitItemInfo* uInfo,
 	char statVal[16] = "0";
 
 	// Replace named stat output strings with their STAT# counterpart
-	// Matching the prefixed % symbol to avoid intercepting matches from non-numbered variables
 	std::vector<pair<string, int>>::iterator it;
 	for (it = stat_id_map.begin(); it != stat_id_map.end(); it++)
 	{
-		while (name.find("%" + it->first) != string::npos)
+		while (name.find("%" + it->first + "%") != string::npos)
 		{
-			name.replace(name.find("%" + it->first), it->first.length() + 1, "%STAT" + std::to_string(it->second));
+			name.replace(name.find("%" + it->first + "%"), it->first.length() + 2, "%STAT" + std::to_string(it->second) + "%");
 		}
 	}
 
@@ -1263,10 +1266,10 @@ void ReplaceStatSkillVars(UnitItemInfo* uInfo,
 void SubstituteNameVariables(UnitItemInfo* uInfo,
 	string& name,
 	const string& action_name,
-	BOOL          bLimit,
-    BOOL          last_rule)
+	BOOL          bLimit)
 {
-	char origName[MAX_ITEM_TEXT_SIZE];
+	char origName[1024];
+	if (name.size() > 1023) { name.resize(1023); }
 	sprintf_s(origName, "%s", name.c_str());
 
 	ItemsTxt* itemTxt = D2COMMON_GetItemText(uInfo->item->dwTxtFileNo);
@@ -1297,10 +1300,8 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	int nColorCodesSize = 0;
 	name.assign(action_name);
 
-	bool inShop = false;
-	if (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
-		find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs))
-		inShop = true;
+	bool inShop = (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
+		find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs));
 
 	// Concat replacements list into a regex string to avoid accidental matches with stray % symbols
 	string reListString = "";
@@ -1332,10 +1333,15 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	// TODO: Unify handling of numbered and non-numbered variables
 	ReplaceStatSkillVars(uInfo, name);
 
-	bool nlAllowed = (uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0  &&
-					 (uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC ||
-					  (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0   ||
-					  inShop);
+	bool nlAllowed = ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0  &&
+					 (uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0)) ||
+					 inShop;
+
+	// Check if non-mag item capable of having staffmods
+	bool nmagStaffmod = ((uInfo->item->pItemData->dwQuality == ITEM_QUALITY_INFERIOR ||
+		                  uInfo->item->pItemData->dwQuality == ITEM_QUALITY_NORMAL || 
+		                  uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR) &&
+						uInfo->attrs->staffmodClass < CLASS_NA);
 
 	if (!name.empty() && (!bLimit || nlAllowed))
 	{
@@ -1345,21 +1351,18 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		// Replace allowed %NL%s with new lines
 		while (name.find("%NL%") != string::npos)
 			name.replace(name.find("%NL%"), 4, "\n");
-
-		if (last_rule)
-		{
-			// Collapse paired CLs
-			while (name.find("\r\r") != string::npos)
-				name.replace(name.find("\r\r"), 2, "\r");
-			// Delete leading/trailing CLs
-			if (name.find("\r") == 0)
-				name.erase(0, 1);
-			if (name.rfind("\r") == name.size() - 1)
-				name.resize(name.size() - 1);
-			// Convert to new line
-			while (name.find("\r") != string::npos)
-				name.replace(name.find("\r"), 1, "\n");
-		}
+	}
+	else if (!name.empty() && nmagStaffmod)
+	{
+		// Replace first new line and remove all others
+		if (name.find("%NL%") != string::npos && name.find("\n") == string::npos)
+			name.replace(name.find("%NL%"), 4, "\n");
+		if (name.find("%CL%") != string::npos && name.find("\n") == string::npos)
+			name.replace(name.find("%CL%"), 4, "\n");
+		while (name.find("%NL%") != string::npos)
+			name.replace(name.find("%NL%"), 4, "");
+		while (name.find("%CL%") != string::npos)
+			name.replace(name.find("%CL%"), 4, "");
 	}
 	else
 	{
@@ -1369,7 +1372,25 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		while (name.find("%CL%") != string::npos)
 			name.replace(name.find("%CL%"), 4, "");
 	}
+}
 
+void TrimItemText(UnitItemInfo* uInfo,
+	string& name,
+	BOOL bLimit)
+{
+	// Collapse paired CLs
+	while (name.find("\r\r") != string::npos)
+		name.replace(name.find("\r\r"), 2, "\r");
+	// Delete leading/trailing CLs
+	if (name.find("\r") == 0)
+		name.erase(0, 1);
+	if (name.rfind("\r") == name.size() - 1)
+		name.resize(name.size() - 1);
+	// Convert to new line
+	while (name.find("\r") != string::npos)
+		name.replace(name.find("\r"), 1, "\n");
+
+	int nColorCodesSize = 0;
 	int lengthLimit = 0;
 	if (bLimit)
 	{
@@ -1379,6 +1400,9 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 		auto       color_end = std::sregex_iterator();
 		auto       match_count = std::distance(color_matches, color_end);
 		nColorCodesSize += 3 * match_count;
+
+		bool inShop = (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
+			find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs));
 
 		// Increase limit for shop items
 		lengthLimit = inShop ? MAX_ITEM_TEXT_SIZE : MAX_ITEM_NAME_SIZE;

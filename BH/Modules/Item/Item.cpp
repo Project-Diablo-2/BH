@@ -296,6 +296,11 @@ void GetWeaponAttributes()
 	for (auto d = 0; d < pItemDataTables->nWeaponsTxtRecordCount; d++)
 	{
 		ItemsTxt* pWeapons = &pItemDataTables->pWeapons[d];
+		D2ItemTypesTxt* pItemTypesTxtRecord = NULL;
+		if (pWeapons->nType >= 0 && pWeapons->nType < pItemDataTables->nItemsTxtRecordCount)
+		{
+			pItemTypesTxtRecord = &(*p_D2COMMON_sgptDataTable)->pItemsTypeTxt[pWeapons->nType];
+		}
 		BYTE stackable = pWeapons->bstackable > 0 ? pWeapons->bstackable : 0;
 		BYTE useable = pWeapons->buseable > 0 ? pWeapons->buseable : 0;
 		BYTE throwable = throwableMap[pWeapons->nType] > 0 ? throwableMap[pWeapons->nType] : 0;
@@ -401,6 +406,7 @@ void GetWeaponAttributes()
 		attrs->miscFlags = 0;
 		attrs->qualityLevel = pWeapons->blevel;
 		attrs->magicLevel = pWeapons->bmagiclvl;
+		attrs->staffmodClass = pItemTypesTxtRecord ? pItemTypesTxtRecord->nStaffMods : 255;
 		ItemAttributeMap[GetTxtItemCode(pWeapons)] = attrs;
 	}
 }
@@ -411,6 +417,11 @@ void GetArmorAttributes()
 	for (auto d = 0; d < pItemDataTables->nArmorTxtRecordCount; d++)
 	{
 		ItemsTxt* pArmor = &pItemDataTables->pArmor[d];
+		D2ItemTypesTxt* pItemTypesTxtRecord = NULL;
+		if (pArmor->nType >= 0 && pArmor->nType < pItemDataTables->nItemsTxtRecordCount)
+		{
+			pItemTypesTxtRecord = &(*p_D2COMMON_sgptDataTable)->pItemsTypeTxt[pArmor->nType];
+		}
 		BYTE stackable = pArmor->bstackable > 0 ? pArmor->bstackable : 0;
 		BYTE useable = pArmor->buseable > 0 ? pArmor->buseable : 0;
 		BYTE throwable = throwableMap[pArmor->nType] > 0 ? throwableMap[pArmor->nType] : 0; // Hey, you never know
@@ -481,6 +492,7 @@ void GetArmorAttributes()
 		attrs->miscFlags = 0;
 		attrs->qualityLevel = pArmor->blevel;
 		attrs->magicLevel = pArmor->bmagiclvl;
+		attrs->staffmodClass = pItemTypesTxtRecord ? pItemTypesTxtRecord->nStaffMods : 255;
 		ItemAttributeMap[GetTxtItemCode(pArmor)] = attrs;
 	}
 }
@@ -491,6 +503,11 @@ void GetMiscAttributes()
 	for (auto d = 0; d < pItemDataTables->nMiscTxtRecordCount; d++)
 	{
 		ItemsTxt* pMisc = &pItemDataTables->pMisc[d];
+		D2ItemTypesTxt* pItemTypesTxtRecord = NULL;
+		if (pMisc->nType >= 0 && pMisc->nType < pItemDataTables->nItemsTxtRecordCount)
+		{
+			pItemTypesTxtRecord = &(*p_D2COMMON_sgptDataTable)->pItemsTypeTxt[pMisc->nType];
+		}
 		BYTE stackable = pMisc->bstackable > 0 ? pMisc->bstackable : 0;
 		BYTE useable = pMisc->buseable > 0 ? pMisc->buseable : 0;
 		BYTE throwable = throwableMap[pMisc->nType] > 0 ? throwableMap[pMisc->nType] : 0;
@@ -572,6 +589,7 @@ void GetMiscAttributes()
 		attrs->miscFlags = miscFlags;
 		attrs->qualityLevel = pMisc->blevel;
 		attrs->magicLevel = 0;
+		attrs->staffmodClass = pItemTypesTxtRecord ? pItemTypesTxtRecord->nStaffMods : 255;
 		ItemAttributeMap[GetTxtItemCode(pMisc)] = attrs;
 	}
 }

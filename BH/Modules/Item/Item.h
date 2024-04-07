@@ -143,6 +143,7 @@ struct ItemAttributes {
 	unsigned int miscFlags;
 	BYTE qualityLevel;
 	BYTE magicLevel;
+	BYTE staffmodClass;
 };
 
 // Properties from ItemStatCost.txt

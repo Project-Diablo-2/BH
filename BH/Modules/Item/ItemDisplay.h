@@ -945,11 +945,13 @@ inline bool IntegerCompare(int Lvalue,
 	int Rvalue);
 void GetItemName(UnitItemInfo* uInfo,
 	string& name);
+void TrimItemText(UnitItemInfo* uInfo,
+	string& name,
+	BOOL bLimit);
 void SubstituteNameVariables(UnitItemInfo* uInfo,
 	string& name,
 	const string& action_name,
-	BOOL          bLimit,
-	BOOL          last_rule);
+	BOOL          bLimit);
 void ReplaceStatSkillVars(UnitItemInfo* uInfo, string& name);
 string NameVarSockets(UnitItemInfo* uInfo);
 string NameVarRuneNum(UnitItemInfo* uInfo);
