@@ -1428,8 +1428,50 @@ string ItemNameLookupCache::make_cached_T(UnitItemInfo* uInfo,
 	{
 		if ((*it)->Evaluate(uInfo))
 		{
-			ctx.name = (*it)->ApplyName(ctx);
-			SubstituteNameVariables(uInfo, new_name, (*it)->action.name, TRUE);
+			{
+				static long long min = 100000000;
+				static long long max = 0;
+				static long long sum = 0;
+				static long long count = 0;
+				count += 1;
+				auto S = std::chrono::high_resolution_clock::now();
+				ctx.name = (*it)->ApplyName(ctx);
+				auto E = std::chrono::high_resolution_clock::now();
+				long long dur = (E - S).count();
+				min = min > dur ? dur : min;
+				max = max < dur ? dur : max;
+				sum += dur;
+				if (count % 1000 == 0) {
+					PrintText(1, "new %lld %lld %lld %lld", min, max, sum / count, count);
+					FILE* f = fopen("debug_new.txt", "wb");
+					if (f) {
+						fprintf(f, "new %lld %lld %lld %lld", min, max, sum / count, count);
+						fclose(f);
+					}
+				}
+			}
+			{
+				static long long min = 100000000;
+				static long long max = 0;
+				static long long sum = 0;
+				static long long count = 0;
+				count += 1;
+				auto S = std::chrono::high_resolution_clock::now();
+				SubstituteNameVariables(uInfo, new_name, (*it)->action.name, TRUE);
+				auto E = std::chrono::high_resolution_clock::now();
+				long long dur = (E - S).count();
+				min = min > dur ? dur : min;
+				max = max < dur ? dur : max;
+				sum += dur;
+				if (count % 1000 == 0) {
+					PrintText(1, "old %lld %lld %lld %lld", min, max, sum / count, count);
+					FILE* f = fopen("debug_old.txt", "wb");
+					if (f) {
+						fprintf(f, "old %lld %lld %lld %lld", min, max, sum / count, count);
+						fclose(f);
+					}
+				}
+			}
 			if ((*it)->action.stopProcessing) { break; }
 		}
 	}
