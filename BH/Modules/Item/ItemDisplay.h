@@ -853,12 +853,17 @@ struct ConditionEvalNode {
 	}
 };
 
+struct ReplaceContext;
+struct ReplacementValue;
+
 struct Rule
 {
 	vector<Condition*> conditions;
 	Action             action;
 	size_t root;
 	vector<ConditionEvalNode> nodes;
+	vector<ReplacementValue> name;
+	vector<ReplacementValue> description;
 
 	Rule(vector<Condition*>& inputConditions,
 		string* str);
@@ -874,6 +879,8 @@ struct Rule
 		return EvaluateTree(uInfo);
 	}
 
+	string ApplyName(ReplaceContext& ctx);
+	string ApplyDescription(ReplaceContext& ctx);
 	bool EvaluateTree(UnitItemInfo* uInfo);
 private:
 	bool Convert();
