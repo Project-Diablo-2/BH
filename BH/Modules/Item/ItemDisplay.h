@@ -955,11 +955,6 @@ void GetItemName(UnitItemInfo* uInfo,
 void TrimItemText(UnitItemInfo* uInfo,
 	string& name,
 	BOOL bLimit);
-void SubstituteNameVariables(UnitItemInfo* uInfo,
-	string& name,
-	const string& action_name,
-	BOOL          bLimit);
-void ReplaceStatSkillVars(UnitItemInfo* uInfo, string& name);
 string NameVarSockets(UnitItemInfo* uInfo);
 string NameVarRuneNum(UnitItemInfo* uInfo);
 string NameVarRuneName(UnitItemInfo* uInfo);
