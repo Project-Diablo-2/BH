@@ -1878,21 +1878,25 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 			maxTextLimit -= 3; // color addition in the wDesc swprintf_s below
 			maxTextLimit = maxTextLimit > MAX_ITEM_TEXT_SIZE ? MAX_ITEM_TEXT_SIZE : maxTextLimit;
 
-			if (desc.length() > maxTextLimit)
+			bool shouldShowDesc = maxTextLimit > 4;
+			if (desc.length() > maxTextLimit && shouldShowDesc)
 			{
 				desc.resize(maxTextLimit - 4);
 				desc += "...";
 			}
 
-			static wchar_t wDesc[MAX_ITEM_TEXT_SIZE];
-			auto chars_written = MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, desc.c_str(), -1, wDesc, MAX_ITEM_TEXT_SIZE);
+			if (shouldShowDesc)
+			{
+				static wchar_t wDesc[MAX_ITEM_TEXT_SIZE];
+				auto chars_written = MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, desc.c_str(), -1, wDesc, MAX_ITEM_TEXT_SIZE);
 
-			int aLen = wcslen(wTxt);
-			swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen,
-				L"%s%s\n",
-				(chars_written > 0) ? wDesc : L"\377c1Item Description is too long.",
-				GetColorCode(TextColor::White).c_str()
-			);
+				int aLen = wcslen(wTxt);
+				swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen,
+					L"%s%s\n",
+					(chars_written > 0) ? wDesc : L"\377c1Item Description is too long.",
+					GetColorCode(TextColor::White).c_str()
+				);
+			}
 		}
 	}
 
