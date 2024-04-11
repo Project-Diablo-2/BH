@@ -1382,24 +1382,16 @@ BYTE RuneNumberFromItemCode(char* code) { return (BYTE)(((code[1] - '0') * 10) +
 // Find the item description. This code is called only when there's a cache miss
 string ItemDescLookupCache::make_cached_T(UnitItemInfo* uInfo)
 {
-	string new_name;
-	ReplaceContext ctx(uInfo, new_name.c_str(), FALSE);
+	ReplaceContext ctx(uInfo, "", FALSE);
 	for (vector<Rule*>::const_iterator it = RuleList.begin(); it != RuleList.end(); it++)
 	{
 		if ((*it)->Evaluate(uInfo))
 		{
 			ctx.name = (*it)->ApplyDescription(ctx);
-			SubstituteNameVariables(uInfo, new_name, (*it)->action.description, FALSE);
 			if ((*it)->action.stopProcessing) { break; }
 		}
 	}
-
-	if (!new_name.empty()) { TrimItemText(uInfo, new_name, FALSE); }
 	if (!ctx.name.empty()) { TrimItemText(uInfo, ctx.name, FALSE); }
-
-	if (ctx.name != new_name) {
-		return "wrong description applied";
-	}
 
 	return ctx.name;
 }
@@ -1428,59 +1420,11 @@ string ItemNameLookupCache::make_cached_T(UnitItemInfo* uInfo,
 	{
 		if ((*it)->Evaluate(uInfo))
 		{
-			{
-				static long long min = 100000000;
-				static long long max = 0;
-				static long long sum = 0;
-				static long long count = 0;
-				count += 1;
-				auto S = std::chrono::high_resolution_clock::now();
-				ctx.name = (*it)->ApplyName(ctx);
-				auto E = std::chrono::high_resolution_clock::now();
-				long long dur = (E - S).count();
-				min = min > dur ? dur : min;
-				max = max < dur ? dur : max;
-				sum += dur;
-				if (count % 1000 == 0) {
-					PrintText(1, "new %lld %lld %lld %lld", min, max, sum / count, count);
-					FILE* f = fopen("debug_new.txt", "wb");
-					if (f) {
-						fprintf(f, "new %lld %lld %lld %lld", min, max, sum / count, count);
-						fclose(f);
-					}
-				}
-			}
-			{
-				static long long min = 100000000;
-				static long long max = 0;
-				static long long sum = 0;
-				static long long count = 0;
-				count += 1;
-				auto S = std::chrono::high_resolution_clock::now();
-				SubstituteNameVariables(uInfo, new_name, (*it)->action.name, TRUE);
-				auto E = std::chrono::high_resolution_clock::now();
-				long long dur = (E - S).count();
-				min = min > dur ? dur : min;
-				max = max < dur ? dur : max;
-				sum += dur;
-				if (count % 1000 == 0) {
-					PrintText(1, "old %lld %lld %lld %lld", min, max, sum / count, count);
-					FILE* f = fopen("debug_old.txt", "wb");
-					if (f) {
-						fprintf(f, "old %lld %lld %lld %lld", min, max, sum / count, count);
-						fclose(f);
-					}
-				}
-			}
+			ctx.name = (*it)->ApplyName(ctx);
 			if ((*it)->action.stopProcessing) { break; }
 		}
 	}
-	if (!new_name.empty()) { TrimItemText(uInfo, new_name, TRUE); }
 	if (!ctx.name.empty()) { TrimItemText(uInfo, ctx.name, TRUE); }
-
-	if (ctx.name != new_name) {
-		return "wrong name applied";
-	}
 
 	return ctx.name;
 }
