@@ -1384,7 +1384,7 @@ void TrimItemText(UnitItemInfo* uInfo,
 	// Delete leading/trailing CLs
 	if (name.find("\r") == 0)
 		name.erase(0, 1);
-	if (name.rfind("\r") == name.size() - 1)
+	if (!name.empty() && name.rfind("\r") == name.size() - 1)
 		name.resize(name.size() - 1);
 	// Convert to new line
 	while (name.find("\r") != string::npos)
