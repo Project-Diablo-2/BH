@@ -1336,7 +1336,8 @@ bool ShouldShowIlvl(UnitItemInfo* uInfo)
 			attrs->weaponFlags & ITEM_GROUP_ALLWEAPON ||
 			attrs->miscFlags & ITEM_GROUP_QUIVER ||
 			attrs->miscFlags & ITEM_GROUP_JEWELRY ||
-			attrs->miscFlags & ITEM_GROUP_CHARM)
+			attrs->miscFlags & ITEM_GROUP_CHARM ||
+			(uInfo->itemCode[0] == 'j' && uInfo->itemCode[1] == 'e' && uInfo->itemCode[2] == 'w' && uInfo->itemCode[3] == '\0'))
 		{
 			return true;
 		}
