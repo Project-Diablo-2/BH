@@ -2563,16 +2563,13 @@ bool MapIdCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg2)
 {
 	UnitAny* player = D2CLIENT_GetPlayerUnit();
-
-	if (player &&
-		player->pAct &&
-		player->pAct->pRoom1 &&
-		player->pAct->pRoom1->pRoom2 &&
-		player->pAct->pRoom1->pRoom2->pLevel &&
-		player->pAct->pRoom1->pRoom2->pLevel->dwLevelNo > 0)
+	if (player)
 	{
-		int map_id = (int)player->pAct->pRoom1->pRoom2->pLevel->dwLevelNo;
-		return IntegerCompare(map_id, operation, mapId, mapId2);
+		int map_id = D2COMMON_GetLevelIdFromRoom(D2COMMON_GetRoomFromUnit(player));
+		if (map_id > 0)
+		{
+			return IntegerCompare(map_id, operation, mapId, mapId2);
+		}
 	}
 	return false;
 }
