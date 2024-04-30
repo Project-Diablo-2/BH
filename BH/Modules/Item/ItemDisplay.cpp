@@ -1563,7 +1563,7 @@ namespace ItemDisplay
 			item->ItemFilterNames.push_back(to_string(i + 1) + " - " + filterDefinitions[i].second);
 
 			// Max 9 entries
-			if (i >= 8) {
+			if (i >= 11) {
 				break;
 			}
 		}
