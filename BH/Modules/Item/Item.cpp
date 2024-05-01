@@ -931,6 +931,14 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
 	// ÿc8 (orange)
 	// ÿc9 (yellow)
 
+	// Pre-trim "ending" color code that would otherwise be split into a partial code with
+	// the following conversion
+	int lastColorPos = itemName.rfind("ÿc");
+	if (lastColorPos != string::npos && lastColorPos > nameSize - 6)
+	{
+		itemName.resize(lastColorPos);
+	}
+
 	// The game adds the item color code _after_ this ItemNamePatch intercept, so we need to
 	// reduce the total allowed size to account for this
 	MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, itemName.c_str(), -1, name, nameSize - 4);
