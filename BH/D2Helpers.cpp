@@ -4,6 +4,8 @@
 #include "Common.h"
 #include "Constants.h"
 
+#include <regex>
+
 int quality_to_color[] = {
 	White, // none
 	White, // inferior
@@ -330,6 +332,16 @@ std::string GetItemName(UnitAny* item) {
 	wchar_t buffer[256] = L"";
 	D2CLIENT_GetItemName(item, buffer, 256);
 	return UnicodeToAnsi(buffer);
+}
+
+void TransformItemNameForPrint(std::string& name) {
+	std::regex trimName("^\\s*(?:(?:\\s*?)(ÿc[0123456789;:]))*\\s*(.*?\\S)\\s*(?:ÿc[0123456789;:])*\\s*$");	// Matches on leading/trailing spaces (skips most color codes)
+	name = std::regex_replace(name, trimName, "$1$2");												// Trims the matched spaces from notifications
+	size_t start_pos = 0;
+	while ((start_pos = name.find('\n', start_pos)) != std::string::npos) {
+		name.replace(start_pos, 1, " - ");
+		start_pos += 3;
+	}
 }
 
 bool IsTown(DWORD levelId) {

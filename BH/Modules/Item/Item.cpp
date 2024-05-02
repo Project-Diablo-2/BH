@@ -817,6 +817,22 @@ void Item::OnLoop() {
 			D2CLIENT_SetUIVar(0x01, 1, 0);
 		}
 	}
+
+	if (App.lootfilter.advancedItemDisplay.toggle.isEnabled && App.lootfilter.detailedNotifications.toggle.isEnabled) {
+		UnitAny* unit = D2CLIENT_GetCurrentInteractingNPC();
+
+		if (unit && unit->pInventory) {
+			// search from the last item added to avoid checking the entire vendor repeatedly
+			for (UnitAny* pItem = unit->pInventory->pLastItem; pItem && !(pItem->dwFlags & UNITFLAG_REVEALED); pItem = pItem->pItemData->pPrevInvItem) {
+				if (ItemPassesAnyVendorRule(pItem)) {
+					std::string itemName = GetItemName(pItem);
+					TransformItemNameForPrint(itemName);
+					PrintText(ItemColorFromQuality(pItem->pItemData->dwQuality), "%s", itemName.c_str());
+				}
+				pItem->dwFlags |= UNITFLAG_REVEALED;
+			}
+		}
+	}
 }
 
 void Item::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {

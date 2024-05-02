@@ -734,6 +734,7 @@ std::map<std::string, int>   UnknownItemCodes;
 vector<pair<string, string>> rules;
 vector<Rule*>                RuleList;
 vector<Rule*>                MapRuleList;
+vector<Rule*>                VendorRuleList;
 vector<Rule*>                IgnoreRuleList;
 BYTE                         LastConditionType;
 
@@ -1540,14 +1541,22 @@ namespace ItemDisplay
 			Rule* r = new Rule(RawConditions, &(rules[i].second));
 
 			RuleList.push_back(r);
-			if (r->action.colorOnMap != UNDEFINED_COLOR ||
+			bool isMapListRule = r->action.colorOnMap != UNDEFINED_COLOR ||
 				r->action.borderColor != UNDEFINED_COLOR ||
 				r->action.dotColor != UNDEFINED_COLOR ||
 				r->action.pxColor != UNDEFINED_COLOR ||
-				r->action.lineColor != UNDEFINED_COLOR) {
+				r->action.lineColor != UNDEFINED_COLOR;
+			bool isVendorListRule = r->action.vendor;
+			bool isIgnoreListRule = !isMapListRule && !isVendorListRule;
+			if (isMapListRule) {
 				MapRuleList.push_back(r);
 			}
-			else if (r->action.name.length() == 0) { IgnoreRuleList.push_back(r); }
+			if (isVendorListRule) {
+				VendorRuleList.push_back(r);
+			}
+			if (isIgnoreListRule && r->action.name.length() == 0) {
+				IgnoreRuleList.push_back(r);
+			}
 		}
 
 		// Setup filter level names based on config file
@@ -1592,6 +1601,7 @@ namespace ItemDisplay
 		ResetCaches();
 		RuleList.clear();
 		MapRuleList.clear();
+		VendorRuleList.clear();
 		IgnoreRuleList.clear();
 	}
 }
@@ -1748,6 +1758,12 @@ void BuildAction(string* str,
 		act->colorOnMap = mapColor;
 		if (act->borderColor == UNDEFINED_COLOR)
 			act->borderColor = act->colorOnMap;
+	}
+
+	size_t vendor = act->name.find("%VENDOR%");
+	if (vendor != string::npos) {
+		act->name.replace(vendor, 8, "");
+		act->vendor = true;
 	}
 
 	size_t done = act->name.find("%CONTINUE%");
@@ -3114,3 +3130,38 @@ void HandleUnknownItemCode(char* code,
 	}
 }
 
+bool ItemPassesAnyRuleList(UnitAny* pItem, vector<Rule*>& list)
+{
+	DWORD dwFlags = pItem->pItemData->dwFlags;
+	char* code = D2COMMON_GetItemText(pItem->dwTxtFileNo)->szCode;
+	UnitItemInfo uInfo;
+	uInfo.item = pItem;
+	uInfo.itemCode[0] = code[0];
+	uInfo.itemCode[1] = code[1] != ' ' ? code[1] : 0;
+	uInfo.itemCode[2] = code[2] != ' ' ? code[2] : 0;
+	uInfo.itemCode[3] = code[3] != ' ' ? code[3] : 0;
+	uInfo.itemCode[4] = 0;
+	auto foundAttribute = ItemAttributeMap.find(uInfo.itemCode);
+	if (foundAttribute != ItemAttributeMap.end()) {
+		uInfo.attrs = foundAttribute->second;
+		for (vector<Rule*>::iterator it = list.begin(); it != list.end(); it++) {
+			int filterLevel = Item::GetFilterLevel();
+			if (filterLevel != 0 && (*it)->action.pingLevel < filterLevel && (*it)->action.pingLevel != -1) continue;
+
+			if ((*it)->Evaluate(&uInfo)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool ItemPassesAnyMapRule(UnitAny* pItem)
+{
+	return ItemPassesAnyRuleList(pItem, MapRuleList);
+}
+
+bool ItemPassesAnyVendorRule(UnitAny* pItem)
+{
+	return ItemPassesAnyRuleList(pItem, VendorRuleList);
+}
