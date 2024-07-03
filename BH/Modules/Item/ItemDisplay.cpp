@@ -1303,31 +1303,13 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	bool inShop = (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
 		find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs));
 
-	// Concat replacements list into a regex string to avoid accidental matches with stray % symbols
-	string reListString = "";
-	for (int n = 0; n < sizeof(replacements) / sizeof(replacements[0]); n++)
+	for (ActionReplace replacement : replacements)
 	{
-		reListString += replacements[n].key;
-		if (n < sizeof(replacements) / sizeof(replacements[0]) - 1)
-			reListString += "|";
-	}
-
-	std::regex  var_reg("%(" + reListString + ")%", std::regex_constants::ECMAScript);
-	std::smatch var_match;
-
-
-	while (std::regex_search(name, var_match, var_reg))
-	{
-		string varString = var_match[1];
-		transform(varString.begin(), varString.end(), varString.begin(), ::toupper);
-		for (int n = sizeof(replacements) / sizeof(replacements[0]) - 1; n >= 0; --n) // Reverse order to avoid intercepting matches (eg RANGE vs ORANGE)
+		string varString = "%" + replacement.key + "%";
+		while (name.find(varString) != string::npos)
 		{
-			while (varString.find(replacements[n].key) != string::npos)
-			{
-				varString.replace(varString.find(replacements[n].key), replacements[n].key.length(), replacements[n].value);
-			}
+			name.replace(name.find(varString), varString.length(), replacement.value);
 		}
-		name.replace(name.find(var_match[0]), var_match[0].length(), varString);
 	}
 
 	// TODO: Unify handling of numbered and non-numbered variables
@@ -1563,7 +1545,7 @@ namespace ItemDisplay
 			item->ItemFilterNames.push_back(to_string(i + 1) + " - " + filterDefinitions[i].second);
 
 			// Max 9 entries
-			if (i >= 8) {
+			if (i >= 11) {
 				break;
 			}
 		}
@@ -2810,23 +2792,9 @@ bool EquippedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg2)
 {
 	bool is_equipped = false;
-	if (uInfo->item->pItemData->pOwnerInventory)
+	if (uInfo->item->pItemData->BodyLocation > 0 && uInfo->item->pItemData->ItemLocation == STORAGE_NULL)
 	{
-		UnitAny* pMerc = nullptr;
-		UnitAny* pPlayer = D2CLIENT_GetPlayerUnit();
-		if (D2CLIENT_GetUIState(UI_MERC))
-		{
-			pMerc = D2CLIENT_GetMercUnit();
-		}
-
-		if ((pPlayer && uInfo->item->pItemData->pOwnerInventory->dwOwnerId == pPlayer->dwUnitId) ||
-			(pMerc && uInfo->item->pItemData->pOwnerInventory->dwOwnerId == pMerc->dwUnitId))
-		{
-			if (uInfo->item->pItemData->BodyLocation > 0 && uInfo->item->pItemData->ItemLocation == STORAGE_NULL)
-			{
-				is_equipped = true;
-			}
-		}
+		is_equipped = true;
 	}
 
 	return IntegerCompare(is_equipped, (BYTE)EQUAL, 1);
