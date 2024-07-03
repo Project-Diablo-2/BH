@@ -372,16 +372,16 @@ void Gamefilter::OnOOGDraw() {
 			DWORD dwListEnd = filterVector.size() > 9 ? dwListStart + 9 : filterVector.size();
 			for (unsigned int i = dwListStart; i < dwListEnd; i++)
 			{
-				unsigned int uiYPos = 235 + (i - dwListStart) * 19;
+				unsigned int uiYPos = 230 + (i - dwListStart) * 19;
 				if (App.bnet.showDifficulty.value) {
 					if ((filterVector.at(i)->dwStatus & 0x1000)) {
-						D2WIN_DrawText(L"NM", 547, uiYPos, Blue, -1);
+						D2WIN_DrawText(L"NM", 547, uiYPos + 1, Blue, -1);
 					}
 					else if ((filterVector.at(i)->dwStatus & 0x2000)) {
-						D2WIN_DrawText(L"H", 547, uiYPos, Red, -1);
+						D2WIN_DrawText(L"H", 547, uiYPos + 1, Red, -1);
 					}
 					else {
-						D2WIN_DrawText(L"N", 547, uiYPos, White, -1);
+						D2WIN_DrawText(L"N", 547, uiYPos + 1, White, -1);
 					}
 				}
 				if (App.bnet.showGameserver.value) {
