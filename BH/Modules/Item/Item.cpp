@@ -1892,11 +1892,13 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 				auto chars_written = MultiByteToWideChar(CODE_PAGE, MB_PRECOMPOSED, desc.c_str(), -1, wDesc, MAX_ITEM_TEXT_SIZE);
 
 				int aLen = wcslen(wTxt);
-				swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen,
-					L"%s%s\n",
-					(chars_written > 0) ? wDesc : L"\377c1Item Description is too long.",
-					GetColorCode(TextColor::White).c_str()
-				);
+				if (aLen < ITEM_TEXT_SIZE_LIMIT) {
+					swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen,
+						L"%s%s\n",
+						(chars_written > 0) ? wDesc : L"\377c1Item Description is too long.",
+						GetColorCode(TextColor::White).c_str()
+					);
+				}
 			}
 		}
 	}
@@ -1951,12 +1953,16 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 		// Add alvl
 		if (ilvl != alvl && (quality == ITEM_QUALITY_MAGIC || quality == ITEM_QUALITY_RARE || quality == ITEM_QUALITY_CRAFT)) {
 			int aLen = wcslen(wTxt);
-			swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen, alvlString);
+			if (aLen < ITEM_TEXT_SIZE_LIMIT && alvlLen + 1 < ITEM_TEXT_SIZE_LIMIT - aLen) {
+				swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen, alvlString);
+			}
 		}
 
 		// Add ilvl
 		int aLen = wcslen(wTxt);
-		swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen, ilvlString);
+		if (aLen < ITEM_TEXT_SIZE_LIMIT && ilvlLen + 1 < ITEM_TEXT_SIZE_LIMIT - aLen) {
+			swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen, ilvlString);
+		}
 	}
 }
 
