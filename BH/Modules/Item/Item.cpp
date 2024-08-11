@@ -1953,14 +1953,14 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 		// Add alvl
 		if (ilvl != alvl && (quality == ITEM_QUALITY_MAGIC || quality == ITEM_QUALITY_RARE || quality == ITEM_QUALITY_CRAFT)) {
 			int aLen = wcslen(wTxt);
-			if (aLen < ITEM_TEXT_SIZE_LIMIT && alvlLen + 1 < ITEM_TEXT_SIZE_LIMIT - aLen) {
+			if (aLen < ITEM_TEXT_SIZE_LIMIT && alvlLen < ITEM_TEXT_SIZE_LIMIT - aLen) {
 				swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen, alvlString);
 			}
 		}
 
 		// Add ilvl
 		int aLen = wcslen(wTxt);
-		if (aLen < ITEM_TEXT_SIZE_LIMIT && ilvlLen + 1 < ITEM_TEXT_SIZE_LIMIT - aLen) {
+		if (aLen < ITEM_TEXT_SIZE_LIMIT && ilvlLen < ITEM_TEXT_SIZE_LIMIT - aLen) {
 			swprintf_s(wTxt + aLen, ITEM_TEXT_SIZE_LIMIT - aLen, ilvlString);
 		}
 	}
