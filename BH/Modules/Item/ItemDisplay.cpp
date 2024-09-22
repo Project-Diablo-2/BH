@@ -1573,7 +1573,7 @@ namespace ItemDisplay
 			item->ItemFilterNames.push_back("1 - Standard");
 		}
 
-		item->ReplaceItemFilters(item->ItemFilterNames);
+		//item->ReplaceItemFilters(item->ItemFilterNames);
 	}
 
 	void UninitializeItemRules()

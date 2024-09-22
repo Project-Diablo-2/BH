@@ -20,6 +20,7 @@ void GameSettings::LoadConfig() {
 }
 
 void GameSettings::LoadGeneralTab() {
+	/*
 	Drawing::Texthook* colored_text;
 
 	Drawing::UITab* generalTab = new Drawing::UITab("General", BH::settingsUI);
@@ -87,10 +88,11 @@ void GameSettings::LoadGeneralTab() {
 	y += 15;
 	new Drawing::Checkhook(generalTab, x, y, &App.game.buffTimers.toggle.isEnabled, "Always show Buff Timers");
 	new Drawing::Keyhook(generalTab, GameSettings::KeyHookOffset, y + 2, &App.game.buffTimers.toggle.hotkey, "");
-
+	*/
 }
 
 void GameSettings::LoadInteractionTab() {
+	/*
 	Drawing::Texthook* colored_text;
 	Drawing::UITab* tab = new Drawing::UITab("Interaction", BH::settingsUI);
 
@@ -174,32 +176,7 @@ void GameSettings::LoadInteractionTab() {
 	colored_text = new Drawing::Texthook(tab, x + indent + offset, y,
 		"Set filter level");
 	colored_text->SetColor(Gold);
-
-	// Auras
-	y += 20;
-	new Drawing::Texthook(tab, x, (y), "Auras (only for top 3 players)");
-
-	y += 15;
-	new Drawing::Checkhook(tab, x, y, &App.general.maxLevelAura.toggle.isEnabled, "Show 99 Aura");
-	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &App.general.maxLevelAura.toggle.hotkey, "");
-
-	y += 15;
-	new Drawing::Checkhook(tab, x, y, &App.general.dcloneAura.toggle.isEnabled, "Show Dclone Aura");
-	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &App.general.dcloneAura.toggle.hotkey, "");
-
-	y += 15;
-	new Drawing::Checkhook(tab, x, y, &App.general.rathmaAura.toggle.isEnabled, "Show Rathma Aura");
-	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &App.general.rathmaAura.toggle.hotkey, "");
-
-	y += 15;
-	new Drawing::Checkhook(tab, x, y, &App.general.pvpAura.toggle.isEnabled, "Show PVP Aura");
-	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &App.general.pvpAura.toggle.hotkey, "");
-
-	y += 20;
-	new Drawing::Texthook(tab, x, (y), "Developer Only");
-	y += 15;
-	new Drawing::Checkhook(tab, x, y, &App.general.devAura.toggle.isEnabled, "Show Developer Aura");
-	new Drawing::Keyhook(tab, GameSettings::KeyHookOffset, y + 2, &App.general.devAura.toggle.hotkey, "");
+	*/
 }
 
 void GameSettings::OnLoad() {
@@ -220,7 +197,7 @@ void GameSettings::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 			return;
 		}
 	}
-
+	/*
 	if (key == App.game.showPlayersGear.hotkey) {
 		*block = true;
 		if (up)
@@ -246,4 +223,5 @@ void GameSettings::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 		BH::settingsUI->SetMinimized(true, true);
 		return;
 	}
+	*/
 }

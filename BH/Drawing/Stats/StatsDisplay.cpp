@@ -251,7 +251,7 @@ void StatsDisplay::LoadConfig()
 	}
 	if (customStats.size() > 0) { height += (customStats.size() * 16) + 8; }
 
-	int xPos = App.general.statsOnRight.toggle.isEnabled ? *p_D2CLIENT_ScreenSizeX - 10 - GetXSize() : 10;
+	int xPos = App.general.statsOnRight.value ? *p_D2CLIENT_ScreenSizeX - 10 - GetXSize() : 10;
 	SetX(xPos);
 	SetYSize(height);
 }
@@ -322,7 +322,7 @@ void StatsDisplay::OnDraw()
 
 	if (!IsMinimized())
 	{
-		int xPos = App.general.statsOnRight.toggle.isEnabled ? *p_D2CLIENT_ScreenSizeX - 10 - GetXSize() : 10;
+		int xPos = App.general.statsOnRight.value ? *p_D2CLIENT_ScreenSizeX - 10 - GetXSize() : 10;
 		SetX(xPos);
 
 		if (D2CLIENT_GetUIState(UI_MERC))
@@ -933,28 +933,19 @@ bool StatsDisplay::OnKey(bool   up,
 	UnitAny* unit = D2CLIENT_GetPlayerUnit();
 	if (!unit)
 		return false;
-	//Resync
-	if (!up && kkey == App.game.resyncHotkey.hotkey)
-	{
-		DWORD curTime = GetTickCount64();
-		if (curTime >= syncCooldown)
-		{
-			SendSyncMsg();
-			syncCooldown = curTime + 1000;
-		}
-	}
 	if (IsMinimized())
 	{
-		if (!up && kkey == App.game.characterStats.hotkey)
-		{
-			LoadConfig();
-			SetMinimized(false);
-			return true;
-		}
+		//if (!up && kkey == App.game.characterStats.hotkey)
+		//{
+		//	LoadConfig();
+		//	SetMinimized(false);
+		//	return true;
+		//}
 	}
 	else
 	{
-		if (!up && (kkey == App.game.characterStats.hotkey || kkey == VK_ESCAPE))
+		//if (!up && (kkey == App.game.characterStats.hotkey || kkey == VK_ESCAPE))
+		if (!up && kkey == VK_ESCAPE)
 		{
 			SetMinimized(true);
 			return true;

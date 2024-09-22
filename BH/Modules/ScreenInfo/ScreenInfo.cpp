@@ -196,7 +196,7 @@ void ScreenInfo::OnDraw() {
 		}
 	}*/
 
-	if (App.game.experienceMeter.toggle.isEnabled) {
+	if (App.game.experienceMeter.value) {
 		drawExperienceInfo();
 	}
 }

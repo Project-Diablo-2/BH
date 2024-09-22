@@ -151,15 +151,7 @@ void Item::OnLoad() {
 	itemPropertyStringDamagePatch->Install();
 	itemPropertyStringPatch->Install();
 
-	if (App.legacy.showEthereal.toggle.isEnabled ||
-		App.legacy.showSockets.toggle.isEnabled ||
-		App.lootfilter.showIlvl.toggle.isEnabled ||
-		App.legacy.colorMod.toggle.isEnabled ||
-		App.legacy.showRuneNumbers.toggle.isEnabled ||
-		App.legacy.altItemStyle.toggle.isEnabled ||
-		App.legacy.shortenItemNames.toggle.isEnabled ||
-		App.lootfilter.advancedItemDisplay.toggle.isEnabled)
-		itemNamePatch->Install();
+	itemNamePatch->Install();
 
 	DrawSettings();
 }
@@ -630,6 +622,7 @@ void Item::LoadConfig() {
 }
 
 void Item::DrawSettings() {
+	/*
 	Drawing::Texthook* colored_text;
 	settingsTab = new UITab("Item", BH::settingsUI);
 	unsigned int x = 8;
@@ -683,8 +676,8 @@ void Item::DrawSettings() {
 	new Drawing::Texthook(settingsTab, x, (y), "Loot Filter");
 
 	y += 15;
-	new Checkhook(settingsTab, x, y, &App.lootfilter.advancedItemDisplay.toggle.isEnabled, "Enable Loot Filter");
-	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.lootfilter.advancedItemDisplay.toggle.hotkey, "");
+	new Checkhook(settingsTab, x, y, &App.lootfilter.enableFilter.toggle.isEnabled, "Enable Loot Filter");
+	new Keyhook(settingsTab, GameSettings::KeyHookOffset, y + 2, &App.lootfilter.enableFilter.toggle.hotkey, "");
 	y += 15;
 
 	new Checkhook(settingsTab, x, y, &App.legacy.dropNotifications.toggle.isEnabled, "Drop Notifications");
@@ -728,6 +721,7 @@ void Item::DrawSettings() {
 	}
 
 	new Combohook(settingsTab, 120, y, 200, &App.lootfilter.filterLevel.uValue, ItemFilterNames);
+	*/
 }
 
 void Item::ReplaceItemFilters(vector<string> itemFilterNames) {
@@ -803,7 +797,7 @@ void Item::OnLoop() {
 	if (!D2CLIENT_GetUIState(0x01))
 		viewingUnit = NULL;
 
-	if (App.lootfilter.advancedItemDisplay.toggle.isEnabled) {
+	if (App.lootfilter.enableFilter.value) {
 		ItemDisplay::InitializeItemRules();
 	}
 
@@ -820,31 +814,32 @@ void Item::OnLoop() {
 }
 
 void Item::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
-	if (key == App.lootfilter.filterLevelIncrease.hotkey) {
-		*block = true;
-		if (!up && D2CLIENT_GetPlayerUnit() && App.lootfilter.filterLevel.uValue < ItemFilterNames.size() - 1)
-			ChangeFilterLevels(App.lootfilter.filterLevel.uValue + 1);
-		return;
-	}
-	if (key == App.lootfilter.filterLevelDecrease.hotkey) {
-		*block = true;
-		if (!up && D2CLIENT_GetPlayerUnit() && App.lootfilter.filterLevel.uValue > 0)
-			ChangeFilterLevels(App.lootfilter.filterLevel.uValue - 1);
-		return;
-	}
-	if (key == App.lootfilter.filterLevelPrevious.hotkey) {
-		*block = true;
-		if (!up && D2CLIENT_GetPlayerUnit() &&
-			App.lootfilter.lastFilterLevel.uValue < ItemFilterNames.size()) {
-			ChangeFilterLevels(App.lootfilter.lastFilterLevel.uValue);
-		}
-		return;
-	}
+	//if (key == App.lootfilter.filterLevelIncrease.hotkey) {
+	//	*block = true;
+	//	if (!up && D2CLIENT_GetPlayerUnit() && App.lootfilter.filterLevel.uValue < ItemFilterNames.size() - 1)
+	//		ChangeFilterLevels(App.lootfilter.filterLevel.uValue + 1);
+	//	return;
+	//}
+	//if (key == App.lootfilter.filterLevelDecrease.hotkey) {
+	//	*block = true;
+	//	if (!up && D2CLIENT_GetPlayerUnit() && App.lootfilter.filterLevel.uValue > 0)
+	//		ChangeFilterLevels(App.lootfilter.filterLevel.uValue - 1);
+	//	return;
+	//}
+	//if (key == App.lootfilter.filterLevelPrevious.hotkey) {
+	//	*block = true;
+	//	if (!up && D2CLIENT_GetPlayerUnit() &&
+	//		App.lootfilter.lastFilterLevel.uValue < ItemFilterNames.size()) {
+	//		ChangeFilterLevels(App.lootfilter.lastFilterLevel.uValue);
+	//	}
+	//	return;
+	//}
 	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
 	if (ctrlState && key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
 		*block = true;
 		unsigned int targetLevel = key - 0x60;
-		if (!up && D2CLIENT_GetPlayerUnit() && targetLevel < ItemFilterNames.size())
+		if (!up && D2CLIENT_GetPlayerUnit() &&
+			targetLevel < ItemFilterNames.size() && targetLevel != App.lootfilter.filterLevel.value)
 			ChangeFilterLevels(targetLevel);
 		return;
 	}
@@ -905,7 +900,7 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
 	string itemName = szName;
 	char* code = D2COMMON_GetItemText(pItem->dwTxtFileNo)->szCode;
 
-	if (App.lootfilter.advancedItemDisplay.toggle.isEnabled) {
+	if (App.lootfilter.enableFilter.value) {
 		UnitItemInfo uInfo;
 		if (!CreateUnitItemInfo(&uInfo, pItem)) {
 			GetItemName(&uInfo, itemName);
@@ -979,7 +974,7 @@ void __stdcall GetItemFromPacket_OldGround(px9c* pPacket)
 
 void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 {
-	if (App.lootfilter.advancedItemDisplay.toggle.isEnabled) {
+	if (App.lootfilter.enableFilter.value) {
 		bool showOnMap = false;
 		auto color = UNDEFINED_COLOR;
 
@@ -1001,7 +996,7 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 			}
 		}
 		//PrintText(1, "Item on ground: %s, %s, %s, %X", item.name.c_str(), item.code, item.attrs->category.c_str(), item.attrs->flags);
-		if (showOnMap && !App.lootfilter.detailedNotifications.toggle.isEnabled) {
+		if (showOnMap && !App.lootfilter.detailedNotifications.value) {
 			if (color == UNDEFINED_COLOR) {
 				color = ItemColorFromQuality(uInfo->item->pItemData->dwQuality);
 			}
@@ -1039,7 +1034,7 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 
 void Item::OrigGetItemName(UnitAny* item, string& itemName, char* code)
 {
-	bool displayItemLevel = App.lootfilter.showIlvl.toggle.isEnabled;
+	bool displayItemLevel = App.lootfilter.showIlvl.value;
 	if (App.legacy.shortenItemNames.toggle.isEnabled)
 	{
 		// We will also strip ilvls from these items
@@ -1369,7 +1364,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 	int alvlLen = wcslen(alvlString);
 	int ilvlLen = wcslen(ilvlString);
 
-	if (App.lootfilter.advancedItemDisplay.toggle.isEnabled)
+	if (App.lootfilter.enableFilter.value)
 	{
 		if (lastItem == nullptr)
 		{
@@ -1867,7 +1862,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 			}
 
 			// Item Level & Affix Level
-			if (App.lootfilter.showIlvl.toggle.isEnabled && ShouldShowIlvl(&uInfo))
+			if (App.lootfilter.showIlvl.value && ShouldShowIlvl(&uInfo))
 			{
 				if (ilvl != alvl && (quality == ITEM_QUALITY_MAGIC || quality == ITEM_QUALITY_RARE || quality == ITEM_QUALITY_CRAFT))
 				{
@@ -1901,7 +1896,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 		}
 	}
 
-	if (!(App.lootfilter.alwaysShowStatRanges.toggle.isEnabled ||
+	if (!(App.lootfilter.alwaysShowStatRanges.value ||
 		GetKeyState(VK_CONTROL) & 0x8000) ||
 		pItem == nullptr ||
 		pItem->dwType != UNIT_ITEM) {
@@ -1946,7 +1941,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 		//}
 	}
 
-	if (App.lootfilter.showIlvl.toggle.isEnabled && ShouldShowIlvl(&uInfo))
+	if (App.lootfilter.showIlvl.value && ShouldShowIlvl(&uInfo))
 	{
 		// Add alvl
 		if (ilvl != alvl && (quality == ITEM_QUALITY_MAGIC || quality == ITEM_QUALITY_RARE || quality == ITEM_QUALITY_CRAFT)) {
@@ -2102,7 +2097,7 @@ BOOL __stdcall Item::OnDamagePropertyBuild(UnitAny* pItem, DamageStats* pDmgStat
 }
 
 void __stdcall Item::OnPropertyBuild(wchar_t* wOut, int nStat, UnitAny* pItem, int nStatParam) {
-	if (!(App.lootfilter.alwaysShowStatRanges.toggle.isEnabled || GetKeyState(VK_CONTROL) & 0x8000) || pItem == nullptr || pItem->dwType != UNIT_ITEM) {
+	if (!(App.lootfilter.alwaysShowStatRanges.value || GetKeyState(VK_CONTROL) & 0x8000) || pItem == nullptr || pItem->dwType != UNIT_ITEM) {
 		return;
 	}
 
@@ -2975,18 +2970,18 @@ void __declspec(naked) ViewInventoryPatch3_ASM()
 //seems to force alt to be down
 BOOL Item::PermShowItemsPatch1()
 {
-	return App.game.alwaysShowItems.toggle.isEnabled || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
+	return App.game.alwaysShowItems.value || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
 	//return App.game.alwaysShowItems.toggle.isEnabled;
 }
 
 //these two seem to deal w/ fixing the inv/waypoints when alt is down
 BOOL Item::PermShowItemsPatch2() {
 	//return App.game.alwaysShowItems.toggle.isEnabled || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
-	return App.game.alwaysShowItems.toggle.isEnabled && !D2CLIENT_GetUIState(UI_GROUND_ITEMS);
+	return App.game.alwaysShowItems.value && !D2CLIENT_GetUIState(UI_GROUND_ITEMS);
 }
 
 BOOL Item::PermShowItemsPatch3() {
-	return App.game.alwaysShowItems.toggle.isEnabled || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
+	return App.game.alwaysShowItems.value || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
 	//return App.game.alwaysShowItems.toggle.isEnabled;
 }
 
