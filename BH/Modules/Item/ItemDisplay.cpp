@@ -1303,13 +1303,31 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	bool inShop = (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
 		find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs));
 
-	for (ActionReplace replacement : replacements)
+	// Concat replacements list into a regex string to avoid accidental matches with stray % symbols
+	string reListString = "";
+	for (int n = 0; n < sizeof(replacements) / sizeof(replacements[0]); n++)
 	{
-		string varString = "%" + replacement.key + "%";
-		while (name.find(varString) != string::npos)
+		reListString += replacements[n].key;
+		if (n < sizeof(replacements) / sizeof(replacements[0]) - 1)
+			reListString += "|";
+	}
+
+	std::regex  var_reg("%(" + reListString + ")%", std::regex_constants::ECMAScript);
+	std::smatch var_match;
+
+
+	while (std::regex_search(name, var_match, var_reg))
+	{
+		string varString = var_match[1];
+		transform(varString.begin(), varString.end(), varString.begin(), ::toupper);
+		for (int n = sizeof(replacements) / sizeof(replacements[0]) - 1; n >= 0; --n) // Reverse order to avoid intercepting matches (eg RANGE vs ORANGE)
 		{
-			name.replace(name.find(varString), varString.length(), replacement.value);
+			while (varString.find(replacements[n].key) != string::npos)
+			{
+				varString.replace(varString.find(replacements[n].key), replacements[n].key.length(), replacements[n].value);
+			}
 		}
+		name.replace(name.find(var_match[0]), var_match[0].length(), varString);
 	}
 
 	// TODO: Unify handling of numbered and non-numbered variables
