@@ -85,8 +85,8 @@ struct BHApp {
 
 
 	struct {
-		SettingsInt filterLevel = { 1, 1, 0, 9 };
-		SettingsInt lastFilterLevel = { 0, 0, 0, 9 };
+		SettingsInt filterLevel = { 1, 1, 0, 12 };
+		SettingsInt lastFilterLevel = { 0, 0, 0, 12 };
 		SettingsKey filterLevelIncrease = { 0, 0 };
 		SettingsKey filterLevelDecrease = { 0, 0 };
 		SettingsKey filterLevelPrevious = { 0, 0 };

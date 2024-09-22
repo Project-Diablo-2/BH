@@ -177,7 +177,11 @@ void BH::LoadLootFilter()
 		try
 		{
 			nlohmann::json launcherJson = nlohmann::json::parse(launcherConfig);
-			if (launcherJson.contains("SelectedAuthorAndFilter"))
+			if (launcherJson.contains("SelectedAuthorAndFilter") &&
+				launcherJson["SelectedAuthorAndFilter"].contains("selectedAuthor") &&
+				launcherJson["SelectedAuthorAndFilter"]["selectedAuthor"].contains("author") &&
+				launcherJson["SelectedAuthorAndFilter"].contains("selectedFilter") &&
+				launcherJson["SelectedAuthorAndFilter"]["selectedFilter"].contains("name"))
 			{
 				std::string author = launcherJson["SelectedAuthorAndFilter"]["selectedAuthor"]["author"].template get<std::string>();
 				std::string filter = launcherJson["SelectedAuthorAndFilter"]["selectedFilter"]["name"].template get<std::string>();
