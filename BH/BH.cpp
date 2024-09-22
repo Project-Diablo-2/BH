@@ -1,4 +1,4 @@
-﻿#define _DEFINE_PTRS
+#define _DEFINE_PTRS
 #include "BH.h"
 #include <Shlwapi.h>
 #include <psapi.h>
@@ -8,11 +8,13 @@
 #include "D2Handlers.h"
 #include "Modules.h"
 #include "Task.h"
+#include "Drawing/Stats/StatsDisplay.h"
 
 string BH::path;
 HINSTANCE BH::instance;
 ModuleManager* BH::moduleManager;
 Config* BH::lootFilter;
+Item* itemObj;
 Drawing::UI* BH::settingsUI;
 Drawing::StatsDisplay* BH::statsDisplay;
 bool BH::initialized;
@@ -84,7 +86,7 @@ void BH::Initialize()
 		SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)GameWindowEvent);
 		});
 
-	settingsUI = new Drawing::UI(SETTINGS_TEXT, App.bhui.sizeX.value, App.bhui.sizeY.value);
+	//settingsUI = new Drawing::UI(SETTINGS_TEXT, App.bhui.sizeX.value, App.bhui.sizeY.value);
 
 	Task::InitializeThreadPool(2);
 
@@ -92,7 +94,7 @@ void BH::Initialize()
 	new ScreenInfo();
 	new Gamefilter();
 	new Bnet();
-	new Item();
+	itemObj = new Item();
 	new Party();
 	new ItemMover();
 	new StashExport();
@@ -204,3 +206,165 @@ void BH::LoadLootFilter()
 		}
 	}
 }
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+	__declspec(dllexport) int __cdecl BHIsReady()
+	{
+		return BH::initialized;
+	}
+
+	__declspec(dllexport) int __stdcall BHGetConfig(BHConfigId configId)
+	{
+		switch (configId)
+		{
+		case BH_CONFIG_EXPERIENCEMETER:
+			return App.game.experienceMeter.value;
+		case BH_CONFIG_ADVANCEDSTATS:
+			return App.general.statsOnRight.value;
+		case BH_CONFIG_LOOTFILTER:
+			return App.lootfilter.enableFilter.value;
+		case BH_CONFIG_FILTERLEVEL:
+			return App.lootfilter.filterLevel.value;
+		case BH_CONFIG_NUMFILTERLEVELS:
+			return itemObj->ItemFilterNames.size();
+		case BH_CONFIG_LOOTNOTIFY:
+			return App.lootfilter.detailedNotifications.value;
+		case BH_CONFIG_SHOWITEMLEVEL:
+			return App.lootfilter.showIlvl.value;
+		case BH_CONFIG_SHOWSTATRANGE:
+			return App.lootfilter.alwaysShowStatRanges.value;
+		case BH_CONFIG_ALWAYSSHOWITEMS:
+			return App.game.alwaysShowItems.value;
+		}
+
+		return 0;
+	}
+
+	__declspec(dllexport) int __stdcall BHSetConfig(BHConfigId configId, int configVal)
+	{
+		BOOL bSave = FALSE;
+		switch (configId)
+		{
+		case BH_CONFIG_EXPERIENCEMETER:
+			App.game.experienceMeter.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_ADVANCEDSTATS:
+			App.general.statsOnRight.value = configVal;
+			bSave = TRUE;
+			break;
+
+		case BH_CONFIG_LOOTFILTER:
+			App.lootfilter.enableFilter.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_FILTERLEVEL:
+			if (App.lootfilter.filterLevel.value != configVal)
+			{
+				itemObj->ChangeFilterLevels(configVal);
+			}
+			return 1;
+		case BH_CONFIG_LOOTNOTIFY:
+			App.lootfilter.detailedNotifications.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_SHOWITEMLEVEL:
+			App.lootfilter.showIlvl.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_SHOWSTATRANGE:
+			App.lootfilter.alwaysShowStatRanges.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_ALWAYSSHOWITEMS:
+			App.game.alwaysShowItems.value = configVal;
+			bSave = TRUE;
+			break;
+		}
+		if (bSave)
+		{
+			App.config->SaveConfig();
+			return 1;
+		}
+		return 0;
+	}
+
+	__declspec(dllexport) int __stdcall BHInteract(BHConfigId configId)
+	{
+		BOOL bSave = FALSE;
+		switch (configId)
+		{
+		case BH_CONFIG_EXPERIENCEMETER:
+			App.game.experienceMeter.value = !App.game.experienceMeter.value;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_ADVANCEDSTATS:
+			if (BH::statsDisplay->IsMinimized())
+			{
+				BH::statsDisplay->LoadConfig();
+				BH::statsDisplay->SetMinimized(false);
+			}
+			else
+			{
+				BH::statsDisplay->SetMinimized(true);
+			}
+			return 1;
+		case BH_CONFIG_RELOAD:
+			BH::ReloadConfig();
+			return 1;
+		case BH_CONFIG_INCREASEFILTER:
+			if (App.lootfilter.filterLevel.uValue < itemObj->ItemFilterNames.size() - 1)
+			{
+				itemObj->ChangeFilterLevels(App.lootfilter.filterLevel.uValue + 1);
+				bSave = TRUE;
+			}
+			break;
+		case BH_CONFIG_DECREASEFILTER:
+			if (App.lootfilter.filterLevel.uValue > 0)
+			{
+				itemObj->ChangeFilterLevels(App.lootfilter.filterLevel.uValue - 1);
+				bSave = TRUE;
+			}
+			break;
+		case BH_CONFIG_RESTOREFILTER:
+			if (App.lootfilter.lastFilterLevel.uValue < itemObj->ItemFilterNames.size())
+			{
+				itemObj->ChangeFilterLevels(App.lootfilter.lastFilterLevel.uValue);
+				bSave = TRUE;
+			}
+			break;
+		}
+		if (bSave)
+		{
+			App.config->SaveConfig();
+			return 1;
+		}
+		return 0;
+	}
+
+	__declspec(dllexport) int __cdecl BHShowPlayersGear()
+	{
+		UnitAny* selectedUnit = D2CLIENT_GetSelectedUnit();
+		if (selectedUnit && selectedUnit->dwMode != PLAYER_MODE_DEATH && selectedUnit->dwMode != PLAYER_MODE_DEAD && (
+				selectedUnit->dwType == 0 ||			// Player
+				selectedUnit->dwTxtFileNo == 291 ||		// Iron Golem
+				selectedUnit->dwTxtFileNo == 357 ||		// Valkerie
+				selectedUnit->dwTxtFileNo == 417 ||		// Shadow Warrior
+				selectedUnit->dwTxtFileNo == 418)		// Shadow Master
+			)
+		{
+			Item::viewingUnit = selectedUnit;
+			if (!D2CLIENT_GetUIState(0x01))
+			{
+				D2CLIENT_SetUIVar(0x01, 0, 0);
+			}
+		}
+			return 1;
+	}
+
+#ifdef __cplusplus
+}
+#endif

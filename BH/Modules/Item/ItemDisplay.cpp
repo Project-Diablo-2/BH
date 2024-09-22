@@ -1384,7 +1384,7 @@ void TrimItemText(UnitItemInfo* uInfo,
 	// Delete leading/trailing CLs
 	if (name.find("\r") == 0)
 		name.erase(0, 1);
-	if (name.rfind("\r") == name.size() - 1)
+	if (!name.empty() && name.rfind("\r") == name.size() - 1)
 		name.resize(name.size() - 1);
 	// Convert to new line
 	while (name.find("\r") != string::npos)
@@ -1573,7 +1573,7 @@ namespace ItemDisplay
 			item->ItemFilterNames.push_back("1 - Standard");
 		}
 
-		item->ReplaceItemFilters(item->ItemFilterNames);
+		//item->ReplaceItemFilters(item->ItemFilterNames);
 	}
 
 	void UninitializeItemRules()
@@ -2563,16 +2563,13 @@ bool MapIdCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg2)
 {
 	UnitAny* player = D2CLIENT_GetPlayerUnit();
-
-	if (player &&
-		player->pAct &&
-		player->pAct->pRoom1 &&
-		player->pAct->pRoom1->pRoom2 &&
-		player->pAct->pRoom1->pRoom2->pLevel &&
-		player->pAct->pRoom1->pRoom2->pLevel->dwLevelNo > 0)
+	if (player)
 	{
-		int map_id = (int)player->pAct->pRoom1->pRoom2->pLevel->dwLevelNo;
-		return IntegerCompare(map_id, operation, mapId, mapId2);
+		int map_id = D2COMMON_GetLevelIdFromRoom(D2COMMON_GetRoomFromUnit(player));
+		if (map_id > 0)
+		{
+			return IntegerCompare(map_id, operation, mapId, mapId2);
+		}
 	}
 	return false;
 }

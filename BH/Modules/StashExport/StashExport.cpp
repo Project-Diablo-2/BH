@@ -17,6 +17,7 @@ UnitAny* StashExport::viewingUnit;
 using namespace Drawing;
 
 void StashExport::OnLoad() {
+	/*
 	LoadConfig();
 
 	Drawing::Texthook* colored_text;
@@ -64,6 +65,7 @@ void StashExport::OnLoad() {
 	y += 20;
 	colored_text = new Drawing::Texthook(settingsTab, x, y, "Export Type");
 	new Combohook(settingsTab, x, (y += 15), 150, &exportType, options);
+	*/
 }
 
 void StashExport::LoadConfig() {

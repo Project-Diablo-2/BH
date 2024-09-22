@@ -32,13 +32,13 @@ void MapNotify::OnLoad() {
 }
 
 void MapNotify::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
-	bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
-	if (key == App.general.reloadConfigCtrl.hotkey && ctrlState || key == App.general.reloadConfig.hotkey && !ctrlState) {
-		*block = true;
-		if (up)
-			BH::ReloadConfig();
-		return;
-	}
+	//bool ctrlState = ((GetKeyState(VK_LCONTROL) & 0x80) || (GetKeyState(VK_RCONTROL) & 0x80));
+	//if (key == App.general.reloadConfigCtrl.hotkey && ctrlState || key == App.general.reloadConfig.hotkey && !ctrlState) {
+	//	*block = true;
+	//	if (up)
+	//		BH::ReloadConfig();
+	//	return;
+	//}
 	return;
 }
 
@@ -79,8 +79,8 @@ void MapNotify::OnDraw() {
 
 						if ((*it)->Evaluate(&uInfo)) {
 							if ((unit->dwFlags & UNITFLAG_REVEALED) == 0x0
-								&& App.lootfilter.detailedNotifications.toggle.isEnabled) {
-								if (App.legacy.closeNotifications.toggle.isEnabled || (dwFlags & ITEM_NEW)) {
+								&& App.lootfilter.detailedNotifications.value) {
+								if ((dwFlags & ITEM_NEW)) {
 									std::string itemName = GetItemName(unit);
 									regex trimName("^\\s*(?:(?:\\s*?)(ÿc[0123456789;:]))*\\s*(.*?\\S)\\s*(?:ÿc[0123456789;:])*\\s*$");	// Matches on leading/trailing spaces (skips most color codes)
 									itemName = regex_replace(itemName, trimName, "$1$2");												// Trims the matched spaces from notifications

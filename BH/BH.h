@@ -78,14 +78,9 @@ struct BHApp {
 	} bnet;
 
 	struct {
-		SettingsKey reloadConfig = { 0x60, 0x60 };  // VK_NUMPAD0
-		SettingsKey reloadConfigCtrl = { 0x52, 0x52 };  // VK_R
-		SettingsToggle statsOnRight = { {}, {0, false} };
-		SettingsToggle devAura = { {}, {0, true} };
-		SettingsToggle maxLevelAura = { {}, {0, true} };
-		SettingsToggle rathmaAura = { {}, {0, true} };
-		SettingsToggle dcloneAura = { {}, {0, true} };
-		SettingsToggle pvpAura = { {}, {0, true} };
+		//SettingsKey reloadConfig = { 0x60, 0x60 };  // VK_NUMPAD0
+		//SettingsKey reloadConfigCtrl = { 0x52, 0x52 };  // VK_R
+		SettingsBool statsOnRight = { false, false };
 	} general;
 
 
@@ -95,11 +90,11 @@ struct BHApp {
 		SettingsKey filterLevelIncrease = { 0, 0 };
 		SettingsKey filterLevelDecrease = { 0, 0 };
 		SettingsKey filterLevelPrevious = { 0, 0 };
-		SettingsToggle advancedItemDisplay = { {}, {0, true} };
-		SettingsToggle showIlvl = { {}, {0, true} };
-		SettingsToggle detailedNotifications = { {}, {0, true} };
+		SettingsBool enableFilter = { true, true };
+		SettingsBool showIlvl = { false, false };
+		SettingsBool detailedNotifications = { true, true };
 		SettingsToggle allowUnknownItems = { {}, {0, false} };
-		SettingsToggle alwaysShowStatRanges = { {}, {0, true} };
+		SettingsBool alwaysShowStatRanges = { false, false };
 		SettingsAssoc classSkillsList = {}; // TODO??
 		SettingsAssoc tabSkillsList = {};  // TODO??
 	} lootfilter;
@@ -118,18 +113,8 @@ struct BHApp {
 	} legacy;
 
 	struct {
-		SettingsKey characterStats = { 0x38, 0x38 };  // VK_8
-		SettingsKey showPlayersGear = { 0x30, 0x30 };  // VK_0
-		SettingsKey resyncHotkey = { 0x39, 0x39 };  // VK_9
-		SettingsToggle experienceMeter = { {}, {0x67, false} };  // VK_NUMPAD7
-		SettingsToggle alwaysShowItems = { {}, {0, false} };
-		SettingsToggle buffTimers = { {}, {0, false} };
-		SettingsToggle quickCast = { {}, {0, false} };
-		SettingsToggle skillBar = { {}, {0, false} };
-		SettingsToggle skillBarDisable = { {}, {0, false} };
-		SettingsToggle screenshake = { {}, {0, true} };
-		SettingsToggle dpsCounter = { {}, {0, false} };
-		SettingsToggle beltStatus = { {}, {0, true} };
+		SettingsBool experienceMeter = { false, false };
+		SettingsBool alwaysShowItems = { false, false };
 	} game;
 
 	struct {
@@ -174,3 +159,20 @@ struct BHApp {
 };
 
 extern BHApp App;
+
+typedef enum BHConfigId {
+	BH_CONFIG_EXPERIENCEMETER,
+	BH_CONFIG_ADVANCEDSTATS,
+	BH_CONFIG_RELOAD,
+	BH_CONFIG_LOOTFILTER,
+	BH_CONFIG_FILTERLEVEL,
+	BH_CONFIG_NUMFILTERLEVELS,
+	BH_CONFIG_LOOTNOTIFY,
+	BH_CONFIG_SHOWITEMLEVEL,
+	BH_CONFIG_SHOWSTATRANGE,
+	BH_CONFIG_ALWAYSSHOWITEMS,
+	BH_CONFIG_INCREASEFILTER,
+	BH_CONFIG_DECREASEFILTER,
+	BH_CONFIG_RESTOREFILTER,
+
+} BHConfigId;

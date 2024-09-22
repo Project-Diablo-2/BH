@@ -140,26 +140,6 @@ static FARPROC refreshProc;
 typedef BOOL(__cdecl* bhConfigMessage_t)();
 static bhConfigMessage_t bhConfigMessage = NULL;
 
-BOOL __stdcall SendReloadMessage()
-{
-	if (!bhConfigMessage)
-	{
-		pd2Handle = GetModuleHandleA("ProjectDiablo.dll");
-		if (pd2Handle)
-		{
-			refreshProc = GetProcAddress(pd2Handle, "TriggerBHReload");
-			bhConfigMessage = refreshProc ? (bhConfigMessage_t)refreshProc : NULL;
-		}
-	}
-
-	if (bhConfigMessage)
-	{
-		return bhConfigMessage();
-	}
-
-	return FALSE;
-}
-
 bool bCreateFile = false;
 
 void Config::SaveConfig()
@@ -183,20 +163,7 @@ void Config::SaveConfig()
 
 	// General settings
 	json jsonGeneral;
-	jsonGeneral["reload_config"] = GetKeyCode(App.general.reloadConfig.hotkey).name;
-	jsonGeneral["reload_config_ctrl"] = GetKeyCode(App.general.reloadConfigCtrl.hotkey).name;
-	jsonGeneral["stats_on_right"]["enabled"] = App.general.statsOnRight.toggle.isEnabled;
-	jsonGeneral["stats_on_right"]["hotkey"] = GetKeyCode(App.general.statsOnRight.toggle.hotkey).name;
-	jsonGeneral["dev_aura"]["enabled"] = App.general.devAura.toggle.isEnabled;
-	jsonGeneral["dev_aura"]["hotkey"] = GetKeyCode(App.general.devAura.toggle.hotkey).name;
-	jsonGeneral["max_level_aura"]["enabled"] = App.general.maxLevelAura.toggle.isEnabled;
-	jsonGeneral["max_level_aura"]["hotkey"] = GetKeyCode(App.general.maxLevelAura.toggle.hotkey).name;
-	jsonGeneral["rathma_aura"]["enabled"] = App.general.rathmaAura.toggle.isEnabled;
-	jsonGeneral["rathma_aura"]["hotkey"] = GetKeyCode(App.general.rathmaAura.toggle.hotkey).name;
-	jsonGeneral["dclone_aura"]["enabled"] = App.general.dcloneAura.toggle.isEnabled;
-	jsonGeneral["dclone_aura"]["hotkey"] = GetKeyCode(App.general.dcloneAura.toggle.hotkey).name;
-	jsonGeneral["pvp_aura"]["enabled"] = App.general.pvpAura.toggle.isEnabled;
-	jsonGeneral["pvp_aura"]["hotkey"] = GetKeyCode(App.general.pvpAura.toggle.hotkey).name;
+	jsonGeneral["stats_on_right"] = App.general.statsOnRight.value;
 	App.jsonConfig["general"] = jsonGeneral;
 
 	// Legacy Loot filter (these "features" should just be removed entirely)
@@ -227,16 +194,12 @@ void Config::SaveConfig()
 	jsonLoot["filter_level_increase"] = GetKeyCode(App.lootfilter.filterLevelIncrease.hotkey).name;
 	jsonLoot["filter_level_decrease"] = GetKeyCode(App.lootfilter.filterLevelDecrease.hotkey).name;
 	jsonLoot["filter_level_previous"] = GetKeyCode(App.lootfilter.filterLevelPrevious.hotkey).name;
-	jsonLoot["advanced_item_display"]["enabled"] = App.lootfilter.advancedItemDisplay.toggle.isEnabled;
-	jsonLoot["advanced_item_display"]["hotkey"] = GetKeyCode(App.lootfilter.advancedItemDisplay.toggle.hotkey).name;
-	jsonLoot["show_iLvl"]["enabled"] = App.lootfilter.showIlvl.toggle.isEnabled;
-	jsonLoot["show_iLvl"]["hotkey"] = GetKeyCode(App.lootfilter.showIlvl.toggle.hotkey).name;
-	jsonLoot["detailed_notifications"]["enabled"] = App.lootfilter.detailedNotifications.toggle.isEnabled;
-	jsonLoot["detailed_notifications"]["hotkey"] = GetKeyCode(App.lootfilter.detailedNotifications.toggle.hotkey).name;
+	jsonLoot["advanced_item_display"] = App.lootfilter.enableFilter.value;
+	jsonLoot["show_iLvl"] = App.lootfilter.showIlvl.value;
+	jsonLoot["detailed_notifications"] = App.lootfilter.detailedNotifications.value;
 	jsonLoot["allow_unknown_items"]["enabled"] = App.lootfilter.allowUnknownItems.toggle.isEnabled;
 	jsonLoot["allow_unknown_items"]["hotkey"] = GetKeyCode(App.lootfilter.allowUnknownItems.toggle.hotkey).name;
-	jsonLoot["always_show_stat_ranges"]["enabled"] = App.lootfilter.alwaysShowStatRanges.toggle.isEnabled;
-	jsonLoot["always_show_stat_ranges"]["hotkey"] = GetKeyCode(App.lootfilter.alwaysShowStatRanges.toggle.hotkey).name;
+	jsonLoot["always_show_stat_ranges"] = App.lootfilter.alwaysShowStatRanges.value;
 	if (App.lootfilter.classSkillsList.values.size() > 0) { jsonLoot["class_skills_list"] = App.lootfilter.classSkillsList.values; }
 	if (App.lootfilter.tabSkillsList.values.size() > 0) { jsonLoot["tab_skills_list"] = App.lootfilter.tabSkillsList.values; }
 	jsonLoot["legacy_settings"] = jsonLegacyLoot;
@@ -244,27 +207,8 @@ void Config::SaveConfig()
 
 	// Game settings
 	json jsonGame;
-	jsonGame["character_stats"] = GetKeyCode(App.game.characterStats.hotkey).name;
-	jsonGame["show_players_gear"] = GetKeyCode(App.game.showPlayersGear.hotkey).name;
-	jsonGame["resync_hotkey"] = GetKeyCode(App.game.resyncHotkey.hotkey).name;
-	jsonGame["experience_meter"]["enabled"] = App.game.experienceMeter.toggle.isEnabled;
-	jsonGame["experience_meter"]["hotkey"] = GetKeyCode(App.game.experienceMeter.toggle.hotkey).name;
-	jsonGame["always_show_items"]["enabled"] = App.game.alwaysShowItems.toggle.isEnabled;
-	jsonGame["always_show_items"]["hotkey"] = GetKeyCode(App.game.alwaysShowItems.toggle.hotkey).name;
-	jsonGame["buff_timers"]["enabled"] = App.game.buffTimers.toggle.isEnabled;
-	jsonGame["buff_timers"]["hotkey"] = GetKeyCode(App.game.buffTimers.toggle.hotkey).name;
-	jsonGame["quick_cast"]["enabled"] = App.game.quickCast.toggle.isEnabled;
-	jsonGame["quick_cast"]["hotkey"] = GetKeyCode(App.game.quickCast.toggle.hotkey).name;
-	jsonGame["skill_bar"]["enabled"] = App.game.skillBar.toggle.isEnabled;
-	jsonGame["skill_bar"]["hotkey"] = GetKeyCode(App.game.skillBar.toggle.hotkey).name;
-	jsonGame["skill_bar_disable"]["enabled"] = App.game.skillBarDisable.toggle.isEnabled;
-	jsonGame["skill_bar_disable"]["hotkey"] = GetKeyCode(App.game.skillBarDisable.toggle.hotkey).name;
-	jsonGame["screenshake"]["enabled"] = App.game.screenshake.toggle.isEnabled;
-	jsonGame["screenshake"]["hotkey"] = GetKeyCode(App.game.screenshake.toggle.hotkey).name;
-	jsonGame["dps"]["enabled"] = App.game.dpsCounter.toggle.isEnabled;
-	jsonGame["dps"]["hotkey"] = GetKeyCode(App.game.dpsCounter.toggle.hotkey).name;
-	jsonGame["belt_status"]["enabled"] = App.game.beltStatus.toggle.isEnabled;
-	jsonGame["belt_status"]["hotkey"] = GetKeyCode(App.game.beltStatus.toggle.hotkey).name;
+	jsonGame["experience_meter"] = App.game.experienceMeter.value;
+	jsonGame["always_show_items"] = App.game.alwaysShowItems.value;
 	App.jsonConfig["game"] = jsonGame;
 
 	// Party settings
@@ -314,7 +258,6 @@ void Config::SaveConfig()
 		foutBak << std::setw(4) << App.jsonConfig << std::endl;
 		foutBak.close();
 	}
-	SendReloadMessage();
 }
 
 
@@ -386,14 +329,7 @@ void Config::LoadConfig()
 	App.bnet.showHellDiff.value =		GetBool("/bnet"_json_pointer, "show_hell_difficulty", App.bnet.showHellDiff);
 
 	// General settings
-	App.general.reloadConfig.hotkey =		GetKey("/general"_json_pointer, "reload_config", App.general.reloadConfig);
-	App.general.reloadConfigCtrl.hotkey =	GetKey("/general"_json_pointer, "reload_config_ctrl", App.general.reloadConfigCtrl);
-	App.general.statsOnRight.toggle =		GetToggle("/general"_json_pointer, "stats_on_right", App.general.statsOnRight);
-	App.general.devAura.toggle =			GetToggle("/general"_json_pointer, "dev_aura", App.general.devAura);
-	App.general.maxLevelAura.toggle =		GetToggle("/general"_json_pointer, "max_level_aura", App.general.maxLevelAura);
-	App.general.rathmaAura.toggle =			GetToggle("/general"_json_pointer, "rathma_aura", App.general.rathmaAura);
-	App.general.dcloneAura.toggle =			GetToggle("/general"_json_pointer, "dclone_aura", App.general.dcloneAura);
-	App.general.pvpAura.toggle =			GetToggle("/general"_json_pointer, "pvp_aura", App.general.pvpAura);
+	App.general.statsOnRight.value =		GetBool("/general"_json_pointer, "stats_on_right", App.general.statsOnRight);
 
 	// Loot filter
 	App.lootfilter.filterLevel.uValue =		(unsigned int)GetInt("/lootfilter"_json_pointer, "filter_level", App.lootfilter.filterLevel);
@@ -401,11 +337,11 @@ void Config::LoadConfig()
 	App.lootfilter.filterLevelIncrease.hotkey = GetKey("/lootfilter"_json_pointer, "filter_level_increase", App.lootfilter.filterLevelIncrease);
 	App.lootfilter.filterLevelDecrease.hotkey = GetKey("/lootfilter"_json_pointer, "filter_level_decrease", App.lootfilter.filterLevelDecrease);
 	App.lootfilter.filterLevelPrevious.hotkey = GetKey("/lootfilter"_json_pointer, "filter_level_previous", App.lootfilter.filterLevelPrevious);
-	App.lootfilter.advancedItemDisplay.toggle = GetToggle("/lootfilter"_json_pointer, "advanced_item_display", App.lootfilter.advancedItemDisplay);  // Rename to "enable loot filter"
-	App.lootfilter.showIlvl.toggle =			GetToggle("/lootfilter"_json_pointer, "show_iLvl", App.lootfilter.showIlvl);
-	App.lootfilter.detailedNotifications.toggle = GetToggle("/lootfilter"_json_pointer, "detailed_notifications", App.lootfilter.detailedNotifications);
+	App.lootfilter.enableFilter.value =			GetBool("/lootfilter"_json_pointer, "advanced_item_display", App.lootfilter.enableFilter);
+	App.lootfilter.showIlvl.value =				GetBool("/lootfilter"_json_pointer, "show_iLvl", App.lootfilter.showIlvl);
+	App.lootfilter.detailedNotifications.value = GetBool("/lootfilter"_json_pointer, "detailed_notifications", App.lootfilter.detailedNotifications);
 	App.lootfilter.allowUnknownItems.toggle =	GetToggle("/lootfilter"_json_pointer, "allow_unknown_items", App.lootfilter.allowUnknownItems);
-	App.lootfilter.alwaysShowStatRanges.toggle = GetToggle("/lootfilter"_json_pointer, "always_show_stat_ranges", App.lootfilter.alwaysShowStatRanges);
+	App.lootfilter.alwaysShowStatRanges.value = GetBool("/lootfilter"_json_pointer, "always_show_stat_ranges", App.lootfilter.alwaysShowStatRanges);
 	App.lootfilter.classSkillsList.values =		GetAssoc("/lootfilter"_json_pointer, "class_skills_list", App.lootfilter.classSkillsList);
 	App.lootfilter.tabSkillsList.values =		GetAssoc("/lootfilter"_json_pointer, "tab_skills_list", App.lootfilter.tabSkillsList);
 
@@ -421,18 +357,8 @@ void Config::LoadConfig()
 	App.legacy.verboseNotifications.toggle = GetToggle("/lootfilter/legacy_settings"_json_pointer, "verbose_notifications", App.legacy.verboseNotifications);
 
 	// Game settings
-	App.game.characterStats.hotkey =	GetKey("/game"_json_pointer, "character_stats", App.game.characterStats); // VK_8
-	App.game.showPlayersGear.hotkey =	GetKey("/game"_json_pointer, "show_players_gear", App.game.showPlayersGear); // VK_0
-	App.game.resyncHotkey.hotkey =		GetKey("/game"_json_pointer, "resync_hotkey", App.game.resyncHotkey); // VK_9
-	App.game.experienceMeter.toggle =	GetToggle("/game"_json_pointer, "experience_meter", App.game.experienceMeter); // VK_NUMPAD7
-	App.game.alwaysShowItems.toggle =	GetToggle("/game"_json_pointer, "always_show_items", App.game.alwaysShowItems);
-	App.game.buffTimers.toggle =		GetToggle("/game"_json_pointer, "buff_timers", App.game.buffTimers);
-	App.game.quickCast.toggle =			GetToggle("/game"_json_pointer, "quick_cast", App.game.quickCast);
-	App.game.skillBar.toggle =			GetToggle("/game"_json_pointer, "skill_bar", App.game.skillBar);
-	App.game.skillBarDisable.toggle =	GetToggle("/game"_json_pointer, "skill_bar_disable", App.game.skillBarDisable);
-	App.game.screenshake.toggle =		GetToggle("/game"_json_pointer, "screenshake", App.game.screenshake);
-	App.game.dpsCounter.toggle =		GetToggle("/game"_json_pointer, "dps", App.game.dpsCounter);
-	App.game.beltStatus.toggle =		GetToggle("/game"_json_pointer, "belt_status", App.game.beltStatus);
+	App.game.experienceMeter.value =	GetBool("/game"_json_pointer, "experience_meter", App.game.experienceMeter);
+	App.game.alwaysShowItems.value =	GetBool("/game"_json_pointer, "always_show_items", App.game.alwaysShowItems);
 
 	// Party settings
 	App.party.autoParty.toggle =		GetToggle("/party"_json_pointer, "auto_party", App.party.autoParty);
@@ -463,25 +389,12 @@ void Config::LoadConfig()
 	{
 		SaveConfig();
 	}
-	else
-	{
-		SendReloadMessage();
-	}
 
 	App.hotkeyToggles = {
 		// General
-		&App.general.statsOnRight.toggle,
-		&App.general.devAura.toggle,
-		&App.general.maxLevelAura.toggle,
-		&App.general.rathmaAura.toggle,
-		&App.general.dcloneAura.toggle,
-		&App.general.pvpAura.toggle,
+
 		// Lootfilter
-		&App.lootfilter.advancedItemDisplay.toggle,
-		&App.lootfilter.showIlvl.toggle,
-		&App.lootfilter.detailedNotifications.toggle,
 		&App.lootfilter.allowUnknownItems.toggle,
-		&App.lootfilter.alwaysShowStatRanges.toggle,
 		// Legacy Lootfilter
 		&App.legacy.showEthereal.toggle,
 		&App.legacy.showSockets.toggle,
@@ -493,15 +406,7 @@ void Config::LoadConfig()
 		&App.legacy.dropNotifications.toggle,
 		&App.legacy.closeNotifications.toggle,
 		// Game
-		&App.game.experienceMeter.toggle,
-		&App.game.alwaysShowItems.toggle,
-		&App.game.buffTimers.toggle,
-		&App.game.quickCast.toggle,
-		&App.game.skillBar.toggle,
-		&App.game.skillBarDisable.toggle,
-		&App.game.screenshake.toggle,
-		&App.game.dpsCounter.toggle,
-		&App.game.beltStatus.toggle,
+
 		// Party
 		&App.party.autoParty.toggle,
 		&App.party.autoCorpseLoot.toggle,

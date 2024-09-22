@@ -354,6 +354,7 @@ FUNCPTR(D2COMMON, 10365_DATATBLS_GetRareAffixTxtRecord, RareAffixTxt* __stdcall,
 
 FUNCPTR(D2COMMON, CheckUnitCollision, DWORD __stdcall, (UnitAny* pUnitA, UnitAny* pUnitB, DWORD dwBitMask), -10839, -10221)
 FUNCPTR(D2COMMON, GetRoomFromUnit, Room1* __stdcall, (UnitAny* ptUnit), -10331, -10846)
+FUNCPTR(D2COMMON, GetLevelIdFromRoom, int __stdcall, (Room1* pRoom), -10826)
 FUNCPTR(D2COMMON, GetTargetUnitType, Path* __stdcall, (Path* pPath), -10392, -10704)
 
 FUNCPTR(D2COMMON, GetSkillLevel, int __stdcall, (UnitAny* pUnit, Skill* pSkill, BOOL bTotal), -10306, -10007)
