@@ -1,4 +1,4 @@
-﻿#define _DEFINE_PTRS
+#define _DEFINE_PTRS
 #include "BH.h"
 #include <Shlwapi.h>
 #include <psapi.h>
@@ -73,16 +73,7 @@ void BH::Initialize()
 	App.config->LoadConfig();
 
 	lootFilter = new Config("loot.filter");
-	if (!lootFilter->Parse()) {
-		lootFilter->SetConfigName("default.filter");
-		if (!lootFilter->Parse()) {
-			string msg = "Could not find default loot filter.\nAttempted to load " +
-				path + "loot.filter (failed).\nAttempted to load " +
-				path + "default.filter (failed).\n\nDefaults loaded.";
-			MessageBox(NULL, msg.c_str(), "Failed to load ProjectDiablo lootFilter", MB_OK);
-		}
-	}
-
+	LoadLootFilter();
 
 	// Do this asynchronously because D2GFX_GetHwnd() will be null if
 	// we inject on process start
@@ -152,14 +143,15 @@ bool BH::Shutdown() {
 
 bool BH::ReloadConfig() {
 	if (initialized) {
-		if (D2CLIENT_GetPlayerUnit()) {
-			PrintText(0, "Reloading config: %s", App.config->GetConfigName().c_str());
-			PrintText(0, "Reloading filter: %s", lootFilter->GetConfigName().c_str());
-		}
 		App.config->LoadConfig();
-		lootFilter->Parse();
+		LoadLootFilter();
 		moduleManager->ReloadConfig();
 		statsDisplay->LoadConfig();
+
+		if (D2CLIENT_GetPlayerUnit()) {
+			PrintText(0, "Reloaded config: %s", App.config->GetConfigName().c_str());
+			PrintText(0, "Reloaded filter: %s", lootFilter->GetConfigName().c_str());
+		}
 
 		// Remove nodraw flag from items when filter is reloaded. This is primarily just a QoL feature.
 		// Otherwise you'd have to reload the filter + leave and rejoin the area for hidden items to be visible again
@@ -175,6 +167,44 @@ bool BH::ReloadConfig() {
 		}
 	}
 	return true;
+}
+
+void BH::LoadLootFilter()
+{
+	std::ifstream launcherConfig("./AppData/launcherSettings.json");
+	if (launcherConfig)
+	{
+		try
+		{
+			nlohmann::json launcherJson = nlohmann::json::parse(launcherConfig);
+			if (launcherJson.contains("SelectedAuthorAndFilter"))
+			{
+				std::string author = launcherJson["SelectedAuthorAndFilter"]["selectedAuthor"]["author"].template get<std::string>();
+				std::string filter = launcherJson["SelectedAuthorAndFilter"]["selectedFilter"]["name"].template get<std::string>();
+
+				if (author == "Local Filter") { lootFilter->SetConfigName("filters\\local\\" + filter); }
+				else { lootFilter->SetConfigName("filters\\online\\" + filter); }
+			}
+		}
+		catch (const json::parse_error&) {
+		}
+	}
+
+	if (!lootFilter->Parse())
+	{
+		// Fallback to previous behavior
+		lootFilter->SetConfigName("loot.filter");
+		if (!lootFilter->Parse())
+		{
+			lootFilter->SetConfigName("default.filter");
+			if (!lootFilter->Parse()) {
+				string msg = "Could not find default loot filter.\nAttempted to load " +
+					path + "loot.filter (failed).\nAttempted to load " +
+					path + "default.filter (failed).\n\nDefaults loaded.";
+				MessageBox(NULL, msg.c_str(), "Failed to load ProjectDiablo lootFilter", MB_OK);
+			}
+		}
+	}
 }
 
 
