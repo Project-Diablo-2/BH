@@ -1563,7 +1563,7 @@ namespace ItemDisplay
 			item->ItemFilterNames.push_back(to_string(i + 1) + " - " + filterDefinitions[i].second);
 
 			// Max 9 entries
-			if (i >= 8) {
+			if (i >= 11) {
 				break;
 			}
 		}
@@ -2810,23 +2810,9 @@ bool EquippedCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg2)
 {
 	bool is_equipped = false;
-	if (uInfo->item->pItemData->pOwnerInventory)
+	if (uInfo->item->pItemData->BodyLocation > 0 && uInfo->item->pItemData->ItemLocation == STORAGE_NULL)
 	{
-		UnitAny* pMerc = nullptr;
-		UnitAny* pPlayer = D2CLIENT_GetPlayerUnit();
-		if (D2CLIENT_GetUIState(UI_MERC))
-		{
-			pMerc = D2CLIENT_GetMercUnit();
-		}
-
-		if ((pPlayer && uInfo->item->pItemData->pOwnerInventory->dwOwnerId == pPlayer->dwUnitId) ||
-			(pMerc && uInfo->item->pItemData->pOwnerInventory->dwOwnerId == pMerc->dwUnitId))
-		{
-			if (uInfo->item->pItemData->BodyLocation > 0 && uInfo->item->pItemData->ItemLocation == STORAGE_NULL)
-			{
-				is_equipped = true;
-			}
-		}
+		is_equipped = true;
 	}
 
 	return IntegerCompare(is_equipped, (BYTE)EQUAL, 1);
