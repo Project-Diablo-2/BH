@@ -111,7 +111,7 @@ JSONObject* StashExport::getStatEntry(WORD statId, WORD statId2, DWORD statVal, 
 			entry->set("value", (int)statVal);
 		}
 	}
-		break;
+						   break;
 	case STAT_AURA: {
 		SkillsTxt* pSkillsTxt = &(*p_D2COMMON_sgptDataTable)->pSkillsTxt[statId2];
 		SkillDescTxt* pSkillDescTxt = &(*p_D2COMMON_sgptDataTable)->pSkillDescTxt[pSkillsTxt->wSkillDesc];
@@ -123,7 +123,7 @@ JSONObject* StashExport::getStatEntry(WORD statId, WORD statId2, DWORD statVal, 
 			entry->set("name", name);
 		}
 	}
-		break;
+				  break;
 	case STAT_SKILLTAB:
 		for (int j = 0; j < 21; j++) {
 			if (SKILL_TABS[j].id == statId2) {
@@ -205,7 +205,7 @@ JSONObject* StashExport::getStatEntry(WORD statId, WORD statId2, DWORD statVal, 
 	return entry;
 }
 
-void StashExport::fillStats(JSONArray* statsArray, ItemsTxtStat *itemDef, UnitAny* pItem, int maxProps)
+void StashExport::fillStats(JSONArray* statsArray, ItemsTxtStat* itemDef, UnitAny* pItem, int maxProps)
 {
 	for (int prop = 0; prop < maxProps; prop++)
 	{
@@ -214,7 +214,7 @@ void StashExport::fillStats(JSONArray* statsArray, ItemsTxtStat *itemDef, UnitAn
 		ItemsTxtStat itemStats = itemDef[prop];
 		PropertiesTxt* pPropertiesTxt = &(*p_D2COMMON_sgptDataTable)->pPropertiesTxt[itemDef[prop].dwProp];
 		if (!pPropertiesTxt) { break; }
-		
+
 		for (int stat = 0; stat < 8; stat++)
 		{
 			int func = pPropertiesTxt->nFunc[stat];
@@ -288,7 +288,7 @@ void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
 	std::string code = cCode;
 	code = Trim(code);
 
-	int nCorruptor = ItemGetCorruptor(pItem);
+	int nCorruptor = ItemGetCorruptor(pItem, STAT_CORRUPTED);
 
 	BYTE nType = txt->nType;
 	if (nType >= 96 && nType <= 102) { // is gem?
