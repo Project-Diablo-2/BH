@@ -913,6 +913,21 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
 		OrigGetItemName(pItem, itemName, code);
 	}
 
+	bool bAllocated = pItem->pItemData && pItem->pItemData->dwFlags & ITEMFLAG_ALLOCED;
+
+	if (bAllocated)
+	{
+		if (*p_D2GFX_RenderMode != 4)
+		{
+			itemName += "\nÿc1(Allocated)";
+		}
+		else
+		{
+			// Half transparency
+			itemName = "\xFF" "c\x42" + itemName;
+		}
+	}
+
 	// Some common color codes for text strings (see TextColor enum):
 	// ÿc; (purple)
 	// ÿc0 (white)
@@ -2119,8 +2134,21 @@ void __stdcall Item::OnPropertyBuild(wchar_t* wOut, int nStat, UnitAny* pItem, i
 	ItemsTxtStat* all_stat = nullptr; // Stat for common modifer like all-res, all-stats
 	ItemsTxtStat* max_elem_stat = nullptr; // Stat for ranged min/max stats
 
-	int nCorruptor = ItemGetCorruptor(pItem);
+	int nCorruptor = ItemGetCorruptor(pItem, STAT_UNUSED205);
 	BOOL isCorrupted = StatIsCorrupted(nStat, nCorruptor);
+	if (isCorrupted) {
+		int	aLen = wcslen(wOut);
+		int leftSpace = 128 - aLen > 0 ? 128 - aLen : 0;
+		if (leftSpace) {
+			swprintf_s(wOut + aLen, leftSpace,
+				L"%s\*%s",
+				GetColorCode(TextColor::Gold).c_str(),
+				GetColorCode(TextColor::Blue).c_str());
+		}
+	}
+
+	nCorruptor = ItemGetCorruptor(pItem, STAT_CORRUPTED);
+	isCorrupted = StatIsCorrupted(nStat, nCorruptor);
 	if (isCorrupted) {
 		// Add a red star to corruption mods
 		int	aLen = wcslen(wOut);
@@ -2759,13 +2787,13 @@ ItemsTxtStat* GetMaxElemStatFromMin(ItemsTxtStat* pStats, int nStats, int nStat,
 	return nullptr;
 }
 
-int ItemGetCorruptor(UnitAny* pItem)
+int ItemGetCorruptor(UnitAny* pItem, int nStat)
 {
 	int corruptor = -1;
 
 	for (int i = 0; i < pItem->pStats->wSetStatCount; i++) {
 		Stat* pStat = &pItem->pStats->pSetStat[i];
-		if (pStat->wStatIndex == STAT_CORRUPTED) {
+		if (pStat->wStatIndex == nStat) {
 			corruptor = pStat->dwStatValue - 2;
 			break;
 		}

@@ -44,7 +44,11 @@
 	{"CORAL", *p_D2GFX_RenderMode != 4 ? "ÿc1" : "\xFF" "c\x06"},		\
 	{"SAGE", *p_D2GFX_RenderMode != 4 ? "ÿc2" : "\xFF" "c\x07"},		\
 	{"TEAL", *p_D2GFX_RenderMode != 4 ? "ÿc3" : "\xFF" "c\x09"},		\
-	{"LIGHT_GRAY", *p_D2GFX_RenderMode != 4 ? "ÿc5" : "\xFF" "c\x0C"}
+	{"LIGHT_GRAY", *p_D2GFX_RenderMode != 4 ? "ÿc5" : "\xFF" "c\x0C"},	\
+	{"FULL_TRANS", *p_D2GFX_RenderMode != 4 ? "" : "\xFF" "c\x40"}, \
+	{"THREE_FOURTHS_TRANS", *p_D2GFX_RenderMode != 4 ? "" : "\xFF" "c\x41"}, \
+	{"HALF_TRANS", *p_D2GFX_RenderMode != 4 ? "" : "\xFF" "c\x42"}, \
+	{"QUARTER_TRANS", *p_D2GFX_RenderMode != 4 ? "" : "\xFF" "c\x43"}
 
 #define MAP_COLOR_WHITE     0x20
 
@@ -64,7 +68,11 @@
 	{"CORAL", 0x66}, \
 	{"SAGE", 0x82}, \
 	{"TEAL", 0xCB}, \
-	{"LIGHT_GRAY", 0xD6}
+	{"LIGHT_GRAY", 0xD6}, \
+	{"FULL_TRANS", 0xCB}, \
+	{"THREE_FOURTHS_TRANS", 0xCB}, \
+	{"HALF_TRANS", 0xCB}, \
+	{"QUARTER_TRANS", 0xCB}
 
 std::map<std::string, int> code_to_dwtxtfileno = {
 		{"hax", 0},
@@ -1333,15 +1341,15 @@ void SubstituteNameVariables(UnitItemInfo* uInfo,
 	// TODO: Unify handling of numbered and non-numbered variables
 	ReplaceStatSkillVars(uInfo, name);
 
-	bool nlAllowed = ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0  &&
-					 (uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0)) ||
-					 inShop;
+	bool nlAllowed = ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
+		(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0)) ||
+		inShop;
 
 	// Check if non-mag item capable of having staffmods
 	bool nmagStaffmod = ((uInfo->item->pItemData->dwQuality == ITEM_QUALITY_INFERIOR ||
-		                  uInfo->item->pItemData->dwQuality == ITEM_QUALITY_NORMAL || 
-		                  uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR) &&
-						uInfo->attrs->staffmodClass < CLASS_NA);
+		uInfo->item->pItemData->dwQuality == ITEM_QUALITY_NORMAL ||
+		uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR) &&
+		uInfo->attrs->staffmodClass < CLASS_NA);
 
 	if (!name.empty() && (!bLimit || nlAllowed))
 	{
