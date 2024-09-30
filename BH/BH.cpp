@@ -238,7 +238,7 @@ extern "C" {
 			return App.lootfilter.detailedNotifications.value;
 		case BH_CONFIG_SHOWITEMLEVEL:
 			return App.lootfilter.showIlvl.value;
-		case BH_CONFIG_SHOWSTATRANGE:
+		case BH_CONFIG_ALWAYSSHOWSTATRANGE:
 			return App.lootfilter.alwaysShowStatRanges.value;
 		case BH_CONFIG_ALWAYSSHOWITEMS:
 			return App.game.alwaysShowItems.value;
@@ -279,12 +279,20 @@ extern "C" {
 			App.lootfilter.showIlvl.value = configVal;
 			bSave = TRUE;
 			break;
-		case BH_CONFIG_SHOWSTATRANGE:
+		case BH_CONFIG_ALWAYSSHOWSTATRANGE:
 			App.lootfilter.alwaysShowStatRanges.value = configVal;
 			bSave = TRUE;
 			break;
 		case BH_CONFIG_ALWAYSSHOWITEMS:
 			App.game.alwaysShowItems.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_SHOWSTATRANGEPRIMARY:
+			App.lootfilter.showStatRangesPrimary.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_SHOWSTATRANGESECONDARY:
+			App.lootfilter.showStatRangesSecondary.value = configVal;
 			bSave = TRUE;
 			break;
 		}

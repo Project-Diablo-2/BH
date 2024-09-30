@@ -1581,6 +1581,9 @@ namespace ItemDisplay
 			item->ItemFilterNames.push_back("1 - Standard");
 		}
 
+		if (App.lootfilter.filterLevel.uValue >= item->ItemFilterNames.size()) {
+			App.lootfilter.filterLevel.uValue = 1;
+		}
 		//item->ReplaceItemFilters(item->ItemFilterNames);
 	}
 

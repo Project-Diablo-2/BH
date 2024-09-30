@@ -94,6 +94,8 @@ struct BHApp {
 		SettingsBool showIlvl = { false, false };
 		SettingsBool detailedNotifications = { true, true };
 		SettingsToggle allowUnknownItems = { {}, {0, false} };
+		SettingsInt showStatRangesPrimary = { 0, 0, 0x08, 0xE0 };
+		SettingsInt showStatRangesSecondary = { 0, 0, 0x08, 0xE0 };
 		SettingsBool alwaysShowStatRanges = { false, false };
 		SettingsAssoc classSkillsList = {}; // TODO??
 		SettingsAssoc tabSkillsList = {};  // TODO??
@@ -169,10 +171,12 @@ typedef enum BHConfigId {
 	BH_CONFIG_NUMFILTERLEVELS,
 	BH_CONFIG_LOOTNOTIFY,
 	BH_CONFIG_SHOWITEMLEVEL,
-	BH_CONFIG_SHOWSTATRANGE,
+	BH_CONFIG_ALWAYSSHOWSTATRANGE,
 	BH_CONFIG_ALWAYSSHOWITEMS,
 	BH_CONFIG_INCREASEFILTER,
 	BH_CONFIG_DECREASEFILTER,
 	BH_CONFIG_RESTOREFILTER,
+	BH_CONFIG_SHOWSTATRANGEPRIMARY,
+	BH_CONFIG_SHOWSTATRANGESECONDARY,
 
 } BHConfigId;

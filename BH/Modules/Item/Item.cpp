@@ -2126,7 +2126,11 @@ BOOL __stdcall Item::OnDamagePropertyBuild(UnitAny* pItem, DamageStats* pDmgStat
 }
 
 void __stdcall Item::OnPropertyBuild(wchar_t* wOut, int nStat, UnitAny* pItem, int nStatParam) {
-	if (!(App.lootfilter.alwaysShowStatRanges.value || GetKeyState(VK_CONTROL) & 0x8000) || pItem == nullptr || pItem->dwType != UNIT_ITEM) {
+	if (!(App.lootfilter.alwaysShowStatRanges.value ||
+		GetKeyState(App.lootfilter.showStatRangesPrimary.value) & 0x8000 ||
+		GetKeyState(App.lootfilter.showStatRangesSecondary.value) & 0x8000) ||
+		pItem == nullptr || pItem->dwType != UNIT_ITEM)
+	{
 		return;
 	}
 
