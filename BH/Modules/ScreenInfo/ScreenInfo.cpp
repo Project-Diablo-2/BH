@@ -196,7 +196,7 @@ void ScreenInfo::OnDraw() {
 		}
 	}*/
 
-	if (App.game.experienceMeter.value) {
+	if (App.game.experienceMeter.value && D2CLIENT_GetUIState(UI_HELP_MENU) == 0) {
 		drawExperienceInfo();
 	}
 }
