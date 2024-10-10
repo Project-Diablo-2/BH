@@ -860,7 +860,8 @@ struct ReplacementSpec {
 	static string ReplaceMulti(ReplaceContext& ctx, const ReplacementValue& val);
 
 	// COLOR keywords
-	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceGfxDependentColor(const string& primary, const string& secondary);
+	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceGlideDependentColor(const string& primary, const string& secondary);
+	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceHDTextDependentColor(const string& primary, const string& secondary);
 	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceBindString(const string& str);
 	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceNamedStat(int id);
 };
@@ -927,15 +928,15 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "CHARSTAT", { 1, ReplacementSpec::ReplaceCharStat } },
 	{ "MULTI", { 2, ReplacementSpec::ReplaceMulti } },
 	// COLORS
-	{ "BLACK", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x02", "ÿc6") }},
-	{ "CORAL", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x06", "ÿc1") }},
-	{ "SAGE", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x07", "ÿc2") }},
-	{ "TEAL", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x09", "ÿc3") }},
-	{ "LIGHT_GRAY", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x0C", "ÿc5") }},
-	{ "FULL_TRANS", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x40", "") }},
-	{ "THREE_FOURTHS_TRANS", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x41", "") }},
-	{ "HALF_TRANS", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x42", "") }},
-	{ "QUARTER_TRANS", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x43", "") }},
+	{ "BLACK", { 0, ReplacementSpec::ReplaceGlideDependentColor("\xFF" "c\x02", "ÿc6") }},
+	{ "CORAL", { 0, ReplacementSpec::ReplaceGlideDependentColor("\xFF" "c\x06", "ÿc1") }},
+	{ "SAGE", { 0, ReplacementSpec::ReplaceGlideDependentColor("\xFF" "c\x07", "ÿc2") }},
+	{ "TEAL", { 0, ReplacementSpec::ReplaceGlideDependentColor("\xFF" "c\x09", "ÿc3") }},
+	{ "LIGHT_GRAY", { 0, ReplacementSpec::ReplaceGlideDependentColor("\xFF" "c\x0C", "ÿc5") }},
+	{ "FULL_TRANS", { 0, ReplacementSpec::ReplaceHDTextDependentColor("\xFF" "c\x40", "") }},
+	{ "THREE_FOURTHS_TRANS", { 0, ReplacementSpec::ReplaceHDTextDependentColor("\xFF" "c\x41", "") }},
+	{ "HALF_TRANS", { 0, ReplacementSpec::ReplaceHDTextDependentColor("\xFF" "c\x42", "") }},
+	{ "QUARTER_TRANS", { 0, ReplacementSpec::ReplaceHDTextDependentColor("\xFF" "c\x43", "") }},
 	{ "WHITE", { 0, ReplacementSpec::ReplaceBindString("ÿc0") } },
 	{ "RED", { 0, ReplacementSpec::ReplaceBindString("ÿc1") } },
 	{ "GREEN", { 0, ReplacementSpec::ReplaceBindString("ÿc2") } },
@@ -1254,11 +1255,18 @@ string ReplacementSpec::ReplaceMulti(ReplaceContext& ctx, const ReplacementValue
 	return buffer;
 }
 
-function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSpec::ReplaceGfxDependentColor(const string& primary, const string& secondary)
+function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSpec::ReplaceGlideDependentColor(const string& primary, const string& secondary)
 {
 	return [primary, secondary](ReplaceContext& ctx, const ReplacementValue& val) {
 		return *p_D2GFX_RenderMode != 4 ? secondary : primary;
-	};
+		};
+}
+
+function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSpec::ReplaceHDTextDependentColor(const string& primary, const string& secondary)
+{
+	return [primary, secondary](ReplaceContext& ctx, const ReplacementValue& val) {
+		return (!App.d2gl.usingD2GL.value && !App.d2gl.usingHDText.value) ? secondary : primary;
+		};
 }
 
 ReplaceContext::ReplaceContext(UnitItemInfo* info, string name, bool limit) :

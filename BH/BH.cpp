@@ -74,6 +74,7 @@ void BH::Initialize()
 
 	lootFilter = new Config("loot.filter");
 	LoadLootFilter();
+	CheckForD2GL();
 
 	// Do this asynchronously because D2GFX_GetHwnd() will be null if
 	// we inject on process start
@@ -211,6 +212,33 @@ void BH::LoadLootFilter()
 	}
 }
 
+void BH::CheckForD2GL()
+{
+	typedef int(__cdecl* d2glIsReady_t)();
+	static d2glIsReady_t d2glIsReadyImpl = NULL;
+
+	typedef BOOL(__stdcall* d2glConfigQueryImpl_t)(D2GLConfigId);
+	static d2glConfigQueryImpl_t d2glConfigQueryImpl = NULL;
+
+	HMODULE d2glHandle = GetModuleHandleA("glide3x.dll");
+	d2glHandle = !d2glHandle ? GetModuleHandleA("ddraw.dll") : d2glHandle;
+
+	if (d2glHandle)
+	{
+		FARPROC proc = GetProcAddress(d2glHandle, "d2glIsReady");
+		d2glIsReadyImpl = proc ? (d2glIsReady_t)proc : NULL;
+
+		proc = GetProcAddress(d2glHandle, "_d2glConfigQueryImpl@4");
+		d2glConfigQueryImpl = proc ? (d2glConfigQueryImpl_t)proc : NULL;
+
+	}
+
+	if (d2glIsReadyImpl && d2glConfigQueryImpl)
+	{
+		App.d2gl.usingD2GL.value = true;
+		App.d2gl.usingD2GL.value = d2glConfigQueryImpl(D2GL_CONFIG_HD_TEXT);
+	}
+}
 
 #ifdef __cplusplus
 extern "C" {
@@ -295,6 +323,9 @@ extern "C" {
 			App.lootfilter.showStatRangesSecondary.value = configVal;
 			bSave = TRUE;
 			break;
+		case BH_CONFIG_USINGHDTEXT:
+			App.d2gl.usingHDText.value = configVal;
+			return 1;
 		}
 		if (bSave)
 		{

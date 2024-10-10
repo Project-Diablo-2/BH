@@ -917,7 +917,7 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
 
 	if (bAllocated)
 	{
-		if (*p_D2GFX_RenderMode != 4)
+		if (!App.d2gl.usingD2GL.value && !App.d2gl.usingHDText.value)
 		{
 			itemName += "\nÿc1(Allocated)";
 		}

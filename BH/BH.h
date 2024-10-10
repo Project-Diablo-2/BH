@@ -38,6 +38,7 @@ namespace BH {
 	extern bool ReloadConfig();
 	
 	void LoadLootFilter();
+	void CheckForD2GL();
 };
 
 struct BHApp {
@@ -157,6 +158,12 @@ struct BHApp {
 		};
 	} stash;
 
+	struct
+	{
+		SettingsBool usingD2GL = { false, false };
+		SettingsBool usingHDText = { false, false };
+	} d2gl;
+
 	std::vector<Toggle*> hotkeyToggles;
 };
 
@@ -178,5 +185,18 @@ typedef enum BHConfigId {
 	BH_CONFIG_RESTOREFILTER,
 	BH_CONFIG_SHOWSTATRANGEPRIMARY,
 	BH_CONFIG_SHOWSTATRANGESECONDARY,
-
+	BH_CONFIG_USINGHDTEXT,
 } BHConfigId;
+
+typedef enum D2GLConfigId
+{
+	D2GL_CONFIG_VSYNC,
+	D2GL_CONFIG_CURSOR_UNLOCKED,
+	D2GL_CONFIG_HD_CURSOR,
+	D2GL_CONFIG_HD_TEXT,
+	D2GL_CONFIG_MOTION_PREDICTION,
+	D2GL_CONFIG_MINI_MAP,
+	D2GL_CONFIG_SHOW_ITEM_QUANTITY,
+	D2GL_CONFIG_SHOW_MONSTER_RES,
+	D2GL_CONFIG_SHOW_FPS,
+} D2GLConfigId;
