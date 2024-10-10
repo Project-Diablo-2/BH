@@ -26,32 +26,9 @@
 	{"STAT62", STAT_MANALEECH},		\
 	{"REPLIFE", STAT_REPLENISHLIFE},
 
-
-// All colors here must also be defined in MAP_COLOR_REPLACEMENTS
-#define COLOR_REPLACEMENTS	\
-	{"WHITE", "ÿc0"},		\
-	{"RED", "ÿc1"},			\
-	{"GREEN", "ÿc2"},		\
-	{"BLUE", "ÿc3"},		\
-	{"GOLD", "ÿc4"},		\
-	{"GRAY", "ÿc5"},		\
-	{"BLACK", *p_D2GFX_RenderMode != 4 ? "ÿc6" : "\xFF" "c\x02"},		\
-	{"TAN", "ÿc7"},			\
-	{"ORANGE", "ÿc8"},		\
-	{"YELLOW", "ÿc9"},		\
-	{"PURPLE", "ÿc;"},		\
-	{"DARK_GREEN", "ÿc:"},	\
-	{"CORAL", *p_D2GFX_RenderMode != 4 ? "ÿc1" : "\xFF" "c\x06"},		\
-	{"SAGE", *p_D2GFX_RenderMode != 4 ? "ÿc2" : "\xFF" "c\x07"},		\
-	{"TEAL", *p_D2GFX_RenderMode != 4 ? "ÿc3" : "\xFF" "c\x09"},		\
-	{"LIGHT_GRAY", *p_D2GFX_RenderMode != 4 ? "ÿc5" : "\xFF" "c\x0C"},	\
-	{"FULL_TRANS", *p_D2GFX_RenderMode != 4 ? "" : "\xFF" "c\x40"}, \
-	{"THREE_FOURTHS_TRANS", *p_D2GFX_RenderMode != 4 ? "" : "\xFF" "c\x41"}, \
-	{"HALF_TRANS", *p_D2GFX_RenderMode != 4 ? "" : "\xFF" "c\x42"}, \
-	{"QUARTER_TRANS", *p_D2GFX_RenderMode != 4 ? "" : "\xFF" "c\x43"}
-
 #define MAP_COLOR_WHITE     0x20
 
+// All colors here must also be defined in ReplacementMap
 #define MAP_COLOR_REPLACEMENTS	\
 	{"WHITE", 0x20},		\
 	{"RED", 0x0A},			\
@@ -700,40 +677,6 @@ std::map<std::string, FilterCondition> condition_map =
 
 };
 
-
-// Beware of potential match intercepts with these
-// Processed from first to last (EDEF before DEF, ARPER before AR, etc)
-std::vector<pair<std::string, int>> stat_id_map =
-{
-	{"EDEF", STAT_ENHANCEDDEFENSE},
-	{"EDAM", STAT_ENHANCEDMAXIMUMDAMAGE},
-	{"DEF", STAT_DEFENSE},
-	{"FRES", STAT_FIRERESIST},
-	{"CRES", STAT_COLDRESIST},
-	{"LRES", STAT_LIGHTNINGRESIST},
-	{"PRES", STAT_POISONRESIST},
-	{"IAS", STAT_IAS},
-	{"FCR", STAT_FASTERCAST},
-	{"FHR", STAT_FASTERHITRECOVERY},
-	{"FBR", STAT_FASTERBLOCK},
-	{"LIFE", STAT_MAXHP},
-	{"MANA", STAT_MAXMANA},
-	{"ARPER", STAT_TOHITPERCENT},
-	{"MFIND", STAT_MAGICFIND},
-	{"GFIND", STAT_GOLDFIND},
-	{"STR", STAT_STRENGTH},
-	{"DEX", STAT_DEXTERITY},
-	{"FRW", STAT_FASTERRUNWALK},
-	{"MINDMG", STAT_MINIMUMDAMAGE},
-	{"MAXDMG", STAT_MAXIMUMDAMAGE},
-	{"AR", STAT_ATTACKRATING},
-	{"DTM", STAT_DAMAGETOMANA},
-	{"MAEK", STAT_MANAAFTEREACHKILL},
-	{"REPLIFE", STAT_REPLENISHLIFE},
-	{"REPQUANT", STAT_REPLENISHESQUANTITY},
-	{"REPAIR", STAT_REPAIRSDURABILITY},
-};
-
 SkillReplace skills[] = {
 	COMBO_STATS
 };
@@ -814,6 +757,534 @@ char* GemTypes[] = {
 	"Skull"
 };
 
+struct ReplaceContext {
+	UnitItemInfo* info;
+	string name;
+	ItemsTxt* text;
+	// no newlines allowed
+	bool limit;
+	bool inShop;
+	bool nlAllowed;
+	bool nmagStaffmod;
+	bool blockedNL;
+
+	ReplaceContext(UnitItemInfo* info, string name, bool limit);
+};
+
+struct ReplacementValue {
+	const function<string(ReplaceContext&, const ReplacementValue&)> fn;
+	string str = "";
+	int param1 = 0;
+	int param2 = 0;
+
+	ReplacementValue(const string& str, const int param1, const int param2, function<string(ReplaceContext&, const ReplacementValue&)> fn) :
+		str(str),
+		param1(param1),
+		param2(param2),
+		fn(fn) {
+	}
+
+	string Replace(ReplaceContext& ctx) const;
+};
+
+struct ReplacementSpec {
+	uint16_t params;
+	function<string(ReplaceContext&, const ReplacementValue&)> fn;
+
+	ReplacementSpec(uint16_t params, function<string(ReplaceContext&, const ReplacementValue&)> fn) :
+		params(params),
+		fn(fn) {
+	}
+
+	static ReplacementValue MakeReplacementValue(const string& str);
+	static ReplacementValue MakeReplacementValue(const smatch& match, bool& fail);
+
+	// STATIC keywords
+	// no-op
+	static string ReplaceNone(ReplaceContext& ctx, const ReplacementValue& val);
+	// string between keywords
+	static string ReplaceConst(ReplaceContext& ctx, const ReplacementValue& val);
+	// %NAME%
+	static string ReplaceName(ReplaceContext& ctx, const ReplacementValue& val);
+	// %SOCKETS%
+	static string ReplaceSockets(ReplaceContext& ctx, const ReplacementValue& val);
+	// %RUNENUM%
+	static string ReplaceRuneNumber(ReplaceContext& ctx, const ReplacementValue& val);
+	// %RUNNAME%
+	static string ReplaceRuneName(ReplaceContext& ctx, const ReplacementValue& val);
+	// %GEMLEVEL%
+	static string ReplaceGemLevel(ReplaceContext& ctx, const ReplacementValue& val);
+	// %GEMTYPE%
+	static string ReplaceGemType(ReplaceContext& ctx, const ReplacementValue& val);
+	// %ILVL%
+	static string ReplaceItemLevel(ReplaceContext& ctx, const ReplacementValue& val);
+	// %ALVL%
+	static string ReplaceAffixLevel(ReplaceContext& ctx, const ReplacementValue& val);
+	// %CRAFTALVL%
+	static string ReplaceCraftLevel(ReplaceContext& ctx, const ReplacementValue& val);
+	// %LVLREQ%
+	static string ReplaceLevelRequirement(ReplaceContext& ctx, const ReplacementValue& val);
+	// %WPNSPD%
+	static string ReplaceWeaponSpeed(ReplaceContext& ctx, const ReplacementValue& val);
+	// %RANGE%
+	static string ReplaceRange(ReplaceContext& ctx, const ReplacementValue& val);
+	// %CODE%
+	static string ReplaceCode(ReplaceContext& ctx, const ReplacementValue& val);
+	// %PRICE%
+	static string ReplacePrice(ReplaceContext& ctx, const ReplacementValue& val);
+	// %QTY%
+	static string ReplaceQuantity(ReplaceContext& ctx, const ReplacementValue& val);
+	// %RES%
+	static string ReplaceAllResist(ReplaceContext& ctx, const ReplacementValue& val);
+	// enhance damage or enhance defense %ED%
+	static string ReplaceEnhancedD(ReplaceContext& ctx, const ReplacementValue& val);
+	// %CL%
+	static string ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val);
+	// %NL%
+	static string ReplaceNewLine(ReplaceContext& ctx, const ReplacementValue& val);
+
+	// DYNAMIC keywords
+	// %STAT%
+	static string ReplaceStat(ReplaceContext& ctx, const ReplacementValue& val);
+	// %SK%
+	static string ReplaceSingleSkill(ReplaceContext& ctx, const ReplacementValue& val);
+	// %OS%
+	static string ReplaceNonClassSkill(ReplaceContext& ctx, const ReplacementValue& val);
+	// %CLSK%
+	static string ReplaceClassSkill(ReplaceContext& ctx, const ReplacementValue& val);
+	// %TABSK%
+	static string ReplaceSkillTab(ReplaceContext& ctx, const ReplacementValue& val);
+	// %CHARSTAT%
+	static string ReplaceCharStat(ReplaceContext& ctx, const ReplacementValue& val);
+	// %MULTI%
+	static string ReplaceMulti(ReplaceContext& ctx, const ReplacementValue& val);
+
+	// COLOR keywords
+	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceGfxDependentColor(const string& primary, const string& secondary);
+	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceBindString(const string& str);
+	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceNamedStat(int id);
+};
+
+unordered_map<string, ReplacementSpec> ReplacementMap = {
+	// STATIC
+	{ "NAME", { 0, ReplacementSpec::ReplaceName } },
+	{ "SOCKETS", { 0, ReplacementSpec::ReplaceSockets } },
+	{ "RUNENUM", { 0, ReplacementSpec::ReplaceRuneNumber } },
+	{ "RUNENAME", { 0, ReplacementSpec::ReplaceRuneName } },
+	{ "GEMLEVEL", { 0, ReplacementSpec::ReplaceGemLevel } },
+	{ "GEMTYPE", { 0, ReplacementSpec::ReplaceGemType } },
+	{ "ILVL", { 0, ReplacementSpec::ReplaceItemLevel } },
+	{ "ALVL", { 0, ReplacementSpec::ReplaceAffixLevel } },
+	{ "CRAFTALVL", { 0, ReplacementSpec::ReplaceCraftLevel } },
+	{ "LVLREQ", { 0, ReplacementSpec::ReplaceLevelRequirement } },
+	{ "WPNSPD", { 0, ReplacementSpec::ReplaceWeaponSpeed } },
+	{ "RANGE", { 0, ReplacementSpec::ReplaceRange } },
+	{ "CODE", { 0, ReplacementSpec::ReplaceCode } },
+	// %LBRACE%
+	{ "LBRACE", { 0, ReplacementSpec::ReplaceBindString("{") } },
+	// %RBRACE%
+	{ "RBRACE", { 0, ReplacementSpec::ReplaceBindString("}") } },
+	{ "PRICE", { 0, ReplacementSpec::ReplacePrice } },
+	{ "QTY", { 0, ReplacementSpec::ReplaceQuantity } },
+	{ "RES", { 0, ReplacementSpec::ReplaceAllResist } },
+	{ "ED", { 0, ReplacementSpec::ReplaceEnhancedD } },
+	{ "CL", { 0, ReplacementSpec::ReplaceConditionalLine } },
+	{ "NL", { 0, ReplacementSpec::ReplaceNewLine } },
+	// named stats
+	{ "EDEF", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDDEFENSE) } },
+	{ "EDAM", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDMAXIMUMDAMAGE) } },
+	{ "DEF", { 0, ReplacementSpec::ReplaceNamedStat(STAT_DEFENSE) } },
+	{ "FRES", { 0, ReplacementSpec::ReplaceNamedStat(STAT_FIRERESIST) } },
+	{ "CRES", { 0, ReplacementSpec::ReplaceNamedStat(STAT_COLDRESIST) } },
+	{ "LRES", { 0, ReplacementSpec::ReplaceNamedStat(STAT_LIGHTNINGRESIST) } },
+	{ "PRES", { 0, ReplacementSpec::ReplaceNamedStat(STAT_POISONRESIST) } },
+	{ "IAS", { 0, ReplacementSpec::ReplaceNamedStat(STAT_IAS) } },
+	{ "FCR", { 0, ReplacementSpec::ReplaceNamedStat(STAT_FASTERCAST) } },
+	{ "FHR", { 0, ReplacementSpec::ReplaceNamedStat(STAT_FASTERHITRECOVERY) } },
+	{ "FBR", { 0, ReplacementSpec::ReplaceNamedStat(STAT_FASTERBLOCK) } },
+	{ "LIFE", { 0, ReplacementSpec::ReplaceNamedStat(STAT_MAXHP) } },
+	{ "MANA", { 0, ReplacementSpec::ReplaceNamedStat(STAT_MAXMANA) } },
+	{ "ARPER", { 0, ReplacementSpec::ReplaceNamedStat(STAT_TOHITPERCENT) } },
+	{ "MFIND", { 0, ReplacementSpec::ReplaceNamedStat(STAT_MAGICFIND) } },
+	{ "GFIND", { 0, ReplacementSpec::ReplaceNamedStat(STAT_GOLDFIND) } },
+	{ "STR", { 0, ReplacementSpec::ReplaceNamedStat(STAT_STRENGTH) } },
+	{ "DEX", { 0, ReplacementSpec::ReplaceNamedStat(STAT_DEXTERITY) } },
+	{ "FRW", { 0, ReplacementSpec::ReplaceNamedStat(STAT_FASTERRUNWALK) } },
+	{ "MINDMG", { 0, ReplacementSpec::ReplaceNamedStat(STAT_MINIMUMDAMAGE) } },
+	{ "MAXDMG", { 0, ReplacementSpec::ReplaceNamedStat(STAT_MAXIMUMDAMAGE) } },
+	{ "AR", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ATTACKRATING) } },
+	{ "DTM", { 0, ReplacementSpec::ReplaceNamedStat(STAT_DAMAGETOMANA) } },
+	{ "MAEK", { 0, ReplacementSpec::ReplaceNamedStat(STAT_MANAAFTEREACHKILL) } },
+	{ "REPLIFE", { 0, ReplacementSpec::ReplaceNamedStat(STAT_REPLENISHLIFE) } },
+	{ "REPQUANT", { 0, ReplacementSpec::ReplaceNamedStat(STAT_REPLENISHESQUANTITY) } },
+	{ "REPAIR", { 0, ReplacementSpec::ReplaceNamedStat(STAT_REPAIRSDURABILITY) } },
+	// DYNAMIC
+	{ "STAT", { 1, ReplacementSpec::ReplaceStat } },
+	{ "SK", { 1, ReplacementSpec::ReplaceSingleSkill } },
+	{ "OS", { 1, ReplacementSpec::ReplaceNonClassSkill } },
+	{ "CLSK", { 1, ReplacementSpec::ReplaceClassSkill } },
+	{ "TABSK", { 1, ReplacementSpec::ReplaceSkillTab } },
+	{ "CHARSTAT", { 1, ReplacementSpec::ReplaceCharStat } },
+	{ "MULTI", { 2, ReplacementSpec::ReplaceMulti } },
+	// COLORS
+	{ "BLACK", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x02", "ÿc6") }},
+	{ "CORAL", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x06", "ÿc1") }},
+	{ "SAGE", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x07", "ÿc2") }},
+	{ "TEAL", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x09", "ÿc3") }},
+	{ "LIGHT_GRAY", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x0C", "ÿc5") }},
+	{ "FULL_TRANS", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x40", "") }},
+	{ "THREE_FOURTHS_TRANS", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x41", "") }},
+	{ "HALF_TRANS", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x42", "") }},
+	{ "QUARTER_TRANS", { 0, ReplacementSpec::ReplaceGfxDependentColor("\xFF" "c\x43", "") }},
+	{ "WHITE", { 0, ReplacementSpec::ReplaceBindString("ÿc0") } },
+	{ "RED", { 0, ReplacementSpec::ReplaceBindString("ÿc1") } },
+	{ "GREEN", { 0, ReplacementSpec::ReplaceBindString("ÿc2") } },
+	{ "BLUE", { 0, ReplacementSpec::ReplaceBindString("ÿc3") } },
+	{ "GOLD", { 0, ReplacementSpec::ReplaceBindString("ÿc4") } },
+	{ "GRAY", { 0, ReplacementSpec::ReplaceBindString("ÿc5") } },
+	{ "TAN", { 0, ReplacementSpec::ReplaceBindString("ÿc7") } },
+	{ "ORANGE", { 0, ReplacementSpec::ReplaceBindString("ÿc8") } },
+	{ "YELLOW", { 0, ReplacementSpec::ReplaceBindString("ÿc9") } },
+	{ "PURPLE", { 0, ReplacementSpec::ReplaceBindString("ÿc;") } },
+	{ "DARK_GREEN", { 0, ReplacementSpec::ReplaceBindString("ÿc:") } },
+};
+
+regex ReplacementRegex("%([A-Z_]+)(?:(\\d{1,9})(?:,(\\d{1,9}))?)?%", regex::ECMAScript);
+vector<ReplacementValue> BuildReplacementActions(const string& action)
+{
+	vector<ReplacementValue> res;
+	smatch match;
+
+	const auto begin = action.begin();
+	size_t lastIndex = 0;
+	while (lastIndex < action.size() && regex_search(begin + lastIndex, action.end(), match, ReplacementRegex)) {
+		const auto position = distance(begin, match[0].first);
+		const auto length = distance(match[0].first, match[0].second);
+		if (lastIndex != position) {
+			const auto str = action.substr(lastIndex, position - lastIndex);
+			res.push_back(ReplacementSpec::MakeReplacementValue(str));
+		}
+		bool failed = false;
+		auto val = ReplacementSpec::MakeReplacementValue(match, failed);
+		// If no matching keyword was found, we must append the start of the failed keyword
+		// then start a match at the second %.
+		if (failed) {
+			const auto str = action.substr(position, length - 1);
+			res.push_back(ReplacementSpec::MakeReplacementValue(str));
+			lastIndex = position + length - 1;
+			continue;
+		}
+		lastIndex = position + length;
+		res.push_back(val);
+	}
+
+	if (lastIndex != action.length()) {
+		const auto str = action.substr(lastIndex);
+		res.push_back(ReplacementSpec::MakeReplacementValue(str));
+	}
+
+	return res;
+}
+
+ReplacementValue ReplacementSpec::MakeReplacementValue(const string& str)
+{
+	return ReplacementValue(str, 0, 0, ReplacementSpec::ReplaceConst);
+}
+
+ReplacementValue ReplacementSpec::MakeReplacementValue(const smatch& match, bool& fail)
+{
+	const auto& spec = ReplacementMap.find(match[1]);
+	if (spec == ReplacementMap.end()) {
+		fail = true;
+		return ReplacementValue(match.str(), 0, 0, ReplacementSpec::ReplaceNone);
+	}
+	const auto& replacer = spec->second;
+	const int count = (match[2].length() != 0) + (match[3].length() != 0);
+	if (count != replacer.params) {
+		return ReplacementValue(match.str(), 0, 0, ReplacementSpec::ReplaceConst);
+	}
+	int param1 = match[2].length() > 0 ? stoi(match[2].str()) : 0;
+	int param2 = match[3].length() > 0 ? stoi(match[3].str()) : 0;
+	return ReplacementValue("", param1, param2, replacer.fn);
+}
+
+function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSpec::ReplaceNamedStat(int id)
+{
+	ReplacementValue rep("", id, 0, ReplacementSpec::ReplaceNone);
+	return [rep](ReplaceContext& ctx, const ReplacementValue& val) -> string {
+		return ReplacementSpec::ReplaceStat(ctx, rep);
+	};
+}
+
+function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSpec::ReplaceBindString(const std::string& str)
+{
+	return [str](ReplaceContext& ctx, const ReplacementValue& val) -> string {
+		return str;
+	};
+}
+
+string ReplacementSpec::ReplaceNone(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return "";
+}
+
+string ReplacementSpec::ReplaceConst(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return val.str;
+}
+
+string ReplacementSpec::ReplaceName(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	if (ctx.name.size() > 1023) {
+		ctx.name.resize(1023);
+	}
+	return ctx.name;
+}
+
+string ReplacementSpec::ReplaceSockets(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarSockets(ctx.info);
+}
+
+string ReplacementSpec::ReplaceRuneNumber(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarRuneNum(ctx.info);
+}
+
+string ReplacementSpec::ReplaceRuneName(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarRuneName(ctx.info);
+}
+
+string ReplacementSpec::ReplaceGemLevel(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarGemLevel(ctx.info);
+}
+
+string ReplacementSpec::ReplaceGemType(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarGemType(ctx.info);
+}
+
+string ReplacementSpec::ReplaceItemLevel(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarIlvl(ctx.info);
+}
+
+string ReplacementSpec::ReplaceAffixLevel(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarAlvl(ctx.info);
+}
+
+string ReplacementSpec::ReplaceCraftLevel(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarCraftAlvl(ctx.info);
+}
+
+string ReplacementSpec::ReplaceLevelRequirement(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarLevelReq(ctx.info);
+}
+
+string ReplacementSpec::ReplaceWeaponSpeed(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarWeaponSpeed(ctx.text);
+}
+
+string ReplacementSpec::ReplaceRange(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarRangeAdder(ctx.text);
+}
+
+string ReplacementSpec::ReplaceCode(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return ctx.info->itemCode;
+}
+
+string ReplacementSpec::ReplacePrice(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarSellValue(ctx.info, ctx.text);
+}
+
+string ReplacementSpec::ReplaceQuantity(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarQty(ctx.info);
+}
+
+string ReplacementSpec::ReplaceAllResist(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarAllRes(ctx.info);
+}
+
+string ReplacementSpec::ReplaceEnhancedD(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarEd(ctx.info);
+}
+
+string ReplacementSpec::ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	if (ctx.blockedNL) {
+		return "";
+	}
+	if (!ctx.limit || ctx.nlAllowed) {
+		return "\r";
+	}
+	if (ctx.nmagStaffmod) {
+		ctx.blockedNL = true;
+		return "\n";
+	}
+	return "";
+}
+
+string ReplacementSpec::ReplaceNewLine(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	if (ctx.blockedNL) {
+		return "";
+	}
+	if (!ctx.limit || ctx.nlAllowed) {
+		return "\n";
+	}
+	if (ctx.nmagStaffmod) {
+		ctx.blockedNL = true;
+		return "\n";
+	}
+	return "";
+}
+
+string ReplacementSpec::ReplaceStat(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	const auto stat = val.param1;
+	if (stat > STAT_MAX) {
+		return "";
+	}
+	char buffer[16] = { 0 };
+	auto value = D2COMMON_GetUnitStat(ctx.info->item, stat, 0);
+	// Hp and mana need adjusting
+	if (stat == STAT_MAXHP || stat == STAT_MAXMANA)
+	{
+		value /= 256;
+	}
+	// These stat values need to be grabbed differently otherwise they just:
+	else if (
+		stat == STAT_ENHANCEDDEFENSE ||				// return 0
+		stat == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
+		stat == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
+		stat == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
+		stat == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
+		stat == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
+		stat == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
+		)
+	{
+		value = GetStatFromList(ctx.info, stat);
+	}
+	sprintf_s(buffer, "%d", value);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceSingleSkill(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	const auto skill = val.param1;
+	if (skill > SKILL_MAX) {
+		return "";
+	}
+	char buffer[16] = { 0 };
+	auto value = D2COMMON_GetUnitStat(ctx.info->item, STAT_SINGLESKILL, skill);
+	sprintf_s(buffer, "%d", value);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceNonClassSkill(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	const auto skill = val.param1;
+	if (skill > SKILL_MAX) {
+		return "";
+	}
+	char buffer[16] = { 0 };
+	auto value = D2COMMON_GetUnitStat(ctx.info->item, STAT_NONCLASSSKILL, skill);
+	sprintf_s(buffer, "%d", value);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceClassSkill(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	const auto skill = val.param1;
+	if (skill > SKILL_MAX) {
+		return "";
+	}
+	char buffer[16] = { 0 };
+	auto value = D2COMMON_GetUnitStat(ctx.info->item, STAT_CLASSSKILLS, skill);
+	sprintf_s(buffer, "%d", value);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceSkillTab(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	const auto skill = val.param1;
+	if (skill > SKILL_MAX) {
+		return "";
+	}
+	char buffer[16] = { 0 };
+	auto value = D2COMMON_GetUnitStat(ctx.info->item, STAT_SKILLTAB, skill);
+	sprintf_s(buffer, "%d", value);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceCharStat(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	const auto stat = val.param1;
+	if (stat > STAT_MAX) {
+		return "";
+	}
+	char buffer[16] = { 0 };
+	auto value = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat, 0);
+	sprintf_s(buffer, "%d", value);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceMulti(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	const auto stat1 = val.param1;
+	if (stat1 > STAT_MAX) {
+		return "";
+	}
+	const auto stat2 = val.param2;
+	char buffer[16] = { 0 };
+	auto value = D2COMMON_GetUnitStat(ctx.info->item, stat1, stat2);
+	sprintf_s(buffer, "%d", value);
+	return buffer;
+}
+
+function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSpec::ReplaceGfxDependentColor(const string& primary, const string& secondary)
+{
+	return [primary, secondary](ReplaceContext& ctx, const ReplacementValue& val) {
+		return *p_D2GFX_RenderMode != 4 ? secondary : primary;
+	};
+}
+
+ReplaceContext::ReplaceContext(UnitItemInfo* info, string name, bool limit) :
+	info(info),
+	name(name),
+	limit(limit),
+	blockedNL(false) {
+	text = D2COMMON_GetItemText(info->item->dwTxtFileNo);
+	inShop = (info->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
+		find(begin(ShopNPCs), end(ShopNPCs), info->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs));
+	nlAllowed = ((info->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
+		(info->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (info->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0)) ||
+		inShop;
+
+	// Check if non-mag item capable of having staffmods
+	nmagStaffmod = ((info->item->pItemData->dwQuality == ITEM_QUALITY_INFERIOR ||
+		info->item->pItemData->dwQuality == ITEM_QUALITY_NORMAL ||
+		info->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR) &&
+		info->attrs->staffmodClass < CLASS_NA);
+}
+
+string ReplacementValue::Replace(ReplaceContext& ctx) const
+{
+	return fn(ctx, *this);
+}
+
 bool IsGem(ItemAttributes* attrs) { return (attrs->miscFlags & ITEM_GROUP_GEM) > 0; }
 
 BYTE GetGemLevel(ItemAttributes* attrs)
@@ -854,18 +1325,18 @@ BYTE RuneNumberFromItemCode(char* code) { return (BYTE)(((code[1] - '0') * 10) +
 // Find the item description. This code is called only when there's a cache miss
 string ItemDescLookupCache::make_cached_T(UnitItemInfo* uInfo)
 {
-	string new_name;
+	ReplaceContext ctx(uInfo, "", FALSE);
 	for (vector<Rule*>::const_iterator it = RuleList.begin(); it != RuleList.end(); it++)
 	{
 		if ((*it)->Evaluate(uInfo))
 		{
-			SubstituteNameVariables(uInfo, new_name, (*it)->action.description, FALSE);
+			ctx.name = (*it)->ApplyDescription(ctx);
 			if ((*it)->action.stopProcessing) { break; }
 		}
 	}
-	if (!new_name.empty()) { TrimItemText(uInfo, new_name, FALSE); }
+	if (!ctx.name.empty()) { TrimItemText(uInfo, ctx.name, FALSE); }
 
-	return new_name;
+	return ctx.name;
 }
 
 string ItemDescLookupCache::to_str(const string& name)
@@ -887,17 +1358,18 @@ string ItemNameLookupCache::make_cached_T(UnitItemInfo* uInfo,
 	string new_name(name);
 	if (!new_name.empty() && new_name.front() == ' ') { new_name.erase(0, 1); }					// removes one leading space (happens on magic items without a prefix)
 	if (!new_name.empty() && new_name.back() == ' ') { new_name.erase(new_name.size() - 1, 1); }	// removes one trailing space (happens on magic items without a suffix)
+	ReplaceContext ctx(uInfo, new_name.c_str(), TRUE);
 	for (vector<Rule*>::const_iterator it = RuleList.begin(); it != RuleList.end(); it++)
 	{
 		if ((*it)->Evaluate(uInfo))
 		{
-			SubstituteNameVariables(uInfo, new_name, (*it)->action.name, TRUE);
+			ctx.name = (*it)->ApplyName(ctx);
 			if ((*it)->action.stopProcessing) { break; }
 		}
 	}
-	if (!new_name.empty()) { TrimItemText(uInfo, new_name, TRUE); }
+	if (!ctx.name.empty()) { TrimItemText(uInfo, ctx.name, TRUE); }
 
-	return new_name;
+	return ctx.name;
 }
 
 string ItemNameLookupCache::to_str(const string& name)
@@ -1091,295 +1563,6 @@ string NameVarEd(UnitItemInfo* uInfo)
 	}
 	sprintf_s(ed, "%d", value);
 	return ed;
-}
-
-// Dynamic variables; can be further split if needed in the future
-void ReplaceStatSkillVars(UnitItemInfo* uInfo,
-	string& name)
-{
-	char statVal[16] = "0";
-
-	// Replace named stat output strings with their STAT# counterpart
-	std::vector<pair<string, int>>::iterator it;
-	for (it = stat_id_map.begin(); it != stat_id_map.end(); it++)
-	{
-		while (name.find("%" + it->first + "%") != string::npos)
-		{
-			name.replace(name.find("%" + it->first + "%"), it->first.length() + 2, "%STAT" + std::to_string(it->second) + "%");
-		}
-	}
-
-	// stat & skill replacements
-	if (name.find("%STAT") != string::npos)
-	{
-		std::regex  stat_reg("%STAT([0-9]{1,4})%", std::regex_constants::ECMAScript);
-		std::smatch stat_match;
-
-		while (std::regex_search(name, stat_match, stat_reg))
-		{
-			int stat = stoi(stat_match[1].str(), nullptr, 10);
-			statVal[0] = '\0';
-			if (stat <= (int)STAT_MAX)
-			{
-				auto value = D2COMMON_GetUnitStat(uInfo->item, stat, 0);
-				// Hp and mana need adjusting
-				if (stat == STAT_MAXHP || stat == STAT_MAXMANA)
-				{
-					value /= 256;
-				}
-				// These stat values need to be grabbed differently otherwise they just:
-				else if (
-					stat == STAT_ENHANCEDDEFENSE ||				// return 0
-					stat == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
-					stat == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
-					stat == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
-					stat == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
-					stat == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
-					stat == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
-					)
-				{
-					value = GetStatFromList(uInfo, stat);
-				}
-				sprintf_s(statVal, "%d", value);
-			}
-			name.replace(
-				stat_match.prefix().length(),
-				stat_match[0].length(),
-				statVal);
-		}
-	}
-	if (name.find("%SK") != string::npos)
-	{
-		std::regex  stat_reg("%SK([0-9]{1,4})%", std::regex_constants::ECMAScript);
-		std::smatch stat_match;
-
-		while (std::regex_search(name, stat_match, stat_reg))
-		{
-			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
-			statVal[0] = '\0';
-			if (stat2 <= (int)SKILL_MAX)
-			{
-				auto value = D2COMMON_GetUnitStat(uInfo->item, STAT_SINGLESKILL, stat2);
-				sprintf_s(statVal, "%d", value);
-			}
-			name.replace(
-				stat_match.prefix().length(),
-				stat_match[0].length(),
-				statVal);
-		}
-	}
-	if (name.find("%OS") != string::npos)
-	{
-		std::regex  stat_reg("%OS([0-9]{1,4})%", std::regex_constants::ECMAScript);
-		std::smatch stat_match;
-
-		while (std::regex_search(name, stat_match, stat_reg))
-		{
-			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
-			statVal[0] = '\0';
-			if (stat2 <= (int)SKILL_MAX)
-			{
-				auto value = D2COMMON_GetUnitStat(uInfo->item, STAT_NONCLASSSKILL, stat2);
-				sprintf_s(statVal, "%d", value);
-			}
-			name.replace(
-				stat_match.prefix().length(),
-				stat_match[0].length(),
-				statVal);
-		}
-	}
-	if (name.find("%CLSK") != string::npos)
-	{
-		std::regex  stat_reg("%CLSK([0-9]{1,4})%", std::regex_constants::ECMAScript);
-		std::smatch stat_match;
-
-		while (std::regex_search(name, stat_match, stat_reg))
-		{
-			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
-			statVal[0] = '\0';
-			if (stat2 <= (int)SKILL_MAX)
-			{
-				auto value = D2COMMON_GetUnitStat(uInfo->item, STAT_CLASSSKILLS, stat2);
-				sprintf_s(statVal, "%d", value);
-			}
-			name.replace(
-				stat_match.prefix().length(),
-				stat_match[0].length(),
-				statVal);
-		}
-	}
-	if (name.find("%TABSK") != string::npos)
-	{
-		std::regex  stat_reg("%TABSK([0-9]{1,4})%", std::regex_constants::ECMAScript);
-		std::smatch stat_match;
-
-		while (std::regex_search(name, stat_match, stat_reg))
-		{
-			int stat2 = stoi(stat_match[1].str(), nullptr, 10);
-			statVal[0] = '\0';
-			if (stat2 <= (int)SKILL_MAX)
-			{
-				auto value = D2COMMON_GetUnitStat(uInfo->item, STAT_SKILLTAB, stat2);
-				sprintf_s(statVal, "%d", value);
-			}
-			name.replace(
-				stat_match.prefix().length(),
-				stat_match[0].length(),
-				statVal);
-		}
-	}
-	if (name.find("%MULTI") != string::npos)
-	{
-		std::regex  stat_reg("%MULTI([0-9]{1,4}),([0-9]{1,4})%", std::regex_constants::ECMAScript);
-		std::smatch stat_match;
-
-		while (std::regex_search(name, stat_match, stat_reg))
-		{
-			int stat = stoi(stat_match[1].str(), nullptr, 10);
-			int stat2 = stoi(stat_match[2].str(), nullptr, 10);
-			statVal[0] = '\0';
-			if (stat <= (int)STAT_MAX)
-			{
-				auto value = D2COMMON_GetUnitStat(uInfo->item, stat, stat2);
-				sprintf_s(statVal, "%d", value);
-			}
-			name.replace(
-				stat_match.prefix().length(),
-				stat_match[0].length(),
-				statVal);
-		}
-	}
-	if (name.find("%CHARSTAT") != string::npos)
-	{
-		std::regex  stat_reg("%CHARSTAT([0-9]{1,4})%", std::regex_constants::ECMAScript);
-		std::smatch stat_match;
-
-		while (std::regex_search(name, stat_match, stat_reg))
-		{
-			int stat = stoi(stat_match[1].str(), nullptr, 10);
-			statVal[0] = '\0';
-			if (stat <= (int)STAT_MAX)
-			{
-				auto value = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat, 0);
-				sprintf_s(statVal, "%d", value);
-			}
-			name.replace(
-				stat_match.prefix().length(),
-				stat_match[0].length(),
-				statVal);
-		}
-	}
-}
-
-void SubstituteNameVariables(UnitItemInfo* uInfo,
-	string& name,
-	const string& action_name,
-	BOOL          bLimit)
-{
-	char origName[1024];
-	if (name.size() > 1023) { name.resize(1023); }
-	sprintf_s(origName, "%s", name.c_str());
-
-	ItemsTxt* itemTxt = D2COMMON_GetItemText(uInfo->item->dwTxtFileNo);
-
-	ActionReplace replacements[] = {
-		{ "NAME", origName},
-		{ "SOCKETS", NameVarSockets(uInfo).c_str()},
-		{ "RUNENUM", NameVarRuneNum(uInfo).c_str() },
-		{ "RUNENAME", NameVarRuneName(uInfo).c_str() },
-		{ "GEMLEVEL", NameVarGemLevel(uInfo).c_str() },
-		{ "GEMTYPE", NameVarGemType(uInfo).c_str() },
-		{ "ILVL", NameVarIlvl(uInfo).c_str() },
-		{ "ALVL", NameVarAlvl(uInfo).c_str() },
-		{ "CRAFTALVL", NameVarCraftAlvl(uInfo).c_str() },
-		{ "LVLREQ", NameVarLevelReq(uInfo).c_str() },
-		{ "WPNSPD", NameVarWeaponSpeed(itemTxt).c_str() },
-		{ "RANGE", NameVarRangeAdder(itemTxt).c_str() },
-		{ "CODE", uInfo->itemCode },
-		{ "LBRACE", "{" },
-		{ "RBRACE", "}" },
-		{ "PRICE", NameVarSellValue(uInfo, itemTxt).c_str() },
-		{ "QTY", NameVarQty(uInfo).c_str() },
-		{ "RES", NameVarAllRes(uInfo).c_str() },
-		{ "ED", NameVarEd(uInfo).c_str() },
-	COLOR_REPLACEMENTS
-	};
-
-	int nColorCodesSize = 0;
-	name.assign(action_name);
-
-	bool inShop = (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
-		find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs));
-
-	// Concat replacements list into a regex string to avoid accidental matches with stray % symbols
-	string reListString = "";
-	for (int n = 0; n < sizeof(replacements) / sizeof(replacements[0]); n++)
-	{
-		reListString += replacements[n].key;
-		if (n < sizeof(replacements) / sizeof(replacements[0]) - 1)
-			reListString += "|";
-	}
-
-	std::regex  var_reg("%(" + reListString + ")%", std::regex_constants::ECMAScript);
-	std::smatch var_match;
-
-
-	while (std::regex_search(name, var_match, var_reg))
-	{
-		string varString = var_match[1];
-		transform(varString.begin(), varString.end(), varString.begin(), ::toupper);
-		for (int n = sizeof(replacements) / sizeof(replacements[0]) - 1; n >= 0; --n) // Reverse order to avoid intercepting matches (eg RANGE vs ORANGE)
-		{
-			while (varString.find(replacements[n].key) != string::npos)
-			{
-				varString.replace(varString.find(replacements[n].key), replacements[n].key.length(), replacements[n].value);
-			}
-		}
-		name.replace(name.find(var_match[0]), var_match[0].length(), varString);
-	}
-
-	// TODO: Unify handling of numbered and non-numbered variables
-	ReplaceStatSkillVars(uInfo, name);
-
-	bool nlAllowed = ((uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
-		(uInfo->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0)) ||
-		inShop;
-
-	// Check if non-mag item capable of having staffmods
-	bool nmagStaffmod = ((uInfo->item->pItemData->dwQuality == ITEM_QUALITY_INFERIOR ||
-		uInfo->item->pItemData->dwQuality == ITEM_QUALITY_NORMAL ||
-		uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR) &&
-		uInfo->attrs->staffmodClass < CLASS_NA);
-
-	if (!name.empty() && (!bLimit || nlAllowed))
-	{
-		// Replace allowed %CL%s with unused character to avoid limit breaches
-		while (name.find("%CL%") != string::npos)
-			name.replace(name.find("%CL%"), 4, "\r");
-		// Replace allowed %NL%s with new lines
-		while (name.find("%NL%") != string::npos)
-			name.replace(name.find("%NL%"), 4, "\n");
-	}
-	else if (!name.empty() && nmagStaffmod)
-	{
-		// Replace first new line and remove all others
-		if (name.find("%NL%") != string::npos && name.find("\n") == string::npos)
-			name.replace(name.find("%NL%"), 4, "\n");
-		if (name.find("%CL%") != string::npos && name.find("\n") == string::npos)
-			name.replace(name.find("%CL%"), 4, "\n");
-		while (name.find("%NL%") != string::npos)
-			name.replace(name.find("%NL%"), 4, "");
-		while (name.find("%CL%") != string::npos)
-			name.replace(name.find("%CL%"), 4, "");
-	}
-	else
-	{
-		// Remove unallowed %NL%s and %CL%s
-		while (name.find("%NL%") != string::npos)
-			name.replace(name.find("%NL%"), 4, "");
-		while (name.find("%CL%") != string::npos)
-			name.replace(name.find("%CL%"), 4, "");
-	}
 }
 
 void TrimItemText(UnitItemInfo* uInfo,
@@ -1615,6 +1798,24 @@ Rule::Rule(vector<Condition*>& inputConditions,
 	if (!Convert()) {
 		root = -1;
 	}
+	name = BuildReplacementActions(action.name);
+	description = BuildReplacementActions(action.description);
+}
+
+string Rule::ApplyName(ReplaceContext& ctx) {
+	string res;
+	for (const auto& fn : name) {
+		res += fn.Replace(ctx);
+	}
+	return res;
+}
+
+string Rule::ApplyDescription(ReplaceContext& ctx) {
+	string res;
+	for (const auto& fn : description) {
+		res += fn.Replace(ctx);
+	}
+	return res;
 }
 
 bool Rule::Convert() {
