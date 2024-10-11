@@ -11,6 +11,7 @@ struct GameListEntry
 	BYTE bPlayers;
 	DWORD dwStatus;
 	BYTE gs;
+	BYTE lootAlloc;
 	std::string sGameName;
 	std::string sGameDesc;
 };

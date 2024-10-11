@@ -84,8 +84,9 @@ void Gamefilter::OnRealmPacketRecv(BYTE* pPacket, bool* blockPacket) {
 		pEntry->bPlayers = pPacket[7];
 		pEntry->dwStatus = *(DWORD*)&pPacket[8];
 		pEntry->gs = pPacket[12];	// This is not part of the original 1.13c packet
-		pEntry->sGameName = reinterpret_cast<CHAR*>(pPacket + 13);
-		pEntry->sGameDesc = reinterpret_cast<CHAR*>(pPacket + 14 + pEntry->sGameName.length());
+		pEntry->lootAlloc = pPacket[13];	// This is not part of the original 1.13c packet
+		pEntry->sGameName = reinterpret_cast<CHAR*>(pPacket + 14);
+		pEntry->sGameDesc = reinterpret_cast<CHAR*>(pPacket + 15 + pEntry->sGameName.length());
 
 		if (pEntry->bPlayers == 0)
 		{
@@ -386,6 +387,10 @@ void Gamefilter::OnOOGDraw() {
 				}
 				if (App.bnet.showGameserver.value) {
 					D2WIN_DrawText(gServerVector.at(i), 528, uiYPos, Grey, -1);
+				}
+				if (filterVector.at(i)->lootAlloc)
+				{
+					D2WIN_DrawText(L"A", 577, uiYPos + 1, Grey, -1);
 				}
 			}
 		}

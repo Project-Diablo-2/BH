@@ -264,6 +264,7 @@ struct PlayerData {
 	BOOL _0x268;
 	DWORD _0x26C;
 	DWORD nCorruptZone;
+	DWORD nItemAllocation;
 };
 
 struct PresetUnit {

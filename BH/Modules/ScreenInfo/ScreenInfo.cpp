@@ -335,6 +335,11 @@ void ScreenInfo::OnAutomapDraw() {
 		}
 	}
 
+	if (pUnit->pPlayerData && pUnit->pPlayerData->nItemAllocation != 0)
+	{
+		Texthook::Draw(*p_D2CLIENT_ScreenSizeX - 10, y, Right, 0, Gold, "%s", "Allocated Loot");
+	}
+
 	delete[] level;
 }
 
