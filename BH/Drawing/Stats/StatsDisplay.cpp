@@ -391,6 +391,8 @@ void StatsDisplay::OnDraw()
 		int       lMax = min(static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXLIGHTNINGRESIST, 0)) + 75, MAX_PLAYER_RESISTANCE);
 		int       pMax = min(static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXPOISONRESIST, 0)) + 75, MAX_PLAYER_RESISTANCE);
 		int       pLengthReduce = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_POISONLENGTHREDUCTION, 0));
+		int       hfd = min(static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_HALFFREEZEDURATION, 0)), 2);
+		int       cbf = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_CANNOTBEFROZEN, 0));
 
 		Texthook::Draw(column1,
 			(y += 16),
@@ -405,9 +407,11 @@ void StatsDisplay::OnDraw()
 			None,
 			6,
 			Blue,
-			L"ÿc4Cold Resist:ÿc3 %d ÿc0/ %d",
+			L"ÿc4Cold Resist:ÿc3 %d ÿc0/ %d  ÿc4Freeze Duration:ÿc3 %d%%",
 			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_COLDRESIST, 0)) + penalty,
-			cMax);
+			cMax,
+			(cbf > 0) ? 0 : (100 - 50 * hfd)
+		);
 		Texthook::Draw(column1,
 			(y += 16),
 			None,
