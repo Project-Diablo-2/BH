@@ -1105,6 +1105,11 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		{
 			nAttackRateBonus = pRightSkill->pSkillInfo->dwParam4;
 		}
+		// Charge
+		else if (nSkillId == 107)
+		{
+			nAttackRateBonus = pRightSkill->pSkillInfo->dwParam6;
+		}
 
 		if (pRightSkill->mode == PLAYER_MODE_SEQUENCE)
 		{
