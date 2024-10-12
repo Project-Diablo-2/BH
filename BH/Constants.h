@@ -1513,7 +1513,7 @@ const std::vector<std::set<int>> ValidCorruptZones =
 	{128, 129, 130, 131}, // Worldstone Keep + Throne of Destruction
 };
 
-const int NUM_CORRUPTIONS = 90;
+const int NUM_CORRUPTIONS = 91;
 
 const int CorruptionMods[][6] = {
 	{STAT_ENHANCEDMINIMUMDAMAGE, -1, -1, -1, -1, -1},
@@ -1605,4 +1605,5 @@ const int CorruptionMods[][6] = {
 	{STAT_MAP_MON_DROPJEWELRY, -1, -1, -1, -1, -1},
 	{STAT_ADDEXPERIENCE, -1, -1, -1, -1, -1},
 	{STAT_VITALITY, STAT_ENERGY, -1, -1, -1, -1},
+	{STAT_MONSTERDEFDUCTPERHIT, -1, -1, -1, -1, -1},
 };
