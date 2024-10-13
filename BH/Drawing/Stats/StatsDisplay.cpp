@@ -407,7 +407,7 @@ void StatsDisplay::OnDraw()
 			None,
 			6,
 			Blue,
-			L"ÿc4Cold Resist:ÿc3 %d ÿc0/ %d  ÿc4Freeze Duration:ÿc3 %d%%",
+			L"ÿc4Cold Resist:ÿc3 %d ÿc0/ %d  ÿc4Length:ÿc3 %d%%",
 			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_COLDRESIST, 0)) + penalty,
 			cMax,
 			(cbf > 0) ? 0 : (100 - 50 * hfd)
@@ -736,14 +736,14 @@ void StatsDisplay::OnDraw()
 			6,
 			Gold,
 			L"Deadly Strike:ÿc0 %d",
-			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_DEADLYSTRIKE, 0)));
+			min(static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_DEADLYSTRIKE, 0)), 75));
 		Texthook::Draw(column2,
 			y,
 			None,
 			6,
 			Gold,
 			L"Critical Strike: ÿc0%d",
-			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_CRITICALSTRIKE, 0)));
+			min(static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_CRITICALSTRIKE, 0)), 75));
 		Texthook::Draw(column1,
 			(y += 16),
 			None,
