@@ -432,7 +432,7 @@ void StatsDisplay::OnDraw()
 			6,
 			Gold,
 			L"Curse Resist:ÿc8 %d /ÿc0 50 ÿc4Length:ÿc0 %d%%",
-			static_cast<int>(min(D2COMMON_GetUnitStat(unit, STAT_CURSE_EFFECTIVENESS, 0), 50)),
+			static_cast<int>(min(D2COMMON_GetUnitStat(unit, STAT_CURSE_EFFECTIVENESS, 0), 75)),
 			static_cast<int>(max(100 - D2COMMON_GetUnitStat(unit, STAT_CURSERESISTANCE, 0), 25)));
 		y += 8;
 
