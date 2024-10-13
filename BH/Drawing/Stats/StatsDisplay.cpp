@@ -736,7 +736,7 @@ void StatsDisplay::OnDraw()
 			6,
 			Gold,
 			L"Deadly Strike:ÿc0 %d",
-			min(static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_DEADLYSTRIKE, 0)), 75));
+			min(static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_DEADLYSTRIKE, 0)), 75) + D2COMMON_GetUnitStat(unit, STAT_MAXDEADLYSTRIKE, 0));
 		Texthook::Draw(column2,
 			y,
 			None,
