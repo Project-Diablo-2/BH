@@ -435,7 +435,7 @@ void StatsDisplay::OnDraw()
 			None,
 			6,
 			Gold,
-			L"Curse Resist:ÿc8 %d /ÿc0 50 ÿc4Length:ÿc0 %d%%",
+			L"Curse Resist:ÿc8 %d /ÿc0 75 ÿc4Length:ÿc0 %d%%",
 			static_cast<int>(min(D2COMMON_GetUnitStat(unit, STAT_CURSE_EFFECTIVENESS, 0), 75)),
 			static_cast<int>(max(100 - D2COMMON_GetUnitStat(unit, STAT_CURSERESISTANCE, 0), 25)));
 		y += 8;
@@ -1112,11 +1112,6 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		{
 			nAttackRateBonus = pRightSkill->pSkillInfo->dwParam4;
 		}
-		// Charge
-		else if (nSkillId == 107)
-		{
-			nAttackRateBonus = pRightSkill->pSkillInfo->dwParam6;
-		}
 
 		if (pRightSkill->mode == PLAYER_MODE_SEQUENCE)
 		{
@@ -1157,10 +1152,40 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 				return;
 			}
 
-			nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
-			nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAttackRateBonus;
-			nAnimAcceleration = nFrameMinAccr + nAttackRate - 30;
-			nMinAnimAcceleration = nAttackRate - 30;
+			// Charge only uses last 7 frames for attack
+			if (nSkillId == 107)
+			{
+				nFrames = 7;
+				int nAnimSpeedBonus = pRightSkill->pSkillInfo->dwParam6;
+				nAnimSpeed = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit) + D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAnimSpeedBonus;
+				if (nAnimSpeed > 256) nAnimSpeed = 256;
+
+				/*
+				nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
+				nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAttackRateBonus;
+				nAnimAcceleration = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit) + D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAnimSpeedBonus;
+				nMinAnimAcceleration = nAttackRate - 30;
+				*/
+
+				Texthook::Draw(x,
+					*pY,
+					None,
+					6,
+					Gold,
+					"Attack Speed Penalty:ÿc8 %d (WIP)",
+					256 - nAnimSpeed,
+					nFrames);
+
+				return;
+			}
+			else
+			{
+				nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
+				nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAttackRateBonus;
+				nAnimAcceleration = nFrameMinAccr + nAttackRate - 30;
+				nMinAnimAcceleration = nAttackRate - 30;
+			}
+
 		}
 		else if (pUnit->dwType == UNIT_MONSTER && pRightSkill->mode == NPC_MODE_SEQUENCE)
 		{
