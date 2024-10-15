@@ -714,6 +714,9 @@ void StatsDisplay::OnDraw()
 		GetIASBreakpointString(unit, ias_bp_string, column1, &y);
 
 		y += 8;
+		int vLevelThreshold[5] = { 9, 18, 27, 36, 45 };
+		int nOWFrameDamage = D2GAME_CalcOpenWoundsDamage(vLevelThreshold, player_level) + 25;
+		int nOWCharDPS = (nOWFrameDamage * 25) / 256;
 
 		Texthook::Draw(column1,
 			(y += 16),
@@ -729,7 +732,7 @@ void StatsDisplay::OnDraw()
 			Gold,
 			L"Open Wounds: ÿc0%d%%/+%d",
 			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_OPENWOUNDS, 0)),
-			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_DEEP_WOUNDS, 0)));
+			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_DEEP_WOUNDS, 0)) + nOWCharDPS);
 		Texthook::Draw(column1,
 			(y += 16),
 			None,

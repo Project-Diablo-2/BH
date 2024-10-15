@@ -603,6 +603,7 @@ VARPTR(D2WIN, FocusedControl, Control*, 0x214B0, 0x8DB44) // unused, but we ough
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 //FUNCPTR(D2GAME, Rand, DWORD __fastcall, (DWORD* seed), 0x1160)
+FUNCPTR(D2GAME, CalcOpenWoundsDamage, int __fastcall, (int* pLevelThresholds, int nLevel), 0xAC940);
 
 FUNCPTR(D2MCPCLIENT, ParseGameListPacket, VOID __fastcall, (BYTE* pPacket), 0x6E30, 0x6640)
 
