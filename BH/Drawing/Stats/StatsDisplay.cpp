@@ -1155,28 +1155,17 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 			// Charge only uses last 7 frames for attack
 			if (nSkillId == 107)
 			{
-				nFrames = 7;
+				nFrames = 8;
 				int nAnimSpeedBonus = pRightSkill->pSkillInfo->dwParam6;
-				nAnimSpeed = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit) + D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAnimSpeedBonus;
-				if (nAnimSpeed > 256) nAnimSpeed = 256;
+				// Charge is special, the animation does not use attack rate at all, so instead it's baked into the anim speed
+				// This makes the formula the same, removes anim speed and use normal attack rate portion like other skills for visual only
+				nAnimSpeed = 100;
 
-				/*
 				nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
-				nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAttackRateBonus;
-				nAnimAcceleration = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit) + D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAnimSpeedBonus;
-				nMinAnimAcceleration = nAttackRate - 30;
-				*/
-
-				Texthook::Draw(x,
-					*pY,
-					None,
-					6,
-					Gold,
-					"Attack Speed Penalty:ÿc8 %d (WIP)",
-					256 - nAnimSpeed,
-					nFrames);
-
-				return;
+				nAttackRate = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAnimSpeedBonus;
+				nAnimAcceleration = nFrameMinAccr + nAttackRate;
+				nMinAnimAcceleration = nAttackRate;
+				nMaxAnimAcceleration = 256;
 			}
 			else
 			{
@@ -1354,7 +1343,7 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		nFrameBonus = D2COMMON_10031_UNITS_GetFrameBonus(pUnit);
 		pUnit->dwMode = nOldMode;
 
-		if (nMinAnimAcceleration > 175) nMinAnimAcceleration = 174;  // 174 so we go through the for loop once
+		if (nMinAnimAcceleration > nMaxAnimAcceleration) nMinAnimAcceleration = nMaxAnimAcceleration - 1;  // 174 so we go through the for loop once
 		if (nAnimAcceleration < 15) nAnimAcceleration = 15;
 		if (nAnimAcceleration > nMaxAnimAcceleration) nAnimAcceleration = nMaxAnimAcceleration;
 		if (nAnimSpeed == 0) nAnimSpeed = 256;
