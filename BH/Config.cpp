@@ -339,7 +339,7 @@ void Config::LoadConfig()
 	App.lootfilter.filterLevelPrevious.hotkey = GetKey("/lootfilter"_json_pointer, "filter_level_previous", App.lootfilter.filterLevelPrevious);
 	App.lootfilter.enableFilter.value =			GetBool("/lootfilter"_json_pointer, "advanced_item_display", App.lootfilter.enableFilter);
 	App.lootfilter.showIlvl.value =				GetBool("/lootfilter"_json_pointer, "show_iLvl", App.lootfilter.showIlvl);
-	App.lootfilter.detailedNotifications.value = GetBool("/lootfilter"_json_pointer, "detailed_notifications", App.lootfilter.detailedNotifications);
+	App.lootfilter.detailedNotifications.value = GetInt("/lootfilter"_json_pointer, "detailed_notifications", App.lootfilter.detailedNotifications);
 	App.lootfilter.allowUnknownItems.toggle =	GetToggle("/lootfilter"_json_pointer, "allow_unknown_items", App.lootfilter.allowUnknownItems);
 	App.lootfilter.alwaysShowStatRanges.value = GetBool("/lootfilter"_json_pointer, "always_show_stat_ranges", App.lootfilter.alwaysShowStatRanges);
 	App.lootfilter.classSkillsList.values =		GetAssoc("/lootfilter"_json_pointer, "class_skills_list", App.lootfilter.classSkillsList);

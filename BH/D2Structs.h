@@ -800,6 +800,58 @@ struct NPCMenu {
 	BYTE _2[5];
 };
 
+struct NPCDialogItem {
+	wchar_t szItemText[120];
+	DWORD nTextHeight;
+	DWORD nAdjustX;
+	DWORD nTextWidth;
+	DWORD field4_0xfc;
+	DWORD field5_0x100;
+	DWORD field6_0x104;
+	DWORD* pfCallback;
+	DWORD field8_0x10c;
+};
+
+struct NPCDialog {
+	DWORD nCreationTime;
+	DWORD field1_0x4;
+	DWORD pCellfile;
+	DWORD field3_0xc;
+	DWORD bDialogIsPlaying;
+	DWORD field5_0x14;
+	DWORD field6_0x18;
+	DWORD field7_0x1c;
+	DWORD bBlockChatBox;
+	DWORD nXMidpoint; /* nXStart + (nXWidth / 2) */
+	DWORD nYTopThird; /* nYStart + (nXHeight / 3) */
+	DWORD nXStart;
+	DWORD nYStart;
+	DWORD nXWidth;
+	DWORD nYHeight;
+	BYTE field15_0x3c[8];
+	DWORD nKeyboardHover; /* -1 if not on any menu items */
+	DWORD nMouseHover;
+	DWORD nLines;
+	DWORD nNextFreeLine;
+	DWORD nSomeTickCount;
+	DWORD _0x58;
+	DWORD isActive;
+	DWORD* pfCallback1;
+	DWORD* pfCallback2;
+	wchar_t szDialogTitle[120];
+	DWORD nLineHeight;
+	DWORD nLineXAdjust; /* adjustment to center the text in the box */
+	DWORD nTitleTextWidth;
+	DWORD _0x164;
+	DWORD nLineTextTransform;
+	DWORD nLineTextColor;
+	DWORD* pClickCallback;
+	DWORD field33_0x174;
+	struct NPCDialogItem menuRow[9];
+	DWORD field35_0xb08;
+	DWORD field36_0xb0c;
+};
+
 struct OverheadMsg {
 	DWORD _1;
 	DWORD dwTrigger;

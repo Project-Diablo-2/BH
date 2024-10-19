@@ -93,7 +93,7 @@ struct BHApp {
 		SettingsKey filterLevelPrevious = { 0, 0 };
 		SettingsBool enableFilter = { true, true };
 		SettingsBool showIlvl = { false, false };
-		SettingsBool detailedNotifications = { true, true };
+		SettingsInt detailedNotifications = { 1, 1, 0, 2 };	// 0: Off, 1: On, 2: Only "new"
 		SettingsToggle allowUnknownItems = { {}, {0, false} };
 		SettingsInt showStatRangesPrimary = { 0, 0, 0x08, 0xE0 };
 		SettingsInt showStatRangesSecondary = { 0, 0, 0x08, 0xE0 };

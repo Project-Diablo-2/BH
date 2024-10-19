@@ -1019,7 +1019,8 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 			}
 		}
 		//PrintText(1, "Item on ground: %s, %s, %s, %X", item.name.c_str(), item.code, item.attrs->category.c_str(), item.attrs->flags);
-		if (showOnMap && !App.lootfilter.detailedNotifications.value) {
+		if (showOnMap && App.lootfilter.detailedNotifications.value == 0) {
+			/*
 			if (color == UNDEFINED_COLOR) {
 				color = ItemColorFromQuality(uInfo->item->pItemData->dwQuality);
 			}
@@ -1041,6 +1042,7 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 					App.legacy.verboseNotifications.toggle.isEnabled ? " \377c5close" : ""
 				);
 			}
+			*/
 		}
 		else if (!showOnMap) {
 			for (vector<Rule*>::iterator it = RuleList.begin(); it != RuleList.end(); it++) {
@@ -2125,19 +2127,8 @@ BOOL __stdcall Item::OnDamagePropertyBuild(UnitAny* pItem, DamageStats* pDmgStat
 	return TRUE;
 }
 
-void __stdcall Item::OnPropertyBuild(wchar_t* wOut, int nStat, UnitAny* pItem, int nStatParam) {
-	if (!(App.lootfilter.alwaysShowStatRanges.value ||
-		GetKeyState(App.lootfilter.showStatRangesPrimary.value) & 0x8000 ||
-		GetKeyState(App.lootfilter.showStatRangesSecondary.value) & 0x8000) ||
-		pItem == nullptr || pItem->dwType != UNIT_ITEM)
-	{
-		return;
-	}
-
-	ItemsTxtStat* stat = nullptr;
-	ItemsTxtStat* all_stat = nullptr; // Stat for common modifer like all-res, all-stats
-	ItemsTxtStat* max_elem_stat = nullptr; // Stat for ranged min/max stats
-
+void __stdcall Item::OnPropertyBuild(wchar_t* wOut, int nStat, UnitAny* pItem, int nStatParam)
+{
 	int nCorruptor = ItemGetCorruptor(pItem, STAT_UNUSED205);
 	BOOL isCorrupted = StatIsCorrupted(nStat, nCorruptor);
 	if (isCorrupted) {
@@ -2165,6 +2156,17 @@ void __stdcall Item::OnPropertyBuild(wchar_t* wOut, int nStat, UnitAny* pItem, i
 		}
 	}
 
+	if (!(App.lootfilter.alwaysShowStatRanges.value ||
+		GetKeyState(App.lootfilter.showStatRangesPrimary.value) & 0x8000 ||
+		GetKeyState(App.lootfilter.showStatRangesSecondary.value) & 0x8000) ||
+		pItem == nullptr || pItem->dwType != UNIT_ITEM)
+	{
+		return;
+	}
+
+	ItemsTxtStat* stat = nullptr;
+	ItemsTxtStat* all_stat = nullptr; // Stat for common modifer like all-res, all-stats
+	ItemsTxtStat* max_elem_stat = nullptr; // Stat for ranged min/max stats
 
 	TextColor statColor = TextColor::Blue;
 	switch (pItem->pItemData->dwQuality) {
@@ -3013,22 +3015,29 @@ void __declspec(naked) ViewInventoryPatch3_ASM()
 	}
 }
 
+BOOL Item::ShouldShowItems()
+{
+	BOOL menuOpen = D2CLIENT_GetUIState(UI_ESCMENU_MAIN);
+	BOOL hotkeyConfigOpen = D2CLIENT_GetUIState(UI_HOTKEY_CONFIG);
+	BOOL groundItems = D2CLIENT_GetUIState(UI_GROUND_ITEMS);
+	return (App.game.alwaysShowItems.value || groundItems) && !menuOpen && !hotkeyConfigOpen && !*p_D2CLIENT_GoldDialog;
+}
+
 //seems to force alt to be down
 BOOL Item::PermShowItemsPatch1()
 {
-	return App.game.alwaysShowItems.value || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
-	//return App.game.alwaysShowItems.toggle.isEnabled;
+	return Item::ShouldShowItems();
 }
 
 //these two seem to deal w/ fixing the inv/waypoints when alt is down
-BOOL Item::PermShowItemsPatch2() {
-	//return App.game.alwaysShowItems.toggle.isEnabled || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
-	return App.game.alwaysShowItems.value && !D2CLIENT_GetUIState(UI_GROUND_ITEMS);
+BOOL Item::PermShowItemsPatch2()
+{
+	return Item::ShouldShowItems();
 }
 
-BOOL Item::PermShowItemsPatch3() {
-	return App.game.alwaysShowItems.value || D2CLIENT_GetUIState(UI_GROUND_ITEMS);
-	//return App.game.alwaysShowItems.toggle.isEnabled;
+BOOL Item::PermShowItemsPatch3()
+{
+	return Item::ShouldShowItems();
 }
 
 

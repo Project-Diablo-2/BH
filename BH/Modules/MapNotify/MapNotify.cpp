@@ -77,9 +77,12 @@ void MapNotify::OnDraw() {
 						int filterLevel = Item::GetFilterLevel();
 						if (filterLevel != 0 && (*it)->action.pingLevel < filterLevel && (*it)->action.pingLevel != -1) continue;
 
-						if ((*it)->Evaluate(&uInfo)) {
-							if ((unit->dwFlags & UNITFLAG_REVEALED) == 0x0
-								&& App.lootfilter.detailedNotifications.value) {
+						if ((*it)->Evaluate(&uInfo))
+						{
+							if ((unit->dwFlags & UNITFLAG_REVEALED) == 0x0 &&
+								App.lootfilter.enableFilter.value && App.lootfilter.detailedNotifications.value != 0 &&
+								(App.lootfilter.detailedNotifications.value == 1 || (dwFlags & ITEM_NEW)))
+							{
 								std::string itemName = GetItemName(unit);
 								regex trimName("^\\s*(?:(?:\\s*?)(ÿc[0123456789;:]))*\\s*(.*?\\S)\\s*(?:ÿc[0123456789;:])*\\s*$");	// Matches on leading/trailing spaces (skips most color codes)
 								itemName = regex_replace(itemName, trimName, "$1$2");												// Trims the matched spaces from notifications
