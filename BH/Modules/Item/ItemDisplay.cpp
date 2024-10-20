@@ -682,6 +682,7 @@ SkillReplace skills[] = {
 };
 
 std::map<std::string, int>   UnknownItemCodes;
+vector<pair<string, string>> aliases;
 vector<pair<string, string>> rules;
 vector<Rule*>                RuleList;
 vector<Rule*>                MapRuleList;
@@ -1623,7 +1624,7 @@ void TrimItemText(UnitItemInfo* uInfo,
 		}
 	}
 
-	// Limit all names/descriptions to a hard cap, regarless of color codes
+	// Limit all names/descriptions to a hard cap, regardless of color codes
 	lengthLimit = (uInfo->itemCode[0] == 't' || uInfo->itemCode[0] == 'i') &&
 		uInfo->itemCode[1] == 'b' &&
 		uInfo->itemCode[2] == 'k' ? BOOK_NAME_SIZE_LIMIT : MAX_ITEM_TEXT_SIZE;
@@ -1724,10 +1725,35 @@ namespace ItemDisplay
 
 		item_display_initialized = true;
 		rules.clear();
+		aliases.clear();
 		ResetCaches();
+		BH::lootFilter->ReadMapList("Alias", aliases);
 		BH::lootFilter->ReadMapList("ItemDisplay", rules);
+
+		// Limit aliases to single keywords
+		for (unsigned int i = 0; i < aliases.size(); i++)
+		{
+			aliases[i].first = Trim(aliases[i].first);
+
+			if (aliases[i].first.find(" ") != string::npos)
+				aliases[i].first.erase(aliases[i].first.find(" "));
+		}
+
 		for (unsigned int i = 0; i < rules.size(); i++)
 		{
+			for (auto alias : aliases)
+			{
+				if (alias.first.empty())
+					continue;
+
+				while (rules[i].first.find(alias.first) != string::npos)
+					rules[i].first.replace(rules[i].first.find(alias.first), alias.first.length(), alias.second);
+
+				transform(alias.first.begin(), alias.first.end(), alias.first.begin(), toupper);
+				while (rules[i].second.find("%" + alias.first + "%") != string::npos)
+					rules[i].second.replace(rules[i].second.find("%" + alias.first + "%"), alias.first.length() + 2, alias.second);
+			}
+
 			string         buf;
 			stringstream   ss(rules[i].first);
 			vector<string> tokens;

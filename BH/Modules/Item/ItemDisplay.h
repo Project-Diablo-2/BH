@@ -928,6 +928,7 @@ extern vector<Rule*>                RuleList;
 extern vector<Rule*>                MapRuleList;
 extern vector<Rule*>                IgnoreRuleList;
 extern vector<pair<string, string>> rules;
+extern vector<pair<string, string>> aliases;
 extern ItemDescLookupCache          item_desc_cache;
 extern ItemNameLookupCache          item_name_cache;
 extern MapActionLookupCache         map_action_cache;
