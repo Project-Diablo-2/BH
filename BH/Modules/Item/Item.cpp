@@ -3020,7 +3020,9 @@ BOOL Item::ShouldShowItems()
 	BOOL menuOpen = D2CLIENT_GetUIState(UI_ESCMENU_MAIN);
 	BOOL hotkeyConfigOpen = D2CLIENT_GetUIState(UI_HOTKEY_CONFIG);
 	BOOL groundItems = D2CLIENT_GetUIState(UI_GROUND_ITEMS);
-	return (App.game.alwaysShowItems.value || groundItems) && !menuOpen && !hotkeyConfigOpen && !*p_D2CLIENT_GoldDialog;
+	BOOL miniSkillTree = D2CLIENT_GetUIState(UI_MINISKILL);
+	return (App.game.alwaysShowItems.value || groundItems) &&
+		!menuOpen && !hotkeyConfigOpen && !miniSkillTree && !*p_D2CLIENT_GoldDialog;
 }
 
 //seems to force alt to be down
