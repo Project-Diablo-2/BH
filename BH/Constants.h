@@ -1455,8 +1455,9 @@ enum InventoryTxtIndex {
 #define ITEM_TYPE_GEN_TOPAZ			146
 #define ITEM_TYPE_GEN_SKULL			147
 #define ITEM_TYPE_GEN_RUNE			148
-#define ITEM_TYPE_PVP_MAP			199
+#define ITEM_TYPE_PVP_MAP_MOOR		199
 #define ITEM_TYPE_T5_MAP			211
+#define ITEM_TYPE_PVP_MAP_DESERT	227
 
 enum MinAccrIndex
 {

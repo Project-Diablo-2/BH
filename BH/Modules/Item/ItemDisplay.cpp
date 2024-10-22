@@ -361,7 +361,8 @@ std::map<std::string, int> code_to_dwtxtfileno = {
 };
 
 std::map<int, int> maptiers = {
-	{ITEM_TYPE_PVP_MAP, 0},
+	{ITEM_TYPE_PVP_MAP_MOOR, 0},
+	{ITEM_TYPE_PVP_MAP_DESERT, 0},
 	{ITEM_TYPE_T1_MAP, 1},
 	{ITEM_TYPE_T2_MAP, 2},
 	{ITEM_TYPE_T3_MAP, 3},
