@@ -3015,7 +3015,8 @@ void __declspec(naked) ViewInventoryPatch3_ASM()
 	}
 }
 
-BOOL Item::ShouldShowItems()
+//seems to force alt to be down
+BOOL Item::PermShowItemsPatch1()
 {
 	BOOL menuOpen = D2CLIENT_GetUIState(UI_ESCMENU_MAIN);
 	BOOL hotkeyConfigOpen = D2CLIENT_GetUIState(UI_HOTKEY_CONFIG);
@@ -3025,21 +3026,15 @@ BOOL Item::ShouldShowItems()
 		!menuOpen && !hotkeyConfigOpen && !miniSkillTree && !*p_D2CLIENT_GoldDialog;
 }
 
-//seems to force alt to be down
-BOOL Item::PermShowItemsPatch1()
-{
-	return Item::ShouldShowItems();
-}
-
 //these two seem to deal w/ fixing the inv/waypoints when alt is down
 BOOL Item::PermShowItemsPatch2()
 {
-	return Item::ShouldShowItems();
+	return App.game.alwaysShowItems.value && !D2CLIENT_GetUIState(UI_GROUND_ITEMS);
 }
 
 BOOL Item::PermShowItemsPatch3()
 {
-	return Item::ShouldShowItems();
+	return App.game.alwaysShowItems.value && !D2CLIENT_GetUIState(UI_GROUND_ITEMS);
 }
 
 

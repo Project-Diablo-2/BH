@@ -84,7 +84,6 @@ public:
 	static BOOL __stdcall OnDamagePropertyBuild(UnitAny* pItem, DamageStats* pDmgStats, int nStat, wchar_t* wOut);
 	static void __stdcall OnPropertyBuild(wchar_t* wOut, int nStat, UnitAny* pItem, int nStatParam);
 
-	static BOOL ShouldShowItems();
 	static BOOL PermShowItemsPatch1();
 	static BOOL PermShowItemsPatch2();
 	static BOOL PermShowItemsPatch3();
