@@ -1503,7 +1503,7 @@ const std::vector<std::set<int>> ValidCorruptZones =
 	{82, 83, 98, 99}, // Causeway + Travincal + temples
 	{100, 101, 102}, // Durance of Hate
 	{104, 105}, // Outer Steppes + Plains of Despair
-	{106, 108}, // City of the Damned + River of Flame
+	{106, 107}, // City of the Damned + River of Flame
 	{108}, // Chaos Sanctuary
 	{110, 111}, // Bloody Foothills + Frigid Highlands
 	{112, 113, 114}, // Arreat Plateau + Crystalline Passage + Frozen River 
