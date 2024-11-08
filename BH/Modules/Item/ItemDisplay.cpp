@@ -1747,8 +1747,17 @@ namespace ItemDisplay
 				if (alias.first.empty())
 					continue;
 
-				while (rules[i].first.find(alias.first) != string::npos)
-					rules[i].first.replace(rules[i].first.find(alias.first), alias.first.length(), alias.second);
+				size_t pos = rules[i].first.find(alias.first);
+				while (pos != string::npos)
+				{
+					// Expand alias only on full matches (i.e. skip if only a substring)
+					if ((rules[i].first[pos - 1] == '(' || rules[i].first[pos - 1] == ' ') &&
+						(rules[i].first[pos + alias.first.length()] == ')' || rules[i].first[pos + alias.first.length()] == ' '))
+					{
+						rules[i].first.replace(pos, alias.first.length(), alias.second);
+					}
+					pos = rules[i].first.find(alias.first, pos + 1);
+				}
 
 				transform(alias.first.begin(), alias.first.end(), alias.first.begin(), toupper);
 				while (rules[i].second.find("%" + alias.first + "%") != string::npos)
