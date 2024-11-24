@@ -1477,8 +1477,8 @@ string NameVarAlvl(UnitItemInfo* uInfo)
 {
 	char alvl[4] = "0";
 	int alvl_int = GetAffixLevel(
-		uInfo->attrs->qualityLevel,
 		uInfo->item->pItemData->dwItemLevel,
+		uInfo->attrs->qualityLevel,
 		uInfo->attrs->magicLevel
 	);
 	sprintf_s(alvl, "%d", alvl_int);
