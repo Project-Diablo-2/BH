@@ -67,7 +67,7 @@ std::map<DWORD, std::set<int>> merc_attack_skills = {
 
 	{ MERC_A4, {  } },
 
-	{ MERC_A5, { 144 } },
+	{ MERC_A5, { 144, 425 } },
 };
 
 std::set<int> rollback_skills = {
@@ -83,7 +83,7 @@ std::map<DWORD, std::string> merc_skill_names = {
 
 	{ MERC_A4, "Holy Nova/Bone Spear" },
 
-	{ MERC_A5, "Concentrate/Bash" },
+	{ MERC_A5, "Concentrate/Whirlwind" },
 
 };
 
@@ -1058,7 +1058,7 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		AnimDataRecord* pAnimData = NULL;
 
 		// Whirlwind has hardcoded frames
-		if (nSkillId == 151 || nSkillId == 380)
+		if (nSkillId == 151 || nSkillId == 380 || nSkillId == 425)
 		{
 			int WWNextHitDelay = pRightSkill->pSkillInfo->dwParam3;
 			if (D2COMMON_UnitCanDualWield(pUnit))
