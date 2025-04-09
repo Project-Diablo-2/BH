@@ -782,7 +782,7 @@ public:
 private:
 	BYTE           operation;
 	vector<string> codes;
-	vector<DWORD>  stats;
+	vector<tuple<DWORD, DWORD>>  stats;
 	unsigned int   targetStat;
 	string         key;
 	void           Init();
@@ -801,12 +801,6 @@ struct ActionReplace
 };
 
 struct ColorReplace
-{
-	string key;
-	int    value;
-};
-
-struct SkillReplace
 {
 	string key;
 	int    value;
