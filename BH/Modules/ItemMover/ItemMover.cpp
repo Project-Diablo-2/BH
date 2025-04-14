@@ -582,6 +582,19 @@ void ItemMover::OnGamePacketRecv(BYTE* packet, bool* block) {
 		}
 		break;
 	}
+	case 0x42:
+	{
+		// Clear Cursor
+		Lock();
+		ActivePacket.itemId = 0;
+		ActivePacket.itemTargetId = 0;
+		ActivePacket.x = 0;
+		ActivePacket.y = 0;
+		ActivePacket.startTicks = 0;
+		ActivePacket.destination = 0;
+		Unlock();
+		break;
+	}
 	case 0x9c:
 	{
 		// We get this packet after placing an item in a container or on the ground
