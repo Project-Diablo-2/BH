@@ -475,6 +475,11 @@ void ItemMover::OnRightClick(bool up, int x, int y, bool* block) {
 		return;
 	}
 
+	if (unit->pPlayerData && unit->pPlayerData->_0x1B4 == 10 && source == STORAGE_STASH)
+	{
+		return;
+	}
+
 	bool moveItem = LoadInventory(unit, xpac, source, sourceX, sourceY, shiftState, ctrlState, stashUI, invUI);
 	if (moveItem) {
 		PickUpItem();
