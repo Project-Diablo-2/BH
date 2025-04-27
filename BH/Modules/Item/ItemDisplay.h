@@ -824,6 +824,7 @@ struct Action
 	int    lineColor;
 	int    notifyColor;
 	int pingLevel;
+	int soundID;
 
 	Action() :
 		colorOnMap(UNDEFINED_COLOR),
@@ -832,6 +833,7 @@ struct Action
 		pxColor(UNDEFINED_COLOR),
 		lineColor(UNDEFINED_COLOR),
 		notifyColor(UNDEFINED_COLOR),
+		soundID(-1),
 		pingLevel(-1),
 		stopProcessing(true),
 		name(""),
@@ -942,6 +944,7 @@ namespace ItemDisplay
 void            BuildAction(string* str,
 	Action* act);
 int ParsePingLevel(Action* act, const string& reg_string);
+int ParseSoundID(Action* act, const string& reg_string);
 string ParseDescription(Action* act);
 int    ParseMapColor(Action* act,
 	const string& reg_string);

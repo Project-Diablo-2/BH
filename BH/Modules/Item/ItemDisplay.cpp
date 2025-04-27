@@ -1770,7 +1770,8 @@ namespace ItemDisplay
 				r->action.borderColor != UNDEFINED_COLOR ||
 				r->action.dotColor != UNDEFINED_COLOR ||
 				r->action.pxColor != UNDEFINED_COLOR ||
-				r->action.lineColor != UNDEFINED_COLOR) {
+				r->action.lineColor != UNDEFINED_COLOR ||
+				r->action.soundID != -1) {
 				MapRuleList.push_back(r);
 			}
 			else if (r->action.name.length() == 0) { IgnoreRuleList.push_back(r); }
@@ -1971,6 +1972,7 @@ void BuildAction(string* str,
 	act->notifyColor = ParseMapColor(act, "NOTIFY");
 	act->pingLevel = ParsePingLevel(act, "TIER");
 	act->description = ParseDescription(act);
+	act->soundID = ParseSoundID(act, "SOUNDID");
 
 	// legacy support:
 	size_t map = act->name.find("%MAP%");
@@ -2018,6 +2020,21 @@ int ParsePingLevel(Action* act, const string& key_string) {
 			the_match[0].length(), "");
 	}
 	return ping_level;
+}
+
+int ParseSoundID(Action* act, const string& key_string) {
+	std::regex pattern("%" + key_string + "-([0-9]{1,9})%",
+		std::regex_constants::ECMAScript | std::regex_constants::icase);
+	int soundID = -1;
+	std::smatch the_match;
+
+	if (std::regex_search(act->name, the_match, pattern)) {
+		soundID = stoi(the_match[1].str());
+		act->name.replace(
+			the_match.prefix().length(),
+			the_match[0].length(), "");
+	}
+	return soundID;
 }
 
 string ParseDescription(Action* act)
