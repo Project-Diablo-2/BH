@@ -825,7 +825,7 @@ struct Action
 	int    lineColor;
 	int    notifyColor;
 	int pingLevel;
-	int soundID; // Must be between 0 and MAX_SOUND_ID
+	int soundID; // Must range from 0 to MAX_SOUND_ID.
 
 	Action() :
 		colorOnMap(UNDEFINED_COLOR),
