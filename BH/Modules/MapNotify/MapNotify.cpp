@@ -85,7 +85,8 @@ void MapNotify::OnDraw() {
 							{
 								// Play sound associated with the action.
 								int soundID = (*it)->action.soundID;
-								if (soundID >= 0) {
+								// SoundID 0 is none.wav, skip
+								if (soundID != 0) {
 									D2CLIENT_PlaySound_STUB(soundID, NULL, 0, 0, 0);
 								}
 

@@ -2022,18 +2022,30 @@ int ParsePingLevel(Action* act, const string& key_string) {
 	return ping_level;
 }
 
+// ParseSoundID
+// Returns an int ranging from 0 to the MAX_SOUND_ID.
+// If the parsed soundID is not found in that range, this will return a 0.
 int ParseSoundID(Action* act, const string& key_string) {
-	std::regex pattern("%" + key_string + "-([0-9]{1,9})%",
+	std::regex pattern("%" + key_string + "-([0-9]{1,4})%",
 		std::regex_constants::ECMAScript | std::regex_constants::icase);
-	int soundID = -1;
+	// Default soundID should be 0 incase this is played.
+	// 0 is none.wav
+	int soundID = 0;
 	std::smatch the_match;
 
 	if (std::regex_search(act->name, the_match, pattern)) {
-		soundID = stoi(the_match[1].str());
+		int matchedSoundID = stoi(the_match[1].str());
 		act->name.replace(
 			the_match.prefix().length(),
 			the_match[0].length(), "");
+
+		// Do our best to ensure the soundID is valid.
+		// Ensure soundID is in the range of 0 and MAX_SOUND_ID.
+		if (matchedSoundID <= MAX_SOUND_ID) {
+			soundID = matchedSoundID;
+		}
 	}
+
 	return soundID;
 }
 
