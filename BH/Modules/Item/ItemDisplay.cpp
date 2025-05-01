@@ -1771,7 +1771,7 @@ namespace ItemDisplay
 				r->action.dotColor != UNDEFINED_COLOR ||
 				r->action.pxColor != UNDEFINED_COLOR ||
 				r->action.lineColor != UNDEFINED_COLOR ||
-				r->action.soundID != -1) {
+				r->action.soundID != 0) {
 				MapRuleList.push_back(r);
 			}
 			else if (r->action.name.length() == 0) { IgnoreRuleList.push_back(r); }
