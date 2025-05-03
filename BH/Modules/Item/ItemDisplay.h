@@ -15,7 +15,6 @@
 #define EXCEPTION_INVALID_ITEM_TYPE		5
 #define EXCEPTION_INVALID_GOLD_TYPE		6
 
-#define MAX_SOUND_ID      4713 // Max sound index in Sounds.txt
 #define DEAD_COLOR        0xdead
 #define UNDEFINED_COLOR   0xbeef
 
@@ -825,7 +824,7 @@ struct Action
 	int    lineColor;
 	int    notifyColor;
 	int pingLevel;
-	int soundID; // Must range from 0 to MAX_SOUND_ID.
+	int soundID; // Must range from 0 to p_D2CLIENT_SoundRecords-1.
 
 	Action() :
 		colorOnMap(UNDEFINED_COLOR),
