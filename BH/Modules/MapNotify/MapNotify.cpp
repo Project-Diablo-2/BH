@@ -86,6 +86,7 @@ void MapNotify::OnDraw() {
 								SoundsTxt* pSoundsTxt = *p_D2CLIENT_SoundsTxt;
 								int soundID = (*it)->action.soundID;
 								if (soundID > 0 && soundID < *p_D2CLIENT_SoundRecords &&
+									(soundID < 4657 || soundID > 4698) &&	// Don't allow music
 									App.lootfilter.dropSounds.value && pSoundsTxt)
 								{
 									pSoundsTxt = pSoundsTxt + soundID;
