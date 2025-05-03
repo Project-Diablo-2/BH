@@ -200,6 +200,7 @@ void Config::SaveConfig()
 	jsonLoot["allow_unknown_items"]["enabled"] = App.lootfilter.allowUnknownItems.toggle.isEnabled;
 	jsonLoot["allow_unknown_items"]["hotkey"] = GetKeyCode(App.lootfilter.allowUnknownItems.toggle.hotkey).name;
 	jsonLoot["always_show_stat_ranges"] = App.lootfilter.alwaysShowStatRanges.value;
+	jsonLoot["drop_sounds"] = App.lootfilter.dropSounds.value;
 	if (App.lootfilter.classSkillsList.values.size() > 0) { jsonLoot["class_skills_list"] = App.lootfilter.classSkillsList.values; }
 	if (App.lootfilter.tabSkillsList.values.size() > 0) { jsonLoot["tab_skills_list"] = App.lootfilter.tabSkillsList.values; }
 	jsonLoot["legacy_settings"] = jsonLegacyLoot;
@@ -342,6 +343,7 @@ void Config::LoadConfig()
 	App.lootfilter.detailedNotifications.value = GetInt("/lootfilter"_json_pointer, "detailed_notifications", App.lootfilter.detailedNotifications);
 	App.lootfilter.allowUnknownItems.toggle =	GetToggle("/lootfilter"_json_pointer, "allow_unknown_items", App.lootfilter.allowUnknownItems);
 	App.lootfilter.alwaysShowStatRanges.value = GetBool("/lootfilter"_json_pointer, "always_show_stat_ranges", App.lootfilter.alwaysShowStatRanges);
+	App.lootfilter.dropSounds.value =			GetBool("/lootfilter"_json_pointer, "drop_sounds", App.lootfilter.dropSounds);
 	App.lootfilter.classSkillsList.values =		GetAssoc("/lootfilter"_json_pointer, "class_skills_list", App.lootfilter.classSkillsList);
 	App.lootfilter.tabSkillsList.values =		GetAssoc("/lootfilter"_json_pointer, "tab_skills_list", App.lootfilter.tabSkillsList);
 

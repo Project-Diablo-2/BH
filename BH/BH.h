@@ -100,6 +100,7 @@ struct BHApp {
 		SettingsBool alwaysShowStatRanges = { false, false };
 		SettingsAssoc classSkillsList = {}; // TODO??
 		SettingsAssoc tabSkillsList = {};  // TODO??
+		SettingsBool dropSounds = { true, true };
 	} lootfilter;
 
 	struct {
@@ -186,6 +187,7 @@ typedef enum BHConfigId {
 	BH_CONFIG_SHOWSTATRANGEPRIMARY,
 	BH_CONFIG_SHOWSTATRANGESECONDARY,
 	BH_CONFIG_USINGHDTEXT,
+	BH_CONFIG_DROPSOUNDS,
 } BHConfigId;
 
 typedef enum D2GLConfigId

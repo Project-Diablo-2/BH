@@ -2061,7 +2061,7 @@ int ParseSoundID(Action* act, const string& key_string) {
 
 		// Do our best to ensure the soundID is valid.
 		// Ensure soundID is in the range of 0 and MAX_SOUND_ID.
-		if (matchedSoundID <= MAX_SOUND_ID) {
+		if (matchedSoundID < *p_D2CLIENT_SoundRecords) {
 			soundID = matchedSoundID;
 		}
 	}

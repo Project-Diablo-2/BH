@@ -270,6 +270,8 @@ extern "C" {
 			return App.lootfilter.alwaysShowStatRanges.value;
 		case BH_CONFIG_ALWAYSSHOWITEMS:
 			return App.game.alwaysShowItems.value;
+		case BH_CONFIG_DROPSOUNDS:
+			return App.lootfilter.dropSounds.value;
 		}
 
 		return 0;
@@ -326,6 +328,10 @@ extern "C" {
 		case BH_CONFIG_USINGHDTEXT:
 			App.d2gl.usingHDText.value = configVal;
 			return 1;
+		case BH_CONFIG_DROPSOUNDS:
+			App.lootfilter.dropSounds.value = configVal;
+			bSave = TRUE;
+			break;
 		}
 		if (bSave)
 		{

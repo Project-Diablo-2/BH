@@ -15,7 +15,6 @@
 #define EXCEPTION_INVALID_ITEM_TYPE		5
 #define EXCEPTION_INVALID_GOLD_TYPE		6
 
-#define MAX_SOUND_ID      4713 // Max sound index in Sounds.txt
 #define DEAD_COLOR        0xdead
 #define UNDEFINED_COLOR   0xbeef
 

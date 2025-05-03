@@ -87,6 +87,45 @@ struct LvlWarpTxt
 	DWORD dwDirection;
 };
 
+struct SoundsTxt
+{
+	char fileName[60];
+	BYTE volume;
+	BYTE groupSize;
+	BYTE loop;
+	BYTE fadeIn;
+	BYTE fadeOut;
+	BYTE deferInst;
+	BYTE stopInst;
+	WORD duration;
+	WORD compound;
+	DWORD falloff;
+	BYTE reverb;
+	BYTE cache;
+	BYTE asyncOnly;
+	BYTE priority;
+	BYTE stream;
+	BYTE stereo;
+	BYTE tracking;
+	BYTE solo;
+	BYTE musicVolume;
+	DWORD block1;
+	DWORD block2;
+	DWORD block3;
+	DWORD soundIndex;
+	DWORD nCurrentSound;
+	DWORD nPrevSound;
+	void* waveBuffer;
+	DWORD nBufferSize;
+	void* waveSubBuffer;
+	DWORD nSubBufferSize;
+	DWORD lastUsedTick;
+	BYTE field31_0x80;
+	BYTE field32_0x81;
+	struct AsyncData* pAsyncData;
+	enum ESOUNDDATASTATE eDataState;
+	DWORD dwRefCount;
+};
 
 struct PropertiesTxt
 {

@@ -83,11 +83,16 @@ void MapNotify::OnDraw() {
 								App.lootfilter.enableFilter.value && App.lootfilter.detailedNotifications.value != 0 &&
 								(App.lootfilter.detailedNotifications.value == 1 || (dwFlags & ITEM_NEW)))
 							{
-								// Play sound associated with the action.
+								SoundsTxt* pSoundsTxt = *p_D2CLIENT_SoundsTxt;
 								int soundID = (*it)->action.soundID;
-								// SoundID 0 is none.wav, skip
-								if (soundID != 0) {
-									D2CLIENT_PlaySound_STUB(soundID, NULL, 0, 0, 0);
+								if (soundID > 0 && soundID < *p_D2CLIENT_SoundRecords &&
+									App.lootfilter.dropSounds.value && pSoundsTxt)
+								{
+									pSoundsTxt = pSoundsTxt + soundID;
+									if (pSoundsTxt && pSoundsTxt->loop == 0)
+									{
+										D2CLIENT_PlaySound_STUB(soundID, NULL, 0, 0, 0);
+									}
 								}
 
 								std::string itemName = GetItemName(unit);
