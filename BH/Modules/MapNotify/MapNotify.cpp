@@ -83,6 +83,13 @@ void MapNotify::OnDraw() {
 								App.lootfilter.enableFilter.value && App.lootfilter.detailedNotifications.value != 0 &&
 								(App.lootfilter.detailedNotifications.value == 1 || (dwFlags & ITEM_NEW)))
 							{
+								// Play sound associated with the action.
+								int soundID = (*it)->action.soundID;
+								// SoundID 0 is none.wav, skip
+								if (soundID != 0) {
+									D2CLIENT_PlaySound_STUB(soundID, NULL, 0, 0, 0);
+								}
+
 								std::string itemName = GetItemName(unit);
 								regex trimName("^\\s*(?:(?:\\s*?)(ÿc[0123456789;:]))*\\s*(.*?\\S)\\s*(?:ÿc[0123456789;:])*\\s*$");	// Matches on leading/trailing spaces (skips most color codes)
 								itemName = regex_replace(itemName, trimName, "$1$2");												// Trims the matched spaces from notifications

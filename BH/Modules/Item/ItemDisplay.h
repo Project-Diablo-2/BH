@@ -15,6 +15,7 @@
 #define EXCEPTION_INVALID_ITEM_TYPE		5
 #define EXCEPTION_INVALID_GOLD_TYPE		6
 
+#define MAX_SOUND_ID      4713 // Max sound index in Sounds.txt
 #define DEAD_COLOR        0xdead
 #define UNDEFINED_COLOR   0xbeef
 
@@ -818,6 +819,7 @@ struct Action
 	int    lineColor;
 	int    notifyColor;
 	int pingLevel;
+	int soundID; // Must range from 0 to MAX_SOUND_ID.
 
 	Action() :
 		colorOnMap(UNDEFINED_COLOR),
@@ -826,6 +828,7 @@ struct Action
 		pxColor(UNDEFINED_COLOR),
 		lineColor(UNDEFINED_COLOR),
 		notifyColor(UNDEFINED_COLOR),
+		soundID(0),
 		pingLevel(-1),
 		stopProcessing(true),
 		name(""),
@@ -936,6 +939,7 @@ namespace ItemDisplay
 void            BuildAction(string* str,
 	Action* act);
 int ParsePingLevel(Action* act, const string& reg_string);
+int ParseSoundID(Action* act, const string& reg_string);
 string ParseDescription(Action* act);
 int    ParseMapColor(Action* act,
 	const string& reg_string);
