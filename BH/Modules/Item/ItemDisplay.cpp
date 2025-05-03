@@ -1537,7 +1537,7 @@ string NameVarSellValue(UnitItemInfo* uInfo,
 
 string NameVarQty(UnitItemInfo* uInfo)
 {
-	char qty[4] = "0";
+	char qty[10] = "0";
 	sprintf_s(qty, "%d", D2COMMON_GetUnitStat(uInfo->item, STAT_AMMOQUANTITY, 0));
 	return qty;
 }
