@@ -280,9 +280,9 @@ struct PlayerData {
 	DWORD _0x258;	//
 	DWORD _0x25C;	//
 	BOOL _0x260;				// 
-	DWORD _0x264;			//
-	BOOL _0x268;
-	DWORD _0x26C;
+	BYTE _0x264;			//
+	BOOL _0x265;
+	DWORD _0x269;
 	DWORD nCorruptZone;
 	DWORD nItemAllocation;
 };
