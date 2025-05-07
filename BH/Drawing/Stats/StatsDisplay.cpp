@@ -1022,6 +1022,18 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		{
 			std::set<int> vMercSkills = merc_attack_skills.at(pUnit->dwTxtFileNo);
 			pRightSkill = pUnit->pInfo->pFirstSkill;
+
+			if (pUnit->dwTxtFileNo == MERC_A5 &&
+				pRightSkill &&
+				pRightSkill->pSkillInfo &&
+				pRightSkill->pSkillInfo->wSkillId == 425 &&
+				pRightSkill->pNextSkill &&
+				pRightSkill->pNextSkill->pSkillInfo &&
+				pRightSkill->pNextSkill->pSkillInfo->wSkillId != 149)
+			{
+				pRightSkill = pRightSkill->pNextSkill;
+			}
+
 			while (pRightSkill && pRightSkill->pSkillInfo && vMercSkills.find(pRightSkill->pSkillInfo->wSkillId) == vMercSkills.end())
 			{
 				pRightSkill = pRightSkill->pNextSkill;
