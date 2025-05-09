@@ -12,7 +12,8 @@ using namespace std;
 
 struct cGuardModule
 {
-	union {
+	union
+	{
 		HMODULE hModule;
 		DWORD dwBaseAddress;
 	};
@@ -20,7 +21,8 @@ struct cGuardModule
 	char szPath[MAX_PATH];
 };
 
-namespace BH {
+namespace BH
+{
 	extern string path;
 	extern HINSTANCE instance;
 	extern ModuleManager* moduleManager;
@@ -36,19 +38,21 @@ namespace BH {
 	extern "C" __declspec(dllexport) void Initialize();
 	extern bool Shutdown();
 	extern bool ReloadConfig();
-	
+
 	void LoadLootFilter();
 	void CheckForD2GL();
 };
 
-struct BHApp {
+struct BHApp
+{
 
 	Config* config;
 	json jsonConfig;
 	std::string jsonFile = "BH.json";
 	std::string jsonBackup = "BH.json.bak";
 
-	struct {
+	struct
+	{
 		SettingsBool isMinimized = { true, true };
 		SettingsInt openedX = { 0, 100, 0, 1068 };
 		SettingsInt openedY = { 0, 100, 0, 600 };
@@ -58,7 +62,8 @@ struct BHApp {
 		SettingsInt sizeY = { 0, SETTINGS_SIZE_Y, 0, 600 };
 	} bhui;
 
-	struct {
+	struct
+	{
 		SettingsBool autofillLastGame = { true, true };
 		SettingsBool autofillNextGame = { true, true };
 		SettingsBool autofillLastPass = { true, true };
@@ -78,14 +83,16 @@ struct BHApp {
 		SettingsBool showHellDiff = { true, true };
 	} bnet;
 
-	struct {
+	struct
+	{
 		//SettingsKey reloadConfig = { 0x60, 0x60 };  // VK_NUMPAD0
 		//SettingsKey reloadConfigCtrl = { 0x52, 0x52 };  // VK_R
 		SettingsBool statsOnRight = { false, false };
 	} general;
 
 
-	struct {
+	struct
+	{
 		SettingsInt filterLevel = { 1, 1, 0, 12 };
 		SettingsInt lastFilterLevel = { 0, 0, 0, 12 };
 		SettingsKey filterLevelIncrease = { 0, 0 };
@@ -103,7 +110,8 @@ struct BHApp {
 		SettingsBool dropSounds = { true, true };
 	} lootfilter;
 
-	struct {
+	struct
+	{
 		// Legacy Loot filter (these "features" should just be removed entirely)
 		SettingsToggle showEthereal = { {}, {0, false} };
 		SettingsToggle showSockets = { {}, {0, false} };
@@ -116,17 +124,20 @@ struct BHApp {
 		SettingsToggle closeNotifications = { {}, {0, true} };
 	} legacy;
 
-	struct {
+	struct
+	{
 		SettingsBool experienceMeter = { false, false };
 		SettingsBool alwaysShowItems = { false, false };
 	} game;
 
-	struct {
+	struct
+	{
 		SettingsToggle autoParty = { {}, {0, true} };
 		SettingsToggle autoCorpseLoot = { {}, {0, true} };
 	} party;
 
-	struct {
+	struct
+	{
 		SettingsArray automapInfo = { {},
 		{
 			"Name: %GAMENAME%",
@@ -140,7 +151,8 @@ struct BHApp {
 		SettingsAssoc additionalStats = {};
 	} screen;
 
-	struct {
+	struct
+	{
 		SettingsToggle includeEquipment = { {}, {0, true} };
 		SettingsToggle exportOnMenu = { {}, {0, false} };
 		SettingsKey exportGear = { 0, 0 };
@@ -170,7 +182,8 @@ struct BHApp {
 
 extern BHApp App;
 
-typedef enum BHConfigId {
+typedef enum BHConfigId
+{
 	BH_CONFIG_EXPERIENCEMETER,
 	BH_CONFIG_ADVANCEDSTATS,
 	BH_CONFIG_RELOAD,
@@ -188,6 +201,7 @@ typedef enum BHConfigId {
 	BH_CONFIG_SHOWSTATRANGESECONDARY,
 	BH_CONFIG_USINGHDTEXT,
 	BH_CONFIG_DROPSOUNDS,
+	BH_CONFIG_ADVANCEDSTATS_OPEN,
 } BHConfigId;
 
 typedef enum D2GLConfigId

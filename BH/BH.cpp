@@ -41,17 +41,20 @@ Patch* patches[] = {
 Patch* BH::oogDraw = new Patch(Call, D2WIN, { 0x18911, 0xEC61 }, (int)OOGDraw_Interception, 5);
 
 unsigned int index = 0;
-bool BH::Startup(HINSTANCE instance, VOID* reserved) {
+bool BH::Startup(HINSTANCE instance, VOID* reserved)
+{
 
 	BH::instance = instance;
-	if (reserved != NULL) {
+	if (reserved != NULL)
+	{
 		cGuardModule* pModule = (cGuardModule*)reserved;
 		if (!pModule)
 			return FALSE;
 		path.assign(pModule->szPath);
 		cGuardLoaded = true;
 	}
-	else {
+	else
+	{
 		char szPath[MAX_PATH];
 		GetModuleFileName(BH::instance, szPath, MAX_PATH);
 		PathRemoveFileSpec(szPath);
@@ -78,13 +81,15 @@ void BH::Initialize()
 
 	// Do this asynchronously because D2GFX_GetHwnd() will be null if
 	// we inject on process start
-	Task::Enqueue([]() -> void {
-		std::chrono::milliseconds duration(200);
-		while (!D2GFX_GetHwnd()) {
-			std::this_thread::sleep_for(duration);
-		}
-		BH::OldWNDPROC = (WNDPROC)GetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC);
-		SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)GameWindowEvent);
+	Task::Enqueue([]() -> void
+		{
+			std::chrono::milliseconds duration(200);
+			while (!D2GFX_GetHwnd())
+			{
+				std::this_thread::sleep_for(duration);
+			}
+			BH::OldWNDPROC = (WNDPROC)GetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC);
+			SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)GameWindowEvent);
 		});
 
 	//settingsUI = new Drawing::UI(SETTINGS_TEXT, App.bhui.sizeX.value, App.bhui.sizeY.value);
@@ -109,7 +114,8 @@ void BH::Initialize()
 	// Injection would occasionally deadlock (I only ever saw it when using Tabbed Diablo
 	// but theoretically it could happen during regular injection):
 	// installation until after all startup initialization is done.
-	for (int n = 0; n < (sizeof(patches) / sizeof(Patch*)); n++) {
+	for (int n = 0; n < (sizeof(patches) / sizeof(Patch*)); n++)
+	{
 		patches[n]->Install();
 	}
 
@@ -123,8 +129,10 @@ void BH::Initialize()
 	initialized = true;
 }
 
-bool BH::Shutdown() {
-	if (initialized) {
+bool BH::Shutdown()
+{
+	if (initialized)
+	{
 		moduleManager->UnloadModules();
 
 		delete moduleManager;
@@ -132,7 +140,8 @@ bool BH::Shutdown() {
 		delete statsDisplay;
 
 		SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)BH::OldWNDPROC);
-		for (int n = 0; n < (sizeof(patches) / sizeof(Patch*)); n++) {
+		for (int n = 0; n < (sizeof(patches) / sizeof(Patch*)); n++)
+		{
 			delete patches[n];
 		}
 
@@ -142,14 +151,17 @@ bool BH::Shutdown() {
 	return true;
 }
 
-bool BH::ReloadConfig() {
-	if (initialized) {
+bool BH::ReloadConfig()
+{
+	if (initialized)
+	{
 		App.config->LoadConfig();
 		LoadLootFilter();
 		moduleManager->ReloadConfig();
 		statsDisplay->LoadConfig();
 
-		if (D2CLIENT_GetPlayerUnit()) {
+		if (D2CLIENT_GetPlayerUnit())
+		{
 			PrintText(0, "Reloaded config: %s", App.config->GetConfigName().c_str());
 			PrintText(0, "Reloaded filter: %s", lootFilter->GetConfigName().c_str());
 		}
@@ -157,10 +169,14 @@ bool BH::ReloadConfig() {
 		// Remove nodraw flag from items when filter is reloaded. This is primarily just a QoL feature.
 		// Otherwise you'd have to reload the filter + leave and rejoin the area for hidden items to be visible again
 		UnitAny* player = D2CLIENT_GetPlayerUnit();
-		if (player && player->pAct && player->pPath->pRoom1->pRoom2->pLevel->dwLevelNo != 0) {
-			for (Room1* room1 = player->pAct->pRoom1; room1; room1 = room1->pRoomNext) {
-				for (UnitAny* unit = room1->pUnitFirst; unit; unit = unit->pListNext) {
-					if (unit->dwType == UNIT_ITEM && (unit->dwFlags2 & UNITFLAGEX_INVISIBLE)) {
+		if (player && player->pAct && player->pPath->pRoom1->pRoom2->pLevel->dwLevelNo != 0)
+		{
+			for (Room1* room1 = player->pAct->pRoom1; room1; room1 = room1->pRoomNext)
+			{
+				for (UnitAny* unit = room1->pUnitFirst; unit; unit = unit->pListNext)
+				{
+					if (unit->dwType == UNIT_ITEM && (unit->dwFlags2 & UNITFLAGEX_INVISIBLE))
+					{
 						unit->dwFlags2 &= ~UNITFLAGEX_INVISIBLE;
 					}
 				}
@@ -191,7 +207,8 @@ void BH::LoadLootFilter()
 				else { lootFilter->SetConfigName("filters\\online\\" + filter); }
 			}
 		}
-		catch (const json::parse_error&) {
+		catch (const json::parse_error&)
+		{
 		}
 	}
 
@@ -202,7 +219,8 @@ void BH::LoadLootFilter()
 		if (!lootFilter->Parse())
 		{
 			lootFilter->SetConfigName("default.filter");
-			if (!lootFilter->Parse()) {
+			if (!lootFilter->Parse())
+			{
 				string msg = "Could not find default loot filter.\nAttempted to load " +
 					path + "loot.filter (failed).\nAttempted to load " +
 					path + "default.filter (failed).\n\nDefaults loaded.";
@@ -272,6 +290,8 @@ extern "C" {
 			return App.game.alwaysShowItems.value;
 		case BH_CONFIG_DROPSOUNDS:
 			return App.lootfilter.dropSounds.value;
+		case BH_CONFIG_ADVANCEDSTATS_OPEN:
+			return !BH::statsDisplay->IsMinimized();
 		}
 
 		return 0;
@@ -398,11 +418,11 @@ extern "C" {
 	{
 		UnitAny* selectedUnit = D2CLIENT_GetSelectedUnit();
 		if (selectedUnit && selectedUnit->dwMode != PLAYER_MODE_DEATH && selectedUnit->dwMode != PLAYER_MODE_DEAD && (
-				selectedUnit->dwType == 0 ||			// Player
-				selectedUnit->dwTxtFileNo == 291 ||		// Iron Golem
-				selectedUnit->dwTxtFileNo == 357 ||		// Valkerie
-				selectedUnit->dwTxtFileNo == 417 ||		// Shadow Warrior
-				selectedUnit->dwTxtFileNo == 418)		// Shadow Master
+			selectedUnit->dwType == 0 ||			// Player
+			selectedUnit->dwTxtFileNo == 291 ||		// Iron Golem
+			selectedUnit->dwTxtFileNo == 357 ||		// Valkerie
+			selectedUnit->dwTxtFileNo == 417 ||		// Shadow Warrior
+			selectedUnit->dwTxtFileNo == 418)		// Shadow Master
 			)
 		{
 			Item::viewingUnit = selectedUnit;
@@ -411,7 +431,7 @@ extern "C" {
 				D2CLIENT_SetUIVar(0x01, 0, 0);
 			}
 		}
-			return 1;
+		return 1;
 	}
 
 #ifdef __cplusplus
