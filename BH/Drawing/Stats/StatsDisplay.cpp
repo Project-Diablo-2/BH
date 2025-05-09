@@ -1389,7 +1389,7 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		int nPreviousFrameBP = 0;
 		int nCurrentFrames = 0;
 
-		for (int i = nMinAnimAcceleration; i < nMaxAnimAcceleration; i++)
+		for (int i = nMinAnimAcceleration; i < nMaxAnimAcceleration + 1; i++)
 		{
 			nBaseIAS = (double)i - (double)nMinAnimAcceleration;
 			nIASBP = ceil((120 * nBaseIAS) / (120 - nBaseIAS));
