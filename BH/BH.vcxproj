@@ -187,7 +187,6 @@ powershell.exe -NoProfile -File "$(ProjectDir)..\..\scripts\CopyDataFolder.ps1"<
     <ClCompile Include="Modules\GameSettings\GameSettings.cpp" />
     <ClCompile Include="Modules\Item\Item.cpp" />
     <ClCompile Include="Modules\Item\ItemDisplay.cpp" />
-    <ClCompile Include="Modules\ItemMover\ItemMover.cpp" />
     <ClCompile Include="Modules\MapNotify\MapNotify.cpp" />
     <ClCompile Include="Modules\Module.cpp" />
     <ClCompile Include="Modules\ModuleManager.cpp" />
@@ -239,7 +238,6 @@ powershell.exe -NoProfile -File "$(ProjectDir)..\..\scripts\CopyDataFolder.ps1"<
     <ClInclude Include="Modules\GameSettings\GameSettings.h" />
     <ClInclude Include="Modules\Item\Item.h" />
     <ClInclude Include="Modules\Item\ItemDisplay.h" />
-    <ClInclude Include="Modules\ItemMover\ItemMover.h" />
     <ClInclude Include="Modules\MapNotify\MapNotify.h" />
     <ClInclude Include="Modules\Module.h" />
     <ClInclude Include="Modules\ModuleManager.h" />

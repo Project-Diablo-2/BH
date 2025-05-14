@@ -102,7 +102,6 @@ void BH::Initialize()
 	new Bnet();
 	itemObj = new Item();
 	new Party();
-	new ItemMover();
 	new StashExport();
 	new MapNotify();
 	new ChatColor();

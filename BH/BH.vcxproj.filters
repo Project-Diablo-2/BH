@@ -81,9 +81,6 @@
     <ClCompile Include="Modules\Item\ItemDisplay.cpp">
       <Filter>Modules\Item</Filter>
     </ClCompile>
-    <ClCompile Include="Modules\ItemMover\ItemMover.cpp">
-      <Filter>Modules\ItemMover</Filter>
-    </ClCompile>
     <ClCompile Include="Modules\MapNotify\MapNotify.cpp">
       <Filter>Modules\MapNotify</Filter>
     </ClCompile>
@@ -189,9 +186,6 @@
     <ClInclude Include="Modules\Item\ItemDisplay.h">
       <Filter>Modules\Item</Filter>
     </ClInclude>
-    <ClInclude Include="Modules\ItemMover\ItemMover.h">
-      <Filter>Modules\ItemMover</Filter>
-    </ClInclude>
     <ClInclude Include="Modules\MapNotify\MapNotify.h">
       <Filter>Modules\MapNotify</Filter>
     </ClInclude>
@@ -268,9 +262,6 @@
     </Filter>
     <Filter Include="Modules\Item">
       <UniqueIdentifier>{de8abd5b-94a3-4d88-91b7-1268edf58162}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Modules\ItemMover">
-      <UniqueIdentifier>{d2fcab11-38df-4c6e-b59a-17b33c4a4263}</UniqueIdentifier>
     </Filter>
     <Filter Include="Modules\MapNotify">
       <UniqueIdentifier>{3b0284b1-bcc2-4c0d-af04-8ef4d70f238d}</UniqueIdentifier>
