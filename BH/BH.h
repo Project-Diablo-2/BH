@@ -149,6 +149,7 @@ struct BHApp
 		}
 		};
 		SettingsAssoc additionalStats = {};
+		SettingsBool hideGamePassword = { false, false };
 	} screen;
 
 	struct
@@ -202,6 +203,7 @@ typedef enum BHConfigId
 	BH_CONFIG_USINGHDTEXT,
 	BH_CONFIG_DROPSOUNDS,
 	BH_CONFIG_ADVANCEDSTATS_OPEN,
+	BH_CONFIG_HIDE_GAME_PASSWORD,
 } BHConfigId;
 
 typedef enum D2GLConfigId

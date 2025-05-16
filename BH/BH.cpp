@@ -291,6 +291,8 @@ extern "C" {
 			return App.lootfilter.dropSounds.value;
 		case BH_CONFIG_ADVANCEDSTATS_OPEN:
 			return !BH::statsDisplay->IsMinimized();
+		case BH_CONFIG_HIDE_GAME_PASSWORD:
+			return App.screen.hideGamePassword.value;
 		}
 
 		return 0;
@@ -351,7 +353,11 @@ extern "C" {
 			App.lootfilter.dropSounds.value = configVal;
 			bSave = TRUE;
 			break;
+		case BH_CONFIG_HIDE_GAME_PASSWORD:
+			App.screen.hideGamePassword.value = configVal;
+			bSave = TRUE;
 		}
+
 		if (bSave)
 		{
 			App.config->SaveConfig();

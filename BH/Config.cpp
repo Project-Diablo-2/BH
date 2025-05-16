@@ -12,21 +12,26 @@ int Config::GetInt(json::json_pointer sectionKey, std::string key, SettingsInt d
 	int val = def.defValue;
 	int min = def.minValue ? def.minValue : INT_MIN;
 	int max = def.maxValue ? def.maxValue : INT_MAX;
-	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key)) {
-		try {
+	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key))
+	{
+		try
+		{
 			val = App.jsonConfig[sectionKey][key].template get<int>();
 		}
-		catch (const std::exception& e) {
+		catch (const std::exception& e)
+		{
 			// Handle conversion error here
 			//error_log("Error converting int config key '%s' in section '%s', check your values! Exception: %s", key.c_str(), sectionKey.c_str(), e.what());
 		}
 	}
 
-	if (min != INT_MIN && val < min) {
+	if (min != INT_MIN && val < min)
+	{
 		val = min;
 	}
 
-	if (max != INT_MAX && val > max) {
+	if (max != INT_MAX && val > max)
+	{
 		val = max;
 	}
 
@@ -38,21 +43,26 @@ float Config::GetFloat(json::json_pointer sectionKey, std::string key, SettingsF
 	float val = def.defValue;
 	float min = def.minValue;
 	float max = def.maxValue;
-	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key)) {
-		try {
+	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key))
+	{
+		try
+		{
 			val = App.jsonConfig[sectionKey][key].template get<float>();
 		}
-		catch (const std::exception& e) {
+		catch (const std::exception& e)
+		{
 			// Handle conversion error here
 			//error_log("Error converting float config key '%s' in section '%s', check your values! Exception: %s", key.c_str(), sectionKey.c_str(), e.what());
 		}
 	}
 
-	if (val < min) {
+	if (val < min)
+	{
 		val = min;
 	}
 
-	if (val > max) {
+	if (val > max)
+	{
 		val = max;
 	}
 
@@ -62,11 +72,14 @@ float Config::GetFloat(json::json_pointer sectionKey, std::string key, SettingsF
 bool Config::GetBool(json::json_pointer sectionKey, std::string key, SettingsBool def)
 {
 	bool val = def.defValue;
-	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key)) {
-		try {
+	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key))
+	{
+		try
+		{
 			val = App.jsonConfig[sectionKey][key].template get<bool>();
 		}
-		catch (const std::exception& e) {
+		catch (const std::exception& e)
+		{
 			// Handle conversion error here
 			//error_log("Error converting bool config key '%s' in section '%s', check your values! Exception: %s", key.c_str(), sectionKey.c_str(), e.what());
 		}
@@ -77,12 +90,15 @@ bool Config::GetBool(json::json_pointer sectionKey, std::string key, SettingsBoo
 std::string Config::GetString(json::json_pointer sectionKey, std::string key, SettingsString def)
 {
 	std::string val = def.defValue;
-	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key)) {
-		try {
+	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key))
+	{
+		try
+		{
 			val = App.jsonConfig[sectionKey][key].template get<std::string>();
 
 		}
-		catch (const std::exception& e) {
+		catch (const std::exception& e)
+		{
 			// Handle conversion error here
 			//error_log("Error converting string config key '%s' in section '%s', check your values! Exception: %s", key.c_str(), sectionKey.c_str(), e.what());
 		}
@@ -95,12 +111,15 @@ Toggle Config::GetToggle(json::json_pointer sectionKey, std::string key, Setting
 	Toggle ret;
 	ret.isEnabled = def.defToggle.isEnabled;
 	ret.hotkey = def.defToggle.hotkey;
-	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key)) {
-		if (App.jsonConfig[sectionKey][key].contains("enabled")) {
+	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key))
+	{
+		if (App.jsonConfig[sectionKey][key].contains("enabled"))
+		{
 			ret.isEnabled = App.jsonConfig[sectionKey][key]["enabled"].template get<bool>();
 		}
 
-		if (App.jsonConfig[sectionKey][key].contains("hotkey")) {
+		if (App.jsonConfig[sectionKey][key].contains("hotkey"))
+		{
 			ret.hotkey = GetKeyCode(App.jsonConfig[sectionKey][key]["hotkey"].template get<std::string>().c_str()).value;
 		}
 	}
@@ -110,7 +129,8 @@ Toggle Config::GetToggle(json::json_pointer sectionKey, std::string key, Setting
 unsigned int Config::GetKey(json::json_pointer sectionKey, std::string key, SettingsKey def)
 {
 	unsigned int val = def.defHotkey;
-	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key)) {
+	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key))
+	{
 		val = GetKeyCode(App.jsonConfig[sectionKey][key].template get<std::string>().c_str()).value;
 	}
 
@@ -120,7 +140,8 @@ unsigned int Config::GetKey(json::json_pointer sectionKey, std::string key, Sett
 std::vector<std::string> Config::GetArray(json::json_pointer sectionKey, std::string key, SettingsArray def)
 {
 	std::vector<std::string> val = def.defValues;
-	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key)) {
+	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key))
+	{
 		val = App.jsonConfig[sectionKey][key].template get<std::vector<std::string>>();
 	}
 	return val;
@@ -129,7 +150,8 @@ std::vector<std::string> Config::GetArray(json::json_pointer sectionKey, std::st
 std::map<std::string, std::string> Config::GetAssoc(json::json_pointer sectionKey, std::string key, SettingsAssoc def)
 {
 	std::map<std::string, std::string> val = def.defValues;
-	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key)) {
+	if (App.jsonConfig.contains(sectionKey) && App.jsonConfig[sectionKey].contains(key))
+	{
 		val = App.jsonConfig[sectionKey][key].template get<std::map<std::string, std::string>>();
 	}
 	return val;
@@ -224,6 +246,7 @@ void Config::SaveConfig()
 	json jsonScreen;
 	jsonScreen["automap_info"] = App.screen.automapInfo.values;
 	if (App.screen.additionalStats.values.size() > 0) { jsonScreen["additional_stats"] = App.screen.additionalStats.values; }
+	jsonScreen["hide_game_password"] = App.screen.hideGamePassword.value;
 	App.jsonConfig["screen_info"] = jsonScreen;
 
 	// Stash Export
@@ -316,75 +339,76 @@ void Config::LoadConfig()
 	}
 
 	// Bnet settings
-	App.bnet.autofillLastGame.value =	GetBool("/bnet"_json_pointer, "autofill_last_game", App.bnet.autofillLastGame);
-	App.bnet.autofillNextGame.value =	GetBool("/bnet"_json_pointer, "autofill_next_game", App.bnet.autofillNextGame);
-	App.bnet.autofillLastPass.value =	GetBool("/bnet"_json_pointer, "autofill_last_password", App.bnet.autofillLastPass);
-	App.bnet.autofillLastDesc.value =	GetBool("/bnet"_json_pointer, "autofill_description", App.bnet.autofillLastDesc);
-	App.bnet.showDifficulty.value =		GetBool("/bnet"_json_pointer, "show_difficulty", App.bnet.showDifficulty);
-	App.bnet.showGameserver.value =		GetBool("/bnet"_json_pointer, "show_gameserver", App.bnet.showGameserver);
-	App.bnet.failToJoin.value =			GetInt("/bnet"_json_pointer, "fail_to_join", App.bnet.failToJoin);
-	App.bnet.refreshTime.value =		GetInt("/bnet"_json_pointer, "game_list_refresh", App.bnet.refreshTime);
-	App.bnet.whisperColor.values =		GetAssoc("/bnet"_json_pointer, "whisper_color", App.bnet.whisperColor);
-	App.bnet.showNormalDiff.value =		GetBool("/bnet"_json_pointer, "show_normal_difficulty", App.bnet.showNormalDiff);
-	App.bnet.showNightmareDiff.value =	GetBool("/bnet"_json_pointer, "show_nightmare_difficulty", App.bnet.showNightmareDiff);
-	App.bnet.showHellDiff.value =		GetBool("/bnet"_json_pointer, "show_hell_difficulty", App.bnet.showHellDiff);
+	App.bnet.autofillLastGame.value = GetBool("/bnet"_json_pointer, "autofill_last_game", App.bnet.autofillLastGame);
+	App.bnet.autofillNextGame.value = GetBool("/bnet"_json_pointer, "autofill_next_game", App.bnet.autofillNextGame);
+	App.bnet.autofillLastPass.value = GetBool("/bnet"_json_pointer, "autofill_last_password", App.bnet.autofillLastPass);
+	App.bnet.autofillLastDesc.value = GetBool("/bnet"_json_pointer, "autofill_description", App.bnet.autofillLastDesc);
+	App.bnet.showDifficulty.value = GetBool("/bnet"_json_pointer, "show_difficulty", App.bnet.showDifficulty);
+	App.bnet.showGameserver.value = GetBool("/bnet"_json_pointer, "show_gameserver", App.bnet.showGameserver);
+	App.bnet.failToJoin.value = GetInt("/bnet"_json_pointer, "fail_to_join", App.bnet.failToJoin);
+	App.bnet.refreshTime.value = GetInt("/bnet"_json_pointer, "game_list_refresh", App.bnet.refreshTime);
+	App.bnet.whisperColor.values = GetAssoc("/bnet"_json_pointer, "whisper_color", App.bnet.whisperColor);
+	App.bnet.showNormalDiff.value = GetBool("/bnet"_json_pointer, "show_normal_difficulty", App.bnet.showNormalDiff);
+	App.bnet.showNightmareDiff.value = GetBool("/bnet"_json_pointer, "show_nightmare_difficulty", App.bnet.showNightmareDiff);
+	App.bnet.showHellDiff.value = GetBool("/bnet"_json_pointer, "show_hell_difficulty", App.bnet.showHellDiff);
 
 	// General settings
-	App.general.statsOnRight.value =		GetBool("/general"_json_pointer, "stats_on_right", App.general.statsOnRight);
+	App.general.statsOnRight.value = GetBool("/general"_json_pointer, "stats_on_right", App.general.statsOnRight);
 
 	// Loot filter
-	App.lootfilter.filterLevel.uValue =		(unsigned int)GetInt("/lootfilter"_json_pointer, "filter_level", App.lootfilter.filterLevel);
-	App.lootfilter.lastFilterLevel.uValue =	(unsigned int)GetInt("/lootfilter"_json_pointer, "last_filter_level", App.lootfilter.lastFilterLevel);
+	App.lootfilter.filterLevel.uValue = (unsigned int)GetInt("/lootfilter"_json_pointer, "filter_level", App.lootfilter.filterLevel);
+	App.lootfilter.lastFilterLevel.uValue = (unsigned int)GetInt("/lootfilter"_json_pointer, "last_filter_level", App.lootfilter.lastFilterLevel);
 	App.lootfilter.filterLevelIncrease.hotkey = GetKey("/lootfilter"_json_pointer, "filter_level_increase", App.lootfilter.filterLevelIncrease);
 	App.lootfilter.filterLevelDecrease.hotkey = GetKey("/lootfilter"_json_pointer, "filter_level_decrease", App.lootfilter.filterLevelDecrease);
 	App.lootfilter.filterLevelPrevious.hotkey = GetKey("/lootfilter"_json_pointer, "filter_level_previous", App.lootfilter.filterLevelPrevious);
-	App.lootfilter.enableFilter.value =			GetBool("/lootfilter"_json_pointer, "advanced_item_display", App.lootfilter.enableFilter);
-	App.lootfilter.showIlvl.value =				GetBool("/lootfilter"_json_pointer, "show_iLvl", App.lootfilter.showIlvl);
+	App.lootfilter.enableFilter.value = GetBool("/lootfilter"_json_pointer, "advanced_item_display", App.lootfilter.enableFilter);
+	App.lootfilter.showIlvl.value = GetBool("/lootfilter"_json_pointer, "show_iLvl", App.lootfilter.showIlvl);
 	App.lootfilter.detailedNotifications.value = GetInt("/lootfilter"_json_pointer, "detailed_notifications", App.lootfilter.detailedNotifications);
-	App.lootfilter.allowUnknownItems.toggle =	GetToggle("/lootfilter"_json_pointer, "allow_unknown_items", App.lootfilter.allowUnknownItems);
+	App.lootfilter.allowUnknownItems.toggle = GetToggle("/lootfilter"_json_pointer, "allow_unknown_items", App.lootfilter.allowUnknownItems);
 	App.lootfilter.alwaysShowStatRanges.value = GetBool("/lootfilter"_json_pointer, "always_show_stat_ranges", App.lootfilter.alwaysShowStatRanges);
-	App.lootfilter.dropSounds.value =			GetBool("/lootfilter"_json_pointer, "drop_sounds", App.lootfilter.dropSounds);
-	App.lootfilter.classSkillsList.values =		GetAssoc("/lootfilter"_json_pointer, "class_skills_list", App.lootfilter.classSkillsList);
-	App.lootfilter.tabSkillsList.values =		GetAssoc("/lootfilter"_json_pointer, "tab_skills_list", App.lootfilter.tabSkillsList);
+	App.lootfilter.dropSounds.value = GetBool("/lootfilter"_json_pointer, "drop_sounds", App.lootfilter.dropSounds);
+	App.lootfilter.classSkillsList.values = GetAssoc("/lootfilter"_json_pointer, "class_skills_list", App.lootfilter.classSkillsList);
+	App.lootfilter.tabSkillsList.values = GetAssoc("/lootfilter"_json_pointer, "tab_skills_list", App.lootfilter.tabSkillsList);
 
 	// Legacy Loot filter (these "features" should just be removed entirely)
-	App.legacy.showEthereal.toggle =		GetToggle("/lootfilter/legacy_settings"_json_pointer, "show_ethereal", App.legacy.showEthereal);
-	App.legacy.showSockets.toggle =			GetToggle("/lootfilter/legacy_settings"_json_pointer, "show_sockets", App.legacy.showSockets);
-	App.legacy.showRuneNumbers.toggle =		GetToggle("/lootfilter/legacy_settings"_json_pointer, "show_rune_numbers", App.legacy.showRuneNumbers);
-	App.legacy.altItemStyle.toggle =		GetToggle("/lootfilter/legacy_settings"_json_pointer, "alt_item_style", App.legacy.altItemStyle);
-	App.legacy.colorMod.toggle =			GetToggle("/lootfilter/legacy_settings"_json_pointer, "color_mod", App.legacy.colorMod);
-	App.legacy.shortenItemNames.toggle =	GetToggle("/lootfilter/legacy_settings"_json_pointer, "shorten_item_names", App.legacy.shortenItemNames);
-	App.legacy.dropNotifications.toggle =	GetToggle("/lootfilter/legacy_settings"_json_pointer, "drop_notifications", App.legacy.dropNotifications);
-	App.legacy.closeNotifications.toggle =	GetToggle("/lootfilter/legacy_settings"_json_pointer, "close_notifications", App.legacy.closeNotifications);
+	App.legacy.showEthereal.toggle = GetToggle("/lootfilter/legacy_settings"_json_pointer, "show_ethereal", App.legacy.showEthereal);
+	App.legacy.showSockets.toggle = GetToggle("/lootfilter/legacy_settings"_json_pointer, "show_sockets", App.legacy.showSockets);
+	App.legacy.showRuneNumbers.toggle = GetToggle("/lootfilter/legacy_settings"_json_pointer, "show_rune_numbers", App.legacy.showRuneNumbers);
+	App.legacy.altItemStyle.toggle = GetToggle("/lootfilter/legacy_settings"_json_pointer, "alt_item_style", App.legacy.altItemStyle);
+	App.legacy.colorMod.toggle = GetToggle("/lootfilter/legacy_settings"_json_pointer, "color_mod", App.legacy.colorMod);
+	App.legacy.shortenItemNames.toggle = GetToggle("/lootfilter/legacy_settings"_json_pointer, "shorten_item_names", App.legacy.shortenItemNames);
+	App.legacy.dropNotifications.toggle = GetToggle("/lootfilter/legacy_settings"_json_pointer, "drop_notifications", App.legacy.dropNotifications);
+	App.legacy.closeNotifications.toggle = GetToggle("/lootfilter/legacy_settings"_json_pointer, "close_notifications", App.legacy.closeNotifications);
 	App.legacy.verboseNotifications.toggle = GetToggle("/lootfilter/legacy_settings"_json_pointer, "verbose_notifications", App.legacy.verboseNotifications);
 
 	// Game settings
-	App.game.experienceMeter.value =	GetBool("/game"_json_pointer, "experience_meter", App.game.experienceMeter);
-	App.game.alwaysShowItems.value =	GetBool("/game"_json_pointer, "always_show_items", App.game.alwaysShowItems);
+	App.game.experienceMeter.value = GetBool("/game"_json_pointer, "experience_meter", App.game.experienceMeter);
+	App.game.alwaysShowItems.value = GetBool("/game"_json_pointer, "always_show_items", App.game.alwaysShowItems);
 
 	// Party settings
-	App.party.autoParty.toggle =		GetToggle("/party"_json_pointer, "auto_party", App.party.autoParty);
-	App.party.autoCorpseLoot.toggle =	GetToggle("/party"_json_pointer, "auto_corpse_loot", App.party.autoCorpseLoot);
+	App.party.autoParty.toggle = GetToggle("/party"_json_pointer, "auto_party", App.party.autoParty);
+	App.party.autoCorpseLoot.toggle = GetToggle("/party"_json_pointer, "auto_corpse_loot", App.party.autoCorpseLoot);
 
 	// Screen Info
-	App.screen.automapInfo.values =		GetArray("/screen_info"_json_pointer, "automap_info", App.screen.automapInfo);
-	App.screen.additionalStats.values =	GetAssoc("/screen_info"_json_pointer, "additional_stats", App.screen.additionalStats);
+	App.screen.automapInfo.values = GetArray("/screen_info"_json_pointer, "automap_info", App.screen.automapInfo);
+	App.screen.additionalStats.values = GetAssoc("/screen_info"_json_pointer, "additional_stats", App.screen.additionalStats);
+	App.screen.hideGamePassword.value = GetBool("/screen_info"_json_pointer, "hide_game_password", App.screen.hideGamePassword);
 
 	// Stash Export
-	App.stash.includeEquipment.toggle =	GetToggle("/stash_export"_json_pointer, "include_equipment", App.stash.includeEquipment);
-	App.stash.exportOnMenu.toggle =		GetToggle("/stash_export"_json_pointer, "export_on_menu", App.stash.exportOnMenu);
-	App.stash.exportGear.hotkey =		GetKey("/stash_export"_json_pointer, "export_gear", App.stash.exportGear);
-	App.stash.mustacheDefault.value =	GetString("/stash_export"_json_pointer, "mustache_default", App.stash.mustacheDefault);
-	App.stash.mustacheOptions.values =	GetArray("/stash_export"_json_pointer, "mustache_options", App.stash.mustacheOptions);
-	App.stash.mustacheFormat.values =	GetAssoc("/stash_export"_json_pointer, "mustache_format", App.stash.mustacheFormat);
+	App.stash.includeEquipment.toggle = GetToggle("/stash_export"_json_pointer, "include_equipment", App.stash.includeEquipment);
+	App.stash.exportOnMenu.toggle = GetToggle("/stash_export"_json_pointer, "export_on_menu", App.stash.exportOnMenu);
+	App.stash.exportGear.hotkey = GetKey("/stash_export"_json_pointer, "export_gear", App.stash.exportGear);
+	App.stash.mustacheDefault.value = GetString("/stash_export"_json_pointer, "mustache_default", App.stash.mustacheDefault);
+	App.stash.mustacheOptions.values = GetArray("/stash_export"_json_pointer, "mustache_options", App.stash.mustacheOptions);
+	App.stash.mustacheFormat.values = GetAssoc("/stash_export"_json_pointer, "mustache_format", App.stash.mustacheFormat);
 
-	App.bhui.isMinimized.value =		GetBool("/bh_ui"_json_pointer, "is_minimized", App.bhui.isMinimized);
-	App.bhui.openedX.value =			GetInt("/bh_ui"_json_pointer, "opened_x", App.bhui.openedX);
-	App.bhui.openedY.value =			GetInt("/bh_ui"_json_pointer, "opened_y", App.bhui.openedY);
-	App.bhui.minimizedX.value =			GetInt("/bh_ui"_json_pointer, "minimized_x", App.bhui.minimizedX);
-	App.bhui.minimizedY.value =			GetInt("/bh_ui"_json_pointer, "minimized_y", App.bhui.minimizedY);
-	App.bhui.sizeX.value =				GetInt("/bh_ui"_json_pointer, "size_x", App.bhui.sizeX);
-	App.bhui.sizeY.value =				GetInt("/bh_ui"_json_pointer, "size_y", App.bhui.sizeY);
+	App.bhui.isMinimized.value = GetBool("/bh_ui"_json_pointer, "is_minimized", App.bhui.isMinimized);
+	App.bhui.openedX.value = GetInt("/bh_ui"_json_pointer, "opened_x", App.bhui.openedX);
+	App.bhui.openedY.value = GetInt("/bh_ui"_json_pointer, "opened_y", App.bhui.openedY);
+	App.bhui.minimizedX.value = GetInt("/bh_ui"_json_pointer, "minimized_x", App.bhui.minimizedX);
+	App.bhui.minimizedY.value = GetInt("/bh_ui"_json_pointer, "minimized_y", App.bhui.minimizedY);
+	App.bhui.sizeX.value = GetInt("/bh_ui"_json_pointer, "size_x", App.bhui.sizeX);
+	App.bhui.sizeY.value = GetInt("/bh_ui"_json_pointer, "size_y", App.bhui.sizeY);
 
 
 	if (bCreateFile)
@@ -423,7 +447,8 @@ void Config::LoadConfig()
 Parse the configuration file and stores the results in a key->value pair.
 Can be called multiple times so you can reload the configuration.
 */
-bool Config::Parse() {
+bool Config::Parse()
+{
 
 	//If this is a config with a pre-set of values, can't parse!
 	if (configName.length() == 0)
@@ -441,11 +466,13 @@ bool Config::Parse() {
 	//Begin to loop the configuration file one line at a time.
 	std::string line;
 	int lineNo = 0;
-	while (std::getline(file, line)) {
+	while (std::getline(file, line))
+	{
 		lineNo++;
 		std::string comment;
 		//Remove any comments from the config
-		if (line.find("//") != string::npos) {
+		if (line.find("//") != string::npos)
+		{
 			comment = line.substr(line.find("//"));
 			line = line.erase(line.find("//"));
 		}
@@ -472,18 +499,23 @@ bool Config::Parse() {
 	return true;
 }
 
-std::string Config::GetConfigName() {
+std::string Config::GetConfigName()
+{
 	return BH::path + configName;
 }
 
-void Config::SetConfigName(std::string name) {
+void Config::SetConfigName(std::string name)
+{
 	configName = name;
 }
 
-vector<pair<string, string>> Config::ReadMapList(std::string key, vector<pair<string, string>>& values) {
+vector<pair<string, string>> Config::ReadMapList(std::string key, vector<pair<string, string>>& values)
+{
 
-	for (vector<pair<string, string>>::iterator it = orderedKeyVals.begin(); it != orderedKeyVals.end(); it++) {
-		if (!(*it).first.find(key + "[")) {
+	for (vector<pair<string, string>>::iterator it = orderedKeyVals.begin(); it != orderedKeyVals.end(); it++)
+	{
+		if (!(*it).first.find(key + "["))
+		{
 			pair<string, string> assoc;
 			//Pull the value from between the []'s
 			assoc.first = (*it).first.substr((*it).first.find("[") + 1, (*it).first.length() - (*it).first.find("[") - 2);

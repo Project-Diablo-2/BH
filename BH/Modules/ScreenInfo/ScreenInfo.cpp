@@ -10,7 +10,8 @@
 
 using namespace Drawing;
 
-void ScreenInfo::OnLoad() {
+void ScreenInfo::OnLoad()
+{
 	LoadConfig();
 
 	//bhText = new Texthook(OutOfGame, 795, 6, BH_VERSION " (Project Diablo version)");
@@ -22,14 +23,16 @@ void ScreenInfo::OnLoad() {
 	//d2VersionText->SetColor(White);
 	//d2VersionText->SetFont(1);
 
-	if (BH::cGuardLoaded) {
+	if (BH::cGuardLoaded)
+	{
 		Texthook* cGuardText = new Texthook(Perm, 790, 23, "ÿc4cGuard Loaded");
 		cGuardText->SetAlignment(Right);
 	}
 	gameTimer = GetTickCount();
 }
 
-void ScreenInfo::LoadConfig() {
+void ScreenInfo::LoadConfig()
+{
 	/*BH::config->ReadAssoc("Skill Warning", SkillWarnings);
 	SkillWarningMap.clear();
 	for (auto it = SkillWarnings.cbegin(); it != SkillWarnings.cend(); it++) {
@@ -44,7 +47,8 @@ void ScreenInfo::LoadConfig() {
 	}*/
 }
 
-void ScreenInfo::OnGameJoin() {
+void ScreenInfo::OnGameJoin()
+{
 	BnetData* pInfo = (*p_D2LAUNCH_BnData);
 	UnitAny* unit = D2CLIENT_GetPlayerUnit();
 	/*if (unit) {
@@ -64,21 +68,25 @@ void ScreenInfo::OnGameJoin() {
 	startLevel = (int)D2COMMON_GetUnitStat(pUnit, STAT_LEVEL, 0);
 }
 
-void ScreenInfo::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
+void ScreenInfo::OnKey(bool up, BYTE key, LPARAM lParam, bool* block)
+{
 
 }
 
 
 // Right-clicking in the chat console pastes from the clipboard
-void ScreenInfo::OnRightClick(bool up, int x, int y, bool* block) {
+void ScreenInfo::OnRightClick(bool up, int x, int y, bool* block)
+{
 	if (up)
 		return;
 
 	int left = 130, top = 500, width = 540, height = 42;
-	if (D2CLIENT_GetUIState(0x05) && x >= left && x <= (left + width) && y >= top && y <= (top + height)) {
+	if (D2CLIENT_GetUIState(0x05) && x >= left && x <= (left + width) && y >= top && y <= (top + height))
+	{
 		*block = true;
 
-		if (IsClipboardFormatAvailable(CF_TEXT)) {
+		if (IsClipboardFormatAvailable(CF_TEXT))
+		{
 			OpenClipboard(NULL);
 			HGLOBAL glob = GetClipboardData(CF_TEXT);
 			size_t size = GlobalSize(glob);
@@ -89,12 +97,14 @@ void ScreenInfo::OnRightClick(bool up, int x, int y, bool* block) {
 			GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_ILANGUAGE, buffer, sizeof(buffer));
 			HKL hKeyboardLayout = LoadKeyboardLayout(buffer, KLF_ACTIVATE);
 
-			for (unsigned int i = 0; i < size - 1; i++) {
+			for (unsigned int i = 0; i < size - 1; i++)
+			{
 				INPUT keyEvent = { 0 };
 				const SHORT Vk = VkKeyScanEx(cbtext[i], hKeyboardLayout);
 				const UINT VKey = MapVirtualKey(LOBYTE(Vk), 0);
 
-				if (HIBYTE(Vk) == 1) {  // shift key must be pressed
+				if (HIBYTE(Vk) == 1)
+				{  // shift key must be pressed
 					ZeroMemory(&keyEvent, sizeof(keyEvent));
 					keyEvent.type = INPUT_KEYBOARD;
 					keyEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
@@ -114,7 +124,8 @@ void ScreenInfo::OnRightClick(bool up, int x, int y, bool* block) {
 				keyEvent.ki.wScan = VKey;
 				events.push_back(keyEvent);
 
-				if (HIBYTE(Vk) == 1) {  // release shift key
+				if (HIBYTE(Vk) == 1)
+				{  // release shift key
 					ZeroMemory(&keyEvent, sizeof(keyEvent));
 					keyEvent.type = INPUT_KEYBOARD;
 					keyEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
@@ -124,7 +135,8 @@ void ScreenInfo::OnRightClick(bool up, int x, int y, bool* block) {
 			}
 			CloseClipboard();
 
-			if (hKeyboardLayout) {
+			if (hKeyboardLayout)
+			{
 				UnloadKeyboardLayout(hKeyboardLayout);
 			}
 			int retval = SendInput(events.size(), &events[0], sizeof(INPUT));
@@ -132,17 +144,20 @@ void ScreenInfo::OnRightClick(bool up, int x, int y, bool* block) {
 	}
 }
 
-void ScreenInfo::OnDraw() {
+void ScreenInfo::OnDraw()
+{
 	int yOffset = 1;
 	BnetData* pData = (*p_D2LAUNCH_BnData);
 	void* quests = D2CLIENT_GetQuestInfo();
-	if (!pData || !quests) {
+	if (!pData || !quests)
+	{
 		return;
 	}
 
 	ULONGLONG ticks = BHGetTickCount();
 	ULONGLONG ms = ticks - packetTicks;
-	if (!ReceivedQuestPacket && packetRequests < 6 && ms > 5000) {
+	if (!ReceivedQuestPacket && packetRequests < 6 && ms > 5000)
+	{
 		// Ask for quest information from the server; server will respond with packet 0x52.
 		// (In case we inject mid-game and miss the packets sent upon game creation/joining)
 		BYTE RequestQuestData[1] = { 0x40 };
@@ -196,12 +211,14 @@ void ScreenInfo::OnDraw() {
 		}
 	}*/
 
-	if (App.game.experienceMeter.value && D2CLIENT_GetUIState(UI_HELP_MENU) == 0) {
+	if (App.game.experienceMeter.value && D2CLIENT_GetUIState(UI_HELP_MENU) == 0)
+	{
 		drawExperienceInfo();
 	}
 }
 
-void ScreenInfo::drawExperienceInfo() {
+void ScreenInfo::drawExperienceInfo()
+{
 	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
 	int nTime = ((GetTickCount() - gameTimer) / 1000);
 	DWORD cExp = (DWORD)D2COMMON_GetUnitStat(pUnit, STAT_EXP, 0);
@@ -214,20 +231,24 @@ void ScreenInfo::drawExperienceInfo() {
 	double oldPctExp = ((double)startExperience - ExpByLevel[startLevel - 1]) / (ExpByLevel[startLevel] - ExpByLevel[startLevel - 1]) * 100.0;
 	double pExp = ((double)cExp - ExpByLevel[cLevel - 1]) / (ExpByLevel[cLevel] - ExpByLevel[cLevel - 1]) * 100.0;
 	double expGainPct = pExp - oldPctExp;
-	if (cLevel > startLevel) {
+	if (cLevel > startLevel)
+	{
 		expGainPct = (100 - oldPctExp) + pExp + ((cLevel - startLevel) - 1) * 100;
 	}
 	double expPerSecond = nTime > 0 ? (cExp - startExperience) / (double)nTime : 0;
 	char* unit = "";
-	if (expPerSecond > 1E9) {
+	if (expPerSecond > 1E9)
+	{
 		expPerSecond /= 1E9;
 		unit = "B";
 	}
-	else if (expPerSecond > 1E6) {
+	else if (expPerSecond > 1E6)
+	{
 		expPerSecond /= 1E6;
 		unit = "M";
 	}
-	else if (expPerSecond > 1E3) {
+	else if (expPerSecond > 1E3)
+	{
 		expPerSecond /= 1E3;
 		unit = "K";
 	}
@@ -236,7 +257,8 @@ void ScreenInfo::drawExperienceInfo() {
 	Texthook::Draw((*p_D2CLIENT_ScreenSizeX / 2) - 100, *p_D2CLIENT_ScreenSizeY - 60, Center, 6, White, "%s", sExp);
 }
 
-void ScreenInfo::OnAutomapDraw() {
+void ScreenInfo::OnAutomapDraw()
+{
 	GameStructInfo* pInfo = (*p_D2CLIENT_GameInfo);
 	BnetData* pData = (*p_D2LAUNCH_BnData);
 	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
@@ -275,10 +297,12 @@ void ScreenInfo::OnAutomapDraw() {
 
 	std::string szAreaLevel = "";
 
-	if (pData->nCharFlags & PLAYER_TYPE_EXPANSION) {
+	if (pData->nCharFlags & PLAYER_TYPE_EXPANSION)
+	{
 		areaLevel = levelTxt->wMonLvlEx[D2CLIENT_GetDifficulty()];
 	}
-	else {
+	else
+	{
 		areaLevel = levelTxt->wMonLvl[D2CLIENT_GetDifficulty()];
 	}
 
@@ -293,20 +317,22 @@ void ScreenInfo::OnAutomapDraw() {
 		}
 		else
 		{
-			if (areaLevel > 0) {
+			if (areaLevel > 0)
+			{
 				szAreaLevel = to_string(areaLevel);
 				szLevel = szLevel + " (" + to_string(szAreaLevel) + ")";
 			}
 		}
 	}
-	else if (areaLevel > 0) {
+	else if (areaLevel > 0)
+	{
 		szAreaLevel = to_string(areaLevel);
 		szLevel = szLevel + " (" + to_string(szAreaLevel) + ")";
 	}
 
 	AutomapReplace automap[] = {
 		{"GAMENAME", pData->szGameName},
-		{"GAMEPASS", pData->szGamePass},
+		{"GAMEPASS", App.screen.hideGamePassword.value && pData->szGamePass[0] != 0 ? "**" : pData->szGamePass},
 		{"GAMEIP", pData->szGameIP},
 		{"GAMEDIFF", szDiff[D2CLIENT_GetDifficulty()]},
 		{"ACCOUNTNAME", pData->szAccountName},
@@ -318,10 +344,12 @@ void ScreenInfo::OnAutomapDraw() {
 		{"AREALEVEL", szAreaLevel}
 	};
 
-	for (vector<string>::iterator it = App.screen.automapInfo.values.begin(); it < App.screen.automapInfo.values.end(); it++) {
+	for (vector<string>::iterator it = App.screen.automapInfo.values.begin(); it < App.screen.automapInfo.values.end(); it++)
+	{
 		string key;
 		key.assign(*it);
-		for (int n = 0; n < sizeof(automap) / sizeof(automap[0]); n++) {
+		for (int n = 0; n < sizeof(automap) / sizeof(automap[0]); n++)
+		{
 			if (key.find("%" + automap[n].key + "%") == string::npos)
 				continue;
 			if (automap[n].value.length() == 0)
@@ -329,7 +357,8 @@ void ScreenInfo::OnAutomapDraw() {
 			else
 				key.replace(key.find("%" + automap[n].key + "%"), automap[n].key.length() + 2, automap[n].value);
 		}
-		if (key.length() > 0) {
+		if (key.length() > 0)
+		{
 			Texthook::Draw(*p_D2CLIENT_ScreenSizeX - 10, y, Right, 0, Gold, "%s", key.c_str());
 			y += 16;
 		}
@@ -343,7 +372,8 @@ void ScreenInfo::OnAutomapDraw() {
 	delete[] level;
 }
 
-void ScreenInfo::OnGamePacketRecv(BYTE* packet, bool* block) {
+void ScreenInfo::OnGamePacketRecv(BYTE* packet, bool* block)
+{
 	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
 
 	// 0x29 and 0x52 tell us which quests are blocked for us because they were
@@ -415,7 +445,8 @@ void ScreenInfo::OnGamePacketRecv(BYTE* packet, bool* block) {
 	return;
 }
 
-void ScreenInfo::OnGameExit() {
+void ScreenInfo::OnGameExit()
+{
 	MephistoBlocked = false;
 	DiabloBlocked = false;
 	BaalBlocked = false;
@@ -691,17 +722,23 @@ long long ExpByLevel[] = {
 	9999999999
 };
 
-StateCode GetStateCode(unsigned int nKey) {
-	for (int n = 0; n < (sizeof(StateCodes) / sizeof(StateCodes[0])); n++) {
-		if (nKey == StateCodes[n].value) {
+StateCode GetStateCode(unsigned int nKey)
+{
+	for (int n = 0; n < (sizeof(StateCodes) / sizeof(StateCodes[0])); n++)
+	{
+		if (nKey == StateCodes[n].value)
+		{
 			return StateCodes[n];
 		}
 	}
 	return StateCodes[0];
 }
-StateCode GetStateCode(const char* name) {
-	for (int n = 0; n < (sizeof(StateCodes) / sizeof(StateCodes[0])); n++) {
-		if (!_stricmp(name, StateCodes[n].name.c_str())) {
+StateCode GetStateCode(const char* name)
+{
+	for (int n = 0; n < (sizeof(StateCodes) / sizeof(StateCodes[0])); n++)
+	{
+		if (!_stricmp(name, StateCodes[n].name.c_str()))
+		{
 			return StateCodes[n];
 		}
 	}
