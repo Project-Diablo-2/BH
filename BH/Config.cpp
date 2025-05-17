@@ -172,6 +172,9 @@ void Config::SaveConfig()
 	jsonBnet["autofill_next_game"] = App.bnet.autofillNextGame.value;
 	jsonBnet["autofill_last_password"] = App.bnet.autofillLastPass.value;
 	jsonBnet["autofill_description"] = App.bnet.autofillLastDesc.value;
+	jsonBnet["save_last_game"] = App.bnet.saveLastGame.value;
+	jsonBnet["save_last_pass"] = App.bnet.saveLastPass.value;
+	jsonBnet["save_last_desc"] = App.bnet.saveLastDesc.value;
 	jsonBnet["show_difficulty"] = App.bnet.showDifficulty.value;
 	jsonBnet["show_gameserver"] = App.bnet.showGameserver.value;
 	jsonBnet["fail_to_join"] = App.bnet.failToJoin.value;
@@ -343,6 +346,9 @@ void Config::LoadConfig()
 	App.bnet.autofillNextGame.value = GetBool("/bnet"_json_pointer, "autofill_next_game", App.bnet.autofillNextGame);
 	App.bnet.autofillLastPass.value = GetBool("/bnet"_json_pointer, "autofill_last_password", App.bnet.autofillLastPass);
 	App.bnet.autofillLastDesc.value = GetBool("/bnet"_json_pointer, "autofill_description", App.bnet.autofillLastDesc);
+	App.bnet.saveLastGame.value = GetString("/bnet"_json_pointer, "save_last_game", App.bnet.saveLastGame);
+	App.bnet.saveLastPass.value = GetString("/bnet"_json_pointer, "save_last_pass", App.bnet.saveLastPass);
+	App.bnet.saveLastDesc.value = GetString("/bnet"_json_pointer, "save_last_desc", App.bnet.saveLastDesc);
 	App.bnet.showDifficulty.value = GetBool("/bnet"_json_pointer, "show_difficulty", App.bnet.showDifficulty);
 	App.bnet.showGameserver.value = GetBool("/bnet"_json_pointer, "show_gameserver", App.bnet.showGameserver);
 	App.bnet.failToJoin.value = GetInt("/bnet"_json_pointer, "fail_to_join", App.bnet.failToJoin);

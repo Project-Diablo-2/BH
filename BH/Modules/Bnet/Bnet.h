@@ -7,9 +7,6 @@ struct Control;
 class Bnet : public Module {
 	private:
 		static unsigned int failToJoin;
-		static std::string lastName;
-		static std::string lastPass;
-		static std::string lastDesc;
 		static std::regex reg;
 
 	public:

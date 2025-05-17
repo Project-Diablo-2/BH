@@ -3,9 +3,6 @@
 #include "../../BH.h"
 
 unsigned int Bnet::failToJoin;
-std::string Bnet::lastName;
-std::string Bnet::lastPass;
-std::string Bnet::lastDesc;
 std::regex Bnet::reg = std::regex("^(.*?)(\\d+)$");
 
 Patch* nextGame1 = new Patch(Call, D2MULTI, { 0x14D29, 0xADAB }, (int)Bnet::NextGamePatch, 5);
@@ -65,18 +62,28 @@ void Bnet::OnUnload() {
 }
 
 void Bnet::OnGameJoin() {
-	if ( strlen((*p_D2LAUNCH_BnData)->szGameName) > 0)
-		lastName = (*p_D2LAUNCH_BnData)->szGameName;
+	if (strlen((*p_D2LAUNCH_BnData)->szGameName) > 0)
+	{
+		App.bnet.saveLastGame.value = (*p_D2LAUNCH_BnData)->szGameName;
+	}
 
-	if ( strlen((*p_D2LAUNCH_BnData)->szGamePass) > 0)
-		lastPass = (*p_D2LAUNCH_BnData)->szGamePass;
+	if (strlen((*p_D2LAUNCH_BnData)->szGamePass) > 0)
+	{
+		App.bnet.saveLastPass.value = (*p_D2LAUNCH_BnData)->szGamePass;
+	}
 	else
-		lastPass = "";
-	
-	if ( strlen((*p_D2LAUNCH_BnData)->szGameDesc) > 0)
-		lastDesc = (*p_D2LAUNCH_BnData)->szGameDesc;
+	{
+		App.bnet.saveLastPass.value = "";
+	}
+
+	if (strlen((*p_D2LAUNCH_BnData)->szGameDesc) > 0)
+	{
+		App.bnet.saveLastDesc.value = (*p_D2LAUNCH_BnData)->szGameDesc;
+	}
 	else
-		lastDesc = "";
+	{
+		App.bnet.saveLastDesc.value = "";
+	}
 
 	RemovePatches();
 }
@@ -84,13 +91,13 @@ void Bnet::OnGameJoin() {
 void Bnet::OnGameExit() {
 	if (App.bnet.autofillNextGame.value) {
 		std::smatch match;
-		if (std::regex_search(Bnet::lastName, match, Bnet::reg) && match.size() == 3) {
+		if (std::regex_search(App.bnet.saveLastGame.value, match, Bnet::reg) && match.size() == 3) {
 			std::string name = match.format("$1");
 			if (name.length() != 0) {
 				int count = atoi(match.format("$2").c_str());
 
 				//Restart at 1 if the next number would exceed the max game name length of 15
-				if (lastName.length() == 15) {
+				if (App.bnet.saveLastGame.value.length() == 15) {
 					int maxCountLength = 15 - name.length();
 					int countLength = 1;
 					int tempCount = count + 1;
@@ -108,7 +115,7 @@ void Bnet::OnGameExit() {
 				}
 				char buffer[16];
 				sprintf_s(buffer, sizeof(buffer), "%s%d", name.c_str(), count);
-				lastName = std::string(buffer);
+				App.bnet.saveLastGame.value = std::string(buffer);
 			}
 		}
 	}
@@ -117,10 +124,10 @@ void Bnet::OnGameExit() {
 }
 
 VOID __fastcall Bnet::NextGamePatch(Control* box, BOOL (__stdcall *FunCallBack)(Control*, DWORD, DWORD)) {
-	if (Bnet::lastName.size() == 0)
+	if (App.bnet.saveLastGame.value.size() == 0)
 		return;
 
-	wchar_t *wszLastGameName = AnsiToUnicode(Bnet::lastName.c_str());
+	wchar_t *wszLastGameName = AnsiToUnicode(App.bnet.saveLastGame.value.c_str());
 
 	D2WIN_SetControlText(box, wszLastGameName);
 	D2WIN_SelectEditBoxText(box);
@@ -131,9 +138,9 @@ VOID __fastcall Bnet::NextGamePatch(Control* box, BOOL (__stdcall *FunCallBack)(
 }
 
 VOID __fastcall Bnet::NextPassPatch(Control* box, BOOL(__stdcall *FunCallBack)(Control*, DWORD, DWORD)) {
-	if (Bnet::lastPass.size() == 0)
+	if (App.bnet.saveLastPass.value.size() == 0)
 		return;
-	wchar_t *wszLastPass = AnsiToUnicode(Bnet::lastPass.c_str());
+	wchar_t *wszLastPass = AnsiToUnicode(App.bnet.saveLastPass.value.c_str());
 	
 	D2WIN_SetControlText(box, wszLastPass);
 	
@@ -143,9 +150,9 @@ VOID __fastcall Bnet::NextPassPatch(Control* box, BOOL(__stdcall *FunCallBack)(C
 }
 
 VOID __fastcall Bnet::GameDescPatch(Control* box, BOOL(__stdcall *FunCallBack)(Control*, DWORD, DWORD)) {
-	if (Bnet::lastDesc.size() == 0)
+	if (App.bnet.saveLastDesc.value.size() == 0)
 		return;
-	wchar_t *wszLastDesc = AnsiToUnicode(Bnet::lastDesc.c_str());
+	wchar_t *wszLastDesc = AnsiToUnicode(App.bnet.saveLastDesc.value.c_str());
 	
 	D2WIN_SetControlText(box, wszLastDesc);
 	
@@ -170,7 +177,7 @@ void __declspec(naked) RemovePass_Interception() {
 void Bnet::RemovePassPatch() {
 	Control* box = *p_D2MULTI_PassBox;
 
-	if (Bnet::lastPass.size() == 0 || box == nullptr) {
+	if (App.bnet.saveLastPass.value.size() == 0 || box == nullptr) {
 		return;
 	}
 

@@ -68,6 +68,9 @@ struct BHApp
 		SettingsBool autofillNextGame = { true, true };
 		SettingsBool autofillLastPass = { true, true };
 		SettingsBool autofillLastDesc = { true, true };
+		SettingsString saveLastGame = { "", "" };
+		SettingsString saveLastPass = { "", "" };
+		SettingsString saveLastDesc = { "", "" };
 		SettingsBool showDifficulty = { true, true };
 		SettingsBool showGameserver = { true, true };
 		SettingsInt failToJoin = { 4000, 4000, 4000, 10000 };
