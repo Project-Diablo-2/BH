@@ -1880,7 +1880,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 			}
 
 			// Item SpellDesc
-			if (itemTxt->wspelldescstr)
+			if (itemTxt->bspelldesc > 0)
 			{
 				wchar_t spellDesc[256];
 				D2CLIENT_GetItemDescription_STUB(itemTxt, spellDesc, pItem);
