@@ -13,7 +13,7 @@
 #define MAX_ITEM_NAME_SIZE 56
 #define MAX_ITEM_TEXT_SIZE 512 // Half of the maximum in-game limit
 #define BOOK_NAME_SIZE_LIMIT 127 // TP & ID Tomes have a smaller limit for some reason
-#define ITEM_TEXT_SIZE_LIMIT 1023
+#define ITEM_TEXT_SIZE_LIMIT 4095 // This limit actually seems to be much higher, in the assembly the item properties alone is size 4096
 
 enum TextColor {
 	Disabled = -1,
