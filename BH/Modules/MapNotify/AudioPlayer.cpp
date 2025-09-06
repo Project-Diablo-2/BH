@@ -18,6 +18,8 @@
 using Microsoft::WRL::ComPtr;
 
 
+//TODO this should be a BH module?
+// If so we need to investigate the deadlock that happens during BH init.
 AudioPlayer::AudioPlayer() {
     // TODO remove printText after testing
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
