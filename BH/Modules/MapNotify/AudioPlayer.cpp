@@ -19,19 +19,38 @@ using Microsoft::WRL::ComPtr;
 
 
 AudioPlayer::AudioPlayer() {
-    // TODO remove after testing
-    PrintText(0xFFFFA500, "init audio player");
+    // TODO remove printText after testing
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr)) throw std::runtime_error("Failed to initialize COM");
+    if (FAILED(hr)) {
+        char errorMsg[128];
+        snprintf(errorMsg, sizeof(errorMsg), "Failed to initialize COM (HRESULT: 0x%08X)", hr);
+        PrintText(0xFFFFA500, errorMsg);
+        throw std::runtime_error(errorMsg);
+    }
 
     hr = MFStartup(MF_VERSION, MFSTARTUP_FULL);
-    if (FAILED(hr)) throw std::runtime_error("Failed to initialize Media Foundation");
+    if (FAILED(hr)) {
+        char errorMsg[128];
+        snprintf(errorMsg, sizeof(errorMsg), "Failed to initialize Media Foundation (HRESULT: 0x%08X)", hr);
+        PrintText(0xFFFFA500, errorMsg);
+        throw std::runtime_error(errorMsg);
+    }
 
     hr = XAudio2Create(&xaudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
-    if (FAILED(hr)) throw std::runtime_error("Failed to create XAudio2 engine");
+    if (FAILED(hr)) {
+        char errorMsg[128];
+        snprintf(errorMsg, sizeof(errorMsg), "Failed to create XAudio2 (HRESULT: 0x%08X)", hr);
+        PrintText(0xFFFFA500, errorMsg);
+        throw std::runtime_error(errorMsg);
+    }
 
     hr = xaudio2->CreateMasteringVoice(&masterVoice);
-    if (FAILED(hr)) throw std::runtime_error("Failed to create mastering voice");
+    if (FAILED(hr)) {
+        char errorMsg[128];
+        snprintf(errorMsg, sizeof(errorMsg), "Failed to create mastering voice (HRESULT: 0x%08X)", hr);
+        PrintText(0xFFFFA500, errorMsg);
+        throw std::runtime_error(errorMsg);
+    }
 }
 
 AudioPlayer::~AudioPlayer() {
@@ -60,7 +79,11 @@ void AudioPlayer::PlaySoundInternal(const std::wstring& filePath, float volume) 
     // Initialize Media Foundation source reader
     ComPtr<IMFSourceReader> sourceReader;
     HRESULT hr = MFCreateSourceReaderFromURL(filePath.c_str(), nullptr, &sourceReader);
-    if (FAILED(hr)) throw std::runtime_error("Failed to create source reader");
+    if (FAILED(hr)) {
+        char errorMsg[128];
+        snprintf(errorMsg, sizeof(errorMsg), "Failed to create source reader (HRESULT: 0x%08X)", hr);
+        throw std::runtime_error(errorMsg);
+    }
 
     // Set output format to PCM
     ComPtr<IMFMediaType> mediaType;

@@ -2079,7 +2079,7 @@ string ParseSoundFilePath(Action* act, const string& key_string) {
 }
 
 // ParseSoundID
-// Returns an int ranging from 0 to the MAX_SOUND_ID.
+// Returns an int ranging from 0 to the p_D2CLIENT_SoundRecords.
 // If the parsed soundID is not found in that range, this will return a 0.
 int ParseSoundID(Action* act, const string& key_string) {
 	std::regex pattern("%" + key_string + "-([0-9]{1,4})%",
@@ -2096,7 +2096,7 @@ int ParseSoundID(Action* act, const string& key_string) {
 			the_match[0].length(), "");
 
 		// Do our best to ensure the soundID is valid.
-		// Ensure soundID is in the range of 0 and MAX_SOUND_ID.
+		// Ensure soundID is in the range of 0 and p_D2CLIENT_SoundRecords.
 		if (matchedSoundID < *p_D2CLIENT_SoundRecords) {
 			soundID = matchedSoundID;
 		}

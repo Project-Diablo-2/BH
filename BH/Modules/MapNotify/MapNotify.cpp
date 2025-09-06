@@ -16,6 +16,7 @@
 using namespace Drawing;
 
 DrawDirective automapDraw(true, 5);
+AudioPlayer* audioPlayer = nullptr;
 
 MapNotify::MapNotify() : Module("MapNotify") {
     ReadConfig();
@@ -30,7 +31,6 @@ void MapNotify::ReadConfig() {
 
 void MapNotify::OnLoad() {
     ReadConfig();
-//	audioPlayer = new AudioPlayer();
 }
 
 void MapNotify::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
@@ -45,18 +45,11 @@ void MapNotify::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 }
 
 void MapNotify::OnUnload() {
-    // TODO Calling this here instead of lazy loading will not allow startup
- //   if (audioPlayer) {
- //       audioPlayer->~AudioPlayer();
-
- //   }
-	//audioPlayer = nullptr;
 }
 
 void MapNotify::OnLoop() {
 }
 
-//AudioPlayer* aPlayer;
 
 Act* lastAct = NULL;
 
@@ -115,10 +108,9 @@ void MapNotify::OnDraw() {
 								  // Lazy initialize audio player
                                     if (audioPlayer == nullptr) {
                                         audioPlayer = new AudioPlayer();
-									}
+                                    }
 
                                     if (audioPlayer) {
-                                       //audioPlayer->PlaySoundAsync(L"C:\\BHTesting2\\Diablo II\\ProjectD2\\filters\\sounds\\cow1.wav", 0.1f);
                                        audioPlayer->PlaySoundAsync(std::wstring(filePath.begin(), filePath.end()), volume/100);
                                     }
                                 }

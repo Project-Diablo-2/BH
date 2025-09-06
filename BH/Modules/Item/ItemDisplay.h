@@ -818,7 +818,7 @@ struct Action
 	int    lineColor;
 	int    notifyColor;
 	int pingLevel;
-	int soundID; // Must range from 0 to MAX_SOUND_ID.
+	int soundID; // Must range from 0 to p_D2CLIENT_SoundRecords.
 	bool soundEnabled; // Controlled by sounds being enabled/disabled
 	int volume; // 0-100
 	string soundFilePath;

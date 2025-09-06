@@ -23,7 +23,6 @@ private:
 	unsigned int maxGhostSelection;
 	std::map<string, unsigned int> TextColorMap;
 	Drawing::UITab* settingsTab;
-	AudioPlayer* audioPlayer;
 
 public:
 	MapNotify();
