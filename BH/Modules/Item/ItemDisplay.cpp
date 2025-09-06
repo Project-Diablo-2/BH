@@ -1977,7 +1977,10 @@ void BuildAction(string* str,
 	act->notifyColor = ParseMapColor(act, "NOTIFY");
 	act->pingLevel = ParsePingLevel(act, "TIER");
 	act->description = ParseDescription(act);
-	act->soundID = ParseSoundID(act, "SOUNDID");
+	act->soundID= ParseSoundID(act, "SOUNDID");
+	act->soundEnabled = App.lootfilter.dropSounds.value;
+	act->volume = ParseVolume(act, "SOUND_BASE_VOLUME");
+	act->soundFilePath = ParseSoundFilePath(act, "SOUND_PATH");
 
 	// legacy support:
 	size_t map = act->name.find("%MAP%");
@@ -2025,6 +2028,54 @@ int ParsePingLevel(Action* act, const string& key_string) {
 			the_match[0].length(), "");
 	}
 	return ping_level;
+}
+
+int ParseVolume(Action* act, const string& key_string) {
+	// default to 100%
+	int baseVolume = 100;
+
+	std::regex soundBaseVolumePattern("%SOUND_BASE_VOLUME-([0-9]{1,3})%",
+		std::regex_constants::ECMAScript | std::regex_constants::icase);
+	std::smatch soundBaseVolumeMatch;
+	if (std::regex_search(act->name, soundBaseVolumeMatch, soundBaseVolumePattern)) {
+		baseVolume = stoi(soundBaseVolumeMatch[1].str());
+		act->name.replace(
+			soundBaseVolumeMatch.prefix().length(),
+			soundBaseVolumeMatch[0].length(), "");
+
+		// Clamp the base volume between 0 and 100.
+		if (baseVolume < 0) {
+			baseVolume = 0;
+		}
+		else if (baseVolume > 100) {
+			baseVolume = 100;
+		}
+	}
+
+	// Calculate the final volume.
+	return App.lootfilter.dropSoundsVolume.value * baseVolume / 100;
+}
+
+string ParseSoundFilePath(Action* act, const string& key_string) {
+	// Parse the soundpath from the action name.
+	// Wont support % in path
+	std::regex soundPathPattern("%" + key_string + "-([^%]*)%",
+		std::regex_constants::ECMAScript | std::regex_constants::icase);
+	std::smatch soundPathMatch;
+	std::string soundPath = "";
+	if (std::regex_search(act->name, soundPathMatch, soundPathPattern)) {
+		//TODO lets do something not unholy
+		std::string soundEscaped = "";
+		for (char c : soundPathMatch[1].str()) {
+			if (c == '\\') soundEscaped += "\\\\";
+			else soundEscaped += c;
+		}
+		soundPath = soundEscaped;
+		act->name.replace(
+			soundPathMatch.prefix().length(),
+			soundPathMatch[0].length(), "");
+	}
+	return soundPath;
 }
 
 // ParseSoundID

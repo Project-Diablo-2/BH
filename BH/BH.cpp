@@ -293,8 +293,10 @@ extern "C" {
 			return !BH::statsDisplay->IsMinimized();
 		case BH_CONFIG_HIDE_GAME_PASSWORD:
 			return App.screen.hideGamePassword.value;
+		case BH_CONFIG_DROPSOUNDS_VOLUME:
+			return App.lootfilter.dropSoundsVolume.value;
 		}
-
+	
 		return 0;
 	}
 
@@ -351,6 +353,12 @@ extern "C" {
 			return 1;
 		case BH_CONFIG_DROPSOUNDS:
 			App.lootfilter.dropSounds.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_DROPSOUNDS_VOLUME:
+			if (configVal < 0) configVal = 0;
+			if (configVal > 100) configVal = 100;
+			App.lootfilter.dropSoundsVolume.value = configVal;
 			bSave = TRUE;
 			break;
 		case BH_CONFIG_HIDE_GAME_PASSWORD:

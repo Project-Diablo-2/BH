@@ -819,6 +819,9 @@ struct Action
 	int    notifyColor;
 	int pingLevel;
 	int soundID; // Must range from 0 to MAX_SOUND_ID.
+	bool soundEnabled; // Controlled by sounds being enabled/disabled
+	int volume; // 0-100
+	string soundFilePath;
 
 	Action() :
 		colorOnMap(UNDEFINED_COLOR),
@@ -938,6 +941,8 @@ namespace ItemDisplay
 void            BuildAction(string* str,
 	Action* act);
 int ParsePingLevel(Action* act, const string& reg_string);
+int ParseVolume(Action* act, const string& reg_string);
+string ParseSoundFilePath(Action* act, const string& reg_string);
 int ParseSoundID(Action* act, const string& reg_string);
 string ParseDescription(Action* act);
 int    ParseMapColor(Action* act,

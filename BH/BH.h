@@ -111,6 +111,7 @@ struct BHApp
 		SettingsAssoc classSkillsList = {}; // TODO??
 		SettingsAssoc tabSkillsList = {};  // TODO??
 		SettingsBool dropSounds = { true, true };
+		SettingsInt dropSoundsVolume = { 100, 50, 0, 100 }; // default 50%
 	} lootfilter;
 
 	struct
@@ -207,6 +208,7 @@ typedef enum BHConfigId
 	BH_CONFIG_DROPSOUNDS,
 	BH_CONFIG_ADVANCEDSTATS_OPEN,
 	BH_CONFIG_HIDE_GAME_PASSWORD,
+	BH_CONFIG_DROPSOUNDS_VOLUME,
 } BHConfigId;
 
 typedef enum D2GLConfigId

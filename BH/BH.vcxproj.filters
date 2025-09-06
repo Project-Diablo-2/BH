@@ -96,6 +96,7 @@
     <ClCompile Include="Modules\GameSettings\GameSettings.cpp">
       <Filter>Modules\GameSettings</Filter>
     </ClCompile>
+    <ClCompile Include="Modules\MapNotify\AudioPlayer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AsyncDrawBuffer.h" />
@@ -201,6 +202,7 @@
     <ClInclude Include="Modules\GameSettings\GameSettings.h">
       <Filter>Modules\GameSettings</Filter>
     </ClInclude>
+    <ClInclude Include="Modules\MapNotify\AudioPlayer.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">

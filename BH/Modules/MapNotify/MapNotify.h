@@ -3,6 +3,7 @@
 #include "../Module.h"
 #include "../../Config.h"
 #include "../../Drawing.h"
+#include "./AudioPlayer.h"
 
 struct LevelList {
 	unsigned int levelId;
@@ -22,6 +23,7 @@ private:
 	unsigned int maxGhostSelection;
 	std::map<string, unsigned int> TextColorMap;
 	Drawing::UITab* settingsTab;
+	AudioPlayer* audioPlayer;
 
 public:
 	MapNotify();
