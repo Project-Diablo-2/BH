@@ -18,15 +18,11 @@
 using Microsoft::WRL::ComPtr;
 
 
-//TODO this should be a BH module?
-// If so we need to investigate the deadlock that happens during BH init.
 AudioPlayer::AudioPlayer() {
-    // TODO remove printText after testing
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(hr)) {
         char errorMsg[128];
         snprintf(errorMsg, sizeof(errorMsg), "Failed to initialize COM (HRESULT: 0x%08X)", hr);
-        PrintText(0xFFFFA500, errorMsg);
         throw std::runtime_error(errorMsg);
     }
 
@@ -34,7 +30,6 @@ AudioPlayer::AudioPlayer() {
     if (FAILED(hr)) {
         char errorMsg[128];
         snprintf(errorMsg, sizeof(errorMsg), "Failed to initialize Media Foundation (HRESULT: 0x%08X)", hr);
-        PrintText(0xFFFFA500, errorMsg);
         throw std::runtime_error(errorMsg);
     }
 
@@ -42,7 +37,6 @@ AudioPlayer::AudioPlayer() {
     if (FAILED(hr)) {
         char errorMsg[128];
         snprintf(errorMsg, sizeof(errorMsg), "Failed to create XAudio2 (HRESULT: 0x%08X)", hr);
-        PrintText(0xFFFFA500, errorMsg);
         throw std::runtime_error(errorMsg);
     }
 
@@ -50,7 +44,6 @@ AudioPlayer::AudioPlayer() {
     if (FAILED(hr)) {
         char errorMsg[128];
         snprintf(errorMsg, sizeof(errorMsg), "Failed to create mastering voice (HRESULT: 0x%08X)", hr);
-        PrintText(0xFFFFA500, errorMsg);
         throw std::runtime_error(errorMsg);
     }
 }
@@ -68,8 +61,9 @@ void AudioPlayer::PlaySoundAsync(const std::wstring& filePath, float volume) {
             PlaySoundInternal(filePath, volume);
         }
         catch (const std::exception& e) {
-            // TODO after testing we need to remove this print. Silently fail.
-            PrintText(0xFFFFA500, const_cast<char*>(e.what()));
+            if (App.lootfilter.dropCustomSoundsPrintDebug.value) {
+                PrintText(0xFFFFA500, const_cast<char*>(e.what()));
+            }
         }
         }).detach();
 }

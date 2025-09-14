@@ -1978,9 +1978,16 @@ void BuildAction(string* str,
 	act->pingLevel = ParsePingLevel(act, "TIER");
 	act->description = ParseDescription(act);
 	act->soundID= ParseSoundID(act, "SOUNDID");
-	act->soundEnabled = App.lootfilter.dropSounds.value;
-	act->volume = ParseVolume(act, "SOUND_BASE_VOLUME");
-	act->soundFilePath = ParseSoundFilePath(act, "SOUND_PATH");
+	act->customSoundVolume = ParseCustomSoundVolume(act, "CUSTOM_SOUND_BASE_VOLUME");
+	act->customSoundFilePath = ParseCustomSoundFilePath(act, "CUSTOM_SOUND_PATH");
+
+	if (act->customSoundFilePath.empty() && act->soundID == 0) {
+		// If no sound path and no sound ID, disable sound
+		act->soundEnabled = false;
+	} else {
+		// Enable/disable sound based on global setting
+		act->soundEnabled = App.lootfilter.dropSounds.value;
+	}
 
 	// legacy support:
 	size_t map = act->name.find("%MAP%");
@@ -2030,9 +2037,9 @@ int ParsePingLevel(Action* act, const string& key_string) {
 	return ping_level;
 }
 
-int ParseVolume(Action* act, const string& key_string) {
-	// default to 100%
-	int baseVolume = 100;
+int ParseCustomSoundVolume(Action* act, const string& key_string) {
+	// default to 50%
+	int baseVolume = 50;
 
 	std::regex soundBaseVolumePattern("%SOUND_BASE_VOLUME-([0-9]{1,3})%",
 		std::regex_constants::ECMAScript | std::regex_constants::icase);
@@ -2053,10 +2060,10 @@ int ParseVolume(Action* act, const string& key_string) {
 	}
 
 	// Calculate the final volume.
-	return App.lootfilter.dropSoundsVolume.value * baseVolume / 100;
+	return App.lootfilter.dropCustomSoundsVolume.value * baseVolume / 100;
 }
 
-string ParseSoundFilePath(Action* act, const string& key_string) {
+string ParseCustomSoundFilePath(Action* act, const string& key_string) {
 	// Parse the soundpath from the action name.
 	// Wont support % in path
 	std::regex soundPathPattern("%" + key_string + "-([^%]*)%",
@@ -2100,6 +2107,11 @@ int ParseSoundID(Action* act, const string& key_string) {
 		if (matchedSoundID < *p_D2CLIENT_SoundRecords) {
 			soundID = matchedSoundID;
 		}
+	}
+
+	// Don't allow music
+	if (soundID < 4657 || soundID > 4698 || soundID >= *p_D2CLIENT_SoundRecords) {
+		soundID = 0;
 	}
 
 	return soundID;

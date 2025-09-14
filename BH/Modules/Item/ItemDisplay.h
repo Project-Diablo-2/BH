@@ -820,8 +820,8 @@ struct Action
 	int pingLevel;
 	int soundID; // Must range from 0 to p_D2CLIENT_SoundRecords.
 	bool soundEnabled; // Controlled by sounds being enabled/disabled
-	int volume; // 0-100
-	string soundFilePath;
+	int customSoundVolume; // 0-100
+	string customSoundFilePath;
 
 	Action() :
 		colorOnMap(UNDEFINED_COLOR),
@@ -834,7 +834,10 @@ struct Action
 		pingLevel(-1),
 		stopProcessing(true),
 		name(""),
-		description("")
+		description(""),
+		soundEnabled(false),
+		customSoundFilePath(""),
+		customSoundVolume(50)
 	{
 	}
 };
@@ -941,8 +944,8 @@ namespace ItemDisplay
 void            BuildAction(string* str,
 	Action* act);
 int ParsePingLevel(Action* act, const string& reg_string);
-int ParseVolume(Action* act, const string& reg_string);
-string ParseSoundFilePath(Action* act, const string& reg_string);
+int ParseCustomSoundVolume(Action* act, const string& reg_string);
+string ParseCustomSoundFilePath(Action* act, const string& reg_string);
 int ParseSoundID(Action* act, const string& reg_string);
 string ParseDescription(Action* act);
 int    ParseMapColor(Action* act,

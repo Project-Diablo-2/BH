@@ -90,9 +90,7 @@ void MapNotify::OnDraw() {
                                 Action action = (*it)->action;
                                 int soundID = action.soundID;
 
-                                if (soundID > 0 && soundID < *p_D2CLIENT_SoundRecords &&
-                                    (soundID < 4657 || soundID > 4698) &&	// Don't allow music
-                                    App.lootfilter.dropSounds.value && pSoundsTxt)
+                                if (action.soundEnabled && soundID > 0 && pSoundsTxt)
                                 {
                                     pSoundsTxt = pSoundsTxt + soundID;
                                     if (pSoundsTxt && pSoundsTxt->loop == 0)
@@ -101,18 +99,26 @@ void MapNotify::OnDraw() {
                                     }
                                 }
 
-                                if (action.soundEnabled) {
-                                   float volume = action.volume;
-                                  string filePath = action.soundFilePath;
+								// If sound is enabled and a custom sound file path is set, play the custom sound
+                                if (action.soundEnabled && !action.customSoundFilePath.empty()) {
+                                    float volume = action.customSoundVolume;
+                                    string filePath = action.customSoundFilePath;
 
-								  // Lazy initialize audio player
-                                    if (audioPlayer == nullptr) {
-                                        audioPlayer = new AudioPlayer();
-                                    }
+								    // Lazy initialize audio player
+                                     if (audioPlayer == nullptr) {
+                                         try {
+											 audioPlayer = new AudioPlayer();
+                                        }
+                                        catch (const std::exception& e) {
+                                            if (App.lootfilter.dropCustomSoundsPrintDebug.value) {
+                                                 PrintText(0xFFFFA500, const_cast<char*>(e.what()));
+                                            }
+                                         }
+                                     }
 
-                                    if (audioPlayer) {
-                                       audioPlayer->PlaySoundAsync(std::wstring(filePath.begin(), filePath.end()), volume/100);
-                                    }
+                                     if (audioPlayer) {
+                                        audioPlayer->PlaySoundAsync(std::wstring(filePath.begin(), filePath.end()), volume/100);
+                                     }
                                 }
 
                                 std::string itemName = GetItemName(unit);
