@@ -2041,7 +2041,7 @@ int ParseCustomSoundVolume(Action* act, const string& key_string) {
 	// default to 50%
 	int baseVolume = 50;
 
-	std::regex soundBaseVolumePattern("%SOUND_BASE_VOLUME-([0-9]{1,3})%",
+	std::regex soundBaseVolumePattern("%"+ key_string+"-([0-9]{1,3})%",
 		std::regex_constants::ECMAScript | std::regex_constants::icase);
 	std::smatch soundBaseVolumeMatch;
 	if (std::regex_search(act->name, soundBaseVolumeMatch, soundBaseVolumePattern)) {

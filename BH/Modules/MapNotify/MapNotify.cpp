@@ -117,6 +117,9 @@ void MapNotify::OnDraw() {
                                      }
 
                                      if (audioPlayer) {
+                                         if (App.lootfilter.dropCustomSoundsPrintDebug.value) {
+                                             PrintText(0xFFFFA500, "Playing sound path: %s at volume: %.2f", filePath.c_str(), volume / 100);
+                                         }
                                         audioPlayer->PlaySoundAsync(std::wstring(filePath.begin(), filePath.end()), volume/100);
                                      }
                                 }
