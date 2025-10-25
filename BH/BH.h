@@ -153,6 +153,7 @@ struct BHApp
 		};
 		SettingsAssoc additionalStats = {};
 		SettingsBool hideGamePassword = { false, false };
+		SettingsBool showAutomapOnJoin = { false, false };
 	} screen;
 
 	struct
