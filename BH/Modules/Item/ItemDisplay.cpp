@@ -2071,13 +2071,13 @@ string ParseCustomSoundFilePath(Action* act, const string& key_string) {
 	std::smatch soundPathMatch;
 	std::string soundPath = "";
 	if (std::regex_search(act->name, soundPathMatch, soundPathPattern)) {
-		//TODO lets do something not unholy
 		std::string soundEscaped = "";
 		for (char c : soundPathMatch[1].str()) {
 			if (c == '\\') soundEscaped += "\\\\";
 			else soundEscaped += c;
 		}
-		soundPath = soundEscaped;
+		
+		soundPath = BH::lootFilter->GetCustomSoundFilePrefix() + soundEscaped;
 		act->name.replace(
 			soundPathMatch.prefix().length(),
 			soundPathMatch[0].length(), "");

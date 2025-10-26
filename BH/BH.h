@@ -113,6 +113,7 @@ struct BHApp
 		SettingsBool dropSounds = { true, true };
 		SettingsInt dropCustomSoundsVolume = { 100, 50, 0, 100 }; // default 50%
 		SettingsBool dropCustomSoundsPrintDebug = { false, false };
+		SettingsInt dropCustomSoundsMaxDurationSeconds = { 5, 5, 0, 300 };
 	} lootfilter;
 
 	struct
@@ -211,6 +212,7 @@ typedef enum BHConfigId
 	BH_CONFIG_HIDE_GAME_PASSWORD,
 	BH_CONFIG_DROP_CUSTOM_SOUNDS_VOLUME,
 	BH_CONFIG_DROP_CUSTOM_SOUNDS_PRINT_DEBUG,
+	BH_CONFIG_DROP_CUSTOM_SOUNDS_MAX_DURATION_SECONDS,
 } BHConfigId;
 
 typedef enum D2GLConfigId

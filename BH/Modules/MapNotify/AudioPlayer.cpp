@@ -70,7 +70,6 @@ void AudioPlayer::PlaySoundAsync(const std::wstring& filePath, float volume) {
 
 ComPtr<IXAudio2> xaudio2;
 IXAudio2MasteringVoice* masterVoice = nullptr;
-
 void AudioPlayer::PlaySoundInternal(const std::wstring& filePath, float volume) {
     // Initialize Media Foundation source reader
     ComPtr<IMFSourceReader> sourceReader;
@@ -101,6 +100,12 @@ void AudioPlayer::PlaySoundInternal(const std::wstring& filePath, float volume) 
     hr = MFCreateWaveFormatExFromMFMediaType(outputType.Get(), &waveFormat, &waveFormatSize);
     if (FAILED(hr)) throw std::runtime_error("Failed to get wave format");
 
+	// Restrict the duration of the sound to avoid long playback
+	// Loot filter makers should keep sounds short anyway, but lets add this safety net.
+    DWORD maxSamples = waveFormat->nSamplesPerSec * App.lootfilter.dropCustomSoundsMaxDurationSeconds.value;
+    if (App.lootfilter.dropCustomSoundsPrintDebug.value) {
+        PrintText(0xFFFFA500, "Max Samples: %lu at max duration seconds: %d", waveFormat->nSamplesPerSec * App.lootfilter.dropCustomSoundsMaxDurationSeconds.value, App.lootfilter.dropCustomSoundsMaxDurationSeconds.value);
+    }
     // Create source voice
     IXAudio2SourceVoice* sourceVoice = nullptr;
     hr = xaudio2->CreateSourceVoice(&sourceVoice, waveFormat, 0, XAUDIO2_DEFAULT_FREQ_RATIO, nullptr);
@@ -113,7 +118,10 @@ void AudioPlayer::PlaySoundInternal(const std::wstring& filePath, float volume) 
     sourceVoice->SetVolume(volume);
 
     std::vector<BYTE> audioData;
-    while (true) {
+    DWORD totalSamples = 0;
+    bool reachedLimit = false;
+
+    while (!reachedLimit) {
         ComPtr<IMFSample> sample;
         DWORD flags = 0;
         hr = sourceReader->ReadSample(MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0, nullptr, &flags, nullptr, &sample);
@@ -126,19 +134,47 @@ void AudioPlayer::PlaySoundInternal(const std::wstring& filePath, float volume) 
             DWORD dataLength = 0;
             hr = mediaBuffer->Lock(&audioDataPtr, nullptr, &dataLength);
             if (SUCCEEDED(hr)) {
-                audioData.resize(audioData.size() + dataLength);
-                memcpy(audioData.data() + audioData.size() - dataLength, audioDataPtr, dataLength);
+                // Calculate how many samples are in this buffer
+                DWORD bytesPerSample = (waveFormat->wBitsPerSample / 8) * waveFormat->nChannels;
+                DWORD numSamples = bytesPerSample ? (dataLength / bytesPerSample) : 0;
+
+                // If adding this buffer would exceed the limit, trim it
+                if (totalSamples + numSamples > maxSamples) {
+                    DWORD allowedSamples = maxSamples - totalSamples;
+                    DWORD allowedBytes = allowedSamples * bytesPerSample;
+                    if (allowedBytes > 0 && allowedBytes <= dataLength) {
+                        size_t oldSize = audioData.size();
+                        audioData.resize(oldSize + allowedBytes);
+                        memcpy(audioData.data() + oldSize, audioDataPtr, allowedBytes);
+                    }
+                    reachedLimit = true;
+                }
+                else {
+                    size_t oldSize = audioData.size();
+                    audioData.resize(oldSize + dataLength);
+                    memcpy(audioData.data() + oldSize, audioDataPtr, dataLength);
+                    totalSamples += numSamples;
+                }
                 mediaBuffer->Unlock();
             }
         }
     }
-    if (audioData.empty()) throw std::runtime_error("No audio data read");
+    if (audioData.empty()) {
+        sourceVoice->DestroyVoice();
+        CoTaskMemFree(waveFormat);
+        throw std::runtime_error("No audio data read");
+    }
+
     XAUDIO2_BUFFER buffer = { 0 };
     buffer.AudioBytes = static_cast<UINT32>(audioData.size());
     buffer.pAudioData = audioData.data();
     buffer.Flags = XAUDIO2_END_OF_STREAM; // Mark end of stream
     hr = sourceVoice->SubmitSourceBuffer(&buffer);
-    if (FAILED(hr)) throw std::runtime_error("Failed to submit buffer");
+    if (FAILED(hr)) {
+        sourceVoice->DestroyVoice();
+        CoTaskMemFree(waveFormat);
+        throw std::runtime_error("Failed to submit buffer");
+    }
 
     // Start playback
     sourceVoice->Start(0);

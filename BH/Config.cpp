@@ -228,6 +228,7 @@ void Config::SaveConfig()
 	jsonLoot["drop_sounds"] = App.lootfilter.dropSounds.value;
 	jsonLoot["drop_custom_sounds_volume"] = App.lootfilter.dropCustomSoundsVolume.value;
 	jsonLoot["drop_custom_sounds_print_debug"] = App.lootfilter.dropCustomSoundsPrintDebug.value;
+	jsonLoot["drop_custom_sounds_max_duration_seconds"] = App.lootfilter.dropCustomSoundsMaxDurationSeconds.value;
 	if (App.lootfilter.classSkillsList.values.size() > 0) { jsonLoot["class_skills_list"] = App.lootfilter.classSkillsList.values; }
 	if (App.lootfilter.tabSkillsList.values.size() > 0) { jsonLoot["tab_skills_list"] = App.lootfilter.tabSkillsList.values; }
 	jsonLoot["legacy_settings"] = jsonLegacyLoot;
@@ -377,6 +378,7 @@ void Config::LoadConfig()
 	App.lootfilter.dropSounds.value = GetBool("/lootfilter"_json_pointer, "drop_sounds", App.lootfilter.dropSounds);
 	App.lootfilter.dropCustomSoundsVolume.value = GetInt("/lootfilter"_json_pointer, "drop_custom_sounds_volume", App.lootfilter.dropCustomSoundsVolume);
 	App.lootfilter.dropCustomSoundsPrintDebug.value = GetBool("/lootfilter"_json_pointer, "drop_custom_sounds_print_debug", App.lootfilter.dropCustomSoundsPrintDebug);
+	App.lootfilter.dropCustomSoundsMaxDurationSeconds.value = GetInt("/lootfilter"_json_pointer, "drop_custom_sounds_max_duration_seconds", App.lootfilter.dropCustomSoundsMaxDurationSeconds);
 
 	// Clamp the drop sound volume between 0 and 100.
 	if (App.lootfilter.dropCustomSoundsVolume.value < 0) {
@@ -526,6 +528,17 @@ std::string Config::GetConfigName()
 void Config::SetConfigName(std::string name)
 {
 	configName = name;
+}
+
+
+std::string Config::GetCustomSoundFilePrefix()
+{
+	return customSoundFilePrefix;
+}
+
+void Config::SetCustomSoundFilePrefix(std::string prefix)
+{
+	customSoundFilePrefix = prefix;
 }
 
 vector<pair<string, string>> Config::ReadMapList(std::string key, vector<pair<string, string>>& values)

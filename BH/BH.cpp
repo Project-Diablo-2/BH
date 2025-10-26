@@ -202,8 +202,14 @@ void BH::LoadLootFilter()
 				std::string author = launcherJson["SelectedAuthorAndFilter"]["selectedAuthor"]["author"].template get<std::string>();
 				std::string filter = launcherJson["SelectedAuthorAndFilter"]["selectedFilter"]["name"].template get<std::string>();
 
-				if (author == "Local Filter") { lootFilter->SetConfigName("filters\\local\\" + filter); }
-				else { lootFilter->SetConfigName("filters\\online\\" + filter); }
+				if (author == "Local Filter") { 
+					lootFilter->SetConfigName("filters\\local\\" + filter); 
+					lootFilter->SetCustomSoundFilePrefix(".\\filters\\local\\filterSounds\\");
+				}
+				else { 
+					lootFilter->SetConfigName("filters\\online\\" + filter);
+					lootFilter->SetCustomSoundFilePrefix(".\\filters\\online\\"+author+"\\filterSounds\\");
+				}
 			}
 		}
 		catch (const json::parse_error&)
@@ -215,6 +221,7 @@ void BH::LoadLootFilter()
 	{
 		// Fallback to previous behavior
 		lootFilter->SetConfigName("loot.filter");
+		lootFilter->SetCustomSoundFilePrefix(".\\filterSounds\\");
 		if (!lootFilter->Parse())
 		{
 			lootFilter->SetConfigName("default.filter");
@@ -295,6 +302,8 @@ extern "C" {
 			return App.screen.hideGamePassword.value;
 		case BH_CONFIG_DROP_CUSTOM_SOUNDS_PRINT_DEBUG:
 			return App.lootfilter.dropCustomSoundsPrintDebug.value;
+		case BH_CONFIG_DROP_CUSTOM_SOUNDS_MAX_DURATION_SECONDS:
+			return App.lootfilter.dropCustomSoundsMaxDurationSeconds.value;
 		case BH_CONFIG_DROP_CUSTOM_SOUNDS_VOLUME:
 			return App.lootfilter.dropCustomSoundsVolume.value;
 		}
@@ -365,6 +374,12 @@ extern "C" {
 			break;
 		case BH_CONFIG_DROP_CUSTOM_SOUNDS_PRINT_DEBUG:
 			App.lootfilter.dropCustomSoundsPrintDebug.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_DROP_CUSTOM_SOUNDS_MAX_DURATION_SECONDS:
+			if (configVal < 0) configVal = 0;
+			if (configVal > 300) configVal = 300;
+			App.lootfilter.dropCustomSoundsMaxDurationSeconds.value = configVal;
 			bSave = TRUE;
 			break;
 		case BH_CONFIG_HIDE_GAME_PASSWORD:

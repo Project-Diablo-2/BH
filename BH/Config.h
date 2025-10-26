@@ -98,6 +98,7 @@ inline bool operator< (const ConfigEntry& lhs, const ConfigEntry& rhs) {
 class Config {
 private:
 	std::string configName;
+	std::string customSoundFilePrefix;
 	// Only used in lootfilter Parse()
 	std::map<std::string, ConfigEntry> contents;
 	vector<pair<string, string>> orderedKeyVals;
@@ -107,8 +108,9 @@ public:
 	Config(std::string name) : configName(name) {};
 
 	std::string GetConfigName();
+	std::string GetCustomSoundFilePrefix();
 	void SetConfigName(std::string name);
-
+	void SetCustomSoundFilePrefix(std::string prefix);
 	// Functions to read values from the configuration
 	int GetInt(json::json_pointer sectionKey, std::string key, SettingsInt def);
 	float GetFloat(json::json_pointer sectionKey, std::string key, SettingsFloat def);
