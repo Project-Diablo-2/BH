@@ -384,6 +384,7 @@ enum FilterCondition
 	COND_DRUID,
 	COND_ASSASSIN,
 	COND_CRAFTALVL,
+	COND_REROLLALVL,
 	COND_PREFIX,
 	COND_SUFFIX,
 	COND_AUTOMOD,
@@ -518,6 +519,7 @@ std::map<std::string, FilterCondition> condition_map =
 	{"DRUID", COND_DRUID},
 	{"ASSASSIN", COND_ASSASSIN},
 	{"CRAFTALVL", COND_CRAFTALVL},
+	{"REROLLALVL", COND_REROLLALVL},
 	{"PREFIX", COND_PREFIX},
 	{"SUFFIX", COND_SUFFIX},
 	{"AUTOMOD", COND_AUTOMOD},
@@ -829,6 +831,8 @@ struct ReplacementSpec {
 	static string ReplaceAffixLevel(ReplaceContext& ctx, const ReplacementValue& val);
 	// %CRAFTALVL%
 	static string ReplaceCraftLevel(ReplaceContext& ctx, const ReplacementValue& val);
+	// %REROLLALVL%
+	static string ReplaceRerollLevel(ReplaceContext& ctx, const ReplacementValue& val);
 	// %LVLREQ%
 	static string ReplaceLevelRequirement(ReplaceContext& ctx, const ReplacementValue& val);
 	// %WPNSPD%
@@ -884,6 +888,7 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "ILVL", { 0, ReplacementSpec::ReplaceItemLevel } },
 	{ "ALVL", { 0, ReplacementSpec::ReplaceAffixLevel } },
 	{ "CRAFTALVL", { 0, ReplacementSpec::ReplaceCraftLevel } },
+	{ "REROLLALVL", {0, ReplacementSpec::ReplaceRerollLevel }},
 	{ "LVLREQ", { 0, ReplacementSpec::ReplaceLevelRequirement } },
 	{ "WPNSPD", { 0, ReplacementSpec::ReplaceWeaponSpeed } },
 	{ "RANGE", { 0, ReplacementSpec::ReplaceRange } },
@@ -1087,6 +1092,11 @@ string ReplacementSpec::ReplaceAffixLevel(ReplaceContext& ctx, const Replacement
 string ReplacementSpec::ReplaceCraftLevel(ReplaceContext& ctx, const ReplacementValue& val)
 {
 	return NameVarCraftAlvl(ctx.info);
+}
+
+string ReplacementSpec::ReplaceRerollLevel(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarRerollAlvl(ctx.info);
 }
 
 string ReplacementSpec::ReplaceLevelRequirement(ReplaceContext& ctx, const ReplacementValue& val)
@@ -1502,6 +1512,14 @@ string NameVarCraftAlvl(UnitItemInfo* uInfo)
 	);
 	sprintf_s(craftalvl, "%d", craft_alvl);
 	return craftalvl;
+}
+
+string NameVarRerollAlvl(UnitItemInfo* uInfo)
+{
+	char alvl[4] = "0";
+	int reroll_alvl = ComputeRerollAffixLevel(uInfo);
+	sprintf_s(alvl, "%d", reroll_alvl);
+	return alvl;
 }
 
 string NameVarLevelReq(UnitItemInfo* uInfo)
@@ -2327,6 +2345,9 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_CRAFTALVL:
 		Condition::AddOperand(conditions, new CraftLevelCondition(operation, value, value2));
 		break;
+	case COND_REROLLALVL:
+		Condition::AddOperand(conditions, new RerollLevelCondition(operation, value, value2));
+		break;
 	case COND_PREFIX:
 		Condition::AddOperand(conditions, new MagicPrefixCondition(operation, value, value2));
 		break;
@@ -2885,6 +2906,46 @@ bool CraftLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	return IntegerCompare(craft_alvl, operation, craftLevel, craftLevel2);
 }
 
+bool RerollLevelCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	int rerollAlvl = ComputeRerollAffixLevel(uInfo);
+	return IntegerCompare(rerollAlvl, operation_, rerollLevel1_, rerollLevel2_);
+}
+
+BYTE ComputeRerollAffixLevel(UnitItemInfo* uInfo) {
+	// Maps cannot be rerolled using the standard recipe.
+	if (uInfo->attrs->miscFlags & ITEM_GROUP_MAP) {
+		return 0;
+	}
+
+	// Corrupted items cannot be rerolled.
+	if (D2COMMON_GetUnitStat(uInfo->item, STAT_CORRUPTED, 0) > 0) {
+		return 0;
+	}
+
+	BYTE ilvl = uInfo->item->pItemData->dwItemLevel;
+	BYTE reroll_ilvl;
+
+	switch (uInfo->item->pItemData->dwQuality) {
+		case ITEM_QUALITY_RARE:	{
+			BYTE clvl = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
+			reroll_ilvl = (int)(0.4 * ilvl) + (int)(0.4 * clvl);
+			break;
+		}
+		case ITEM_QUALITY_MAGIC:
+			reroll_ilvl = ilvl;
+			break;
+		default:
+			return 0;
+	}
+
+	BYTE qlvl = uInfo->attrs->qualityLevel;
+	BYTE mlvl = uInfo->attrs->magicLevel;
+	return GetAffixLevel(reroll_ilvl, qlvl, mlvl);
+}
+
 bool MagicPrefixCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
@@ -3393,4 +3454,3 @@ void HandleUnknownItemCode(char* code,
 		UnknownItemCodes[code] = 1;
 	}
 }
-
