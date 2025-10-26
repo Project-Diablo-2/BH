@@ -130,7 +130,7 @@ bool IsInitialized();
 
 // Item attributes from ItemTypes.txt and Weapon/Armor/Misc.txt
 struct ItemAttributes {
-	std::string name;			// Only used in Item Drop/Item Close Notifications. Can delete
+	std::string name;
 	WORD category;
 	BYTE width;					// Delete. Inventory related, which is unnecessary
 	BYTE height;				// Delete. Inventory related, which is unnecessary

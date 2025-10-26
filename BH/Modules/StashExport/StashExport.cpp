@@ -250,9 +250,7 @@ void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
 	ItemsTxt* txt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
 	std::string type = UnicodeToAnsi(D2LANG_GetLocaleText(txt->wnamestr));
 	// Remove hardcoded color
-	if (type.size() > 3 && type.substr(0, 2) == "ÿc") {
-		type = type.substr(3, type.size() - 3);
-	}
+	type = MaybeStripColorPrefix(type);
 	pBuffer->set("type", type);
 	pBuffer->set("quality", std::string(QUALITY_NAMES[pItem->pItemData->dwQuality]));
 	pBuffer->set("iLevel", (int)pItem->pItemData->dwItemLevel);
@@ -321,9 +319,7 @@ void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
 			}
 
 			// Remove hardcoded color
-			if (name.size() > 3 && name.substr(0, 2) == "ÿc") {
-				name = name.substr(3, name.size() - 3);
-			}
+			name = MaybeStripColorPrefix(name);
 			pBuffer->set("name", name);
 		}
 							   break;
@@ -333,9 +329,7 @@ void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
 			{
 				std::string name = pUniqueItemsTxt->szName;
 				// Remove hardcoded color
-				if (name.size() > 3 && name.substr(0, 2) == "ÿc") {
-					name = name.substr(3, name.size() - 3);
-				}
+				name = MaybeStripColorPrefix(name);
 				pBuffer->set("name", name);
 				fillStats(statsObject, pUniqueItemsTxt->hStats, pItem, 12);
 			}
@@ -349,9 +343,7 @@ void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
 				std::string itemName = pSetItemsTxt->szName;
 				std::string setName = UnicodeToAnsi(GetTblEntryByIndex(pSetsTxt->wStringId, TBLOFFSET_STRING));
 				// Remove hardcoded color
-				if (itemName.size() > 3 && itemName.substr(0, 2) == "ÿc") {
-					itemName = itemName.substr(3, itemName.size() - 3);
-				}
+				itemName = MaybeStripColorPrefix(itemName);
 				pBuffer->set("set", setName);
 				pBuffer->set("name", itemName);
 				fillStats(statsObject, pSetItemsTxt->hStats, pItem, 9);

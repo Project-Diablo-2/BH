@@ -70,6 +70,7 @@ template< class type> std::string to_string(const type& value)
 bool IsTrue(const char* str);
 bool StringToBool(std::string str);
 int StringToNumber(std::string str);
+std::string MaybeStripColorPrefix(std::string str);
 
 std::string Trim(std::string source);
 

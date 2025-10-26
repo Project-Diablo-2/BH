@@ -124,6 +124,14 @@ int StringToNumber(std::string str) {
 	return ret;
 }
 
+std::string MaybeStripColorPrefix(std::string str) {
+	if (str.size() > 3 && str.substr(0, 2) == "ÿc") {
+		str = str.substr(3, str.size() - 3);
+	}
+
+	return str;
+}
+
 // This function prints at most 151 characters (152 including null)
 // TODO: Fix this so this limitation
 void PrintText(DWORD Color, char* szText, ...) {
