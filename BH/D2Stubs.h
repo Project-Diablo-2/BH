@@ -17,3 +17,7 @@ int __stdcall D2COMMON_GetFrameMinAccr_STUB(int nIndex, UnitAny* pUnit);
 void __stdcall D2CLIENT_GetItemFromPacket_NewGround_STUB(px9c* packet);
 void __stdcall D2CLIENT_GetItemFromPacketIntercept_NewGround_STUB();
 void __stdcall D2CLIENT_GetItemDescription_STUB(ItemsTxt* pItemTxtRec, wchar_t* pBuffer, UnitAny* pItem);
+SoundInstance* __stdcall D2CLIENT_GetExistingSoundInstanceInQueue_STUB(int nSound, SoundInstance* pSoundInstanceToSkip);
+void __stdcall D2CLIENT_AdjustSoundBasedOnCoords_STUB(float* fPos, UnitAny* pUnit, int nSound);
+float __stdcall D2CLIENT_SoundTestCollision_STUB(int nSound, UnitAny* pTarget);
+void __stdcall D2CLIENT_LinkSoundInstanceToClientUnit_STUB(UnitAny* pUnit, int nSoundInstanceId);

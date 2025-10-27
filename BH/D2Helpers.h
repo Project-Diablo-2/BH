@@ -35,3 +35,5 @@ DWORD GetPlayerArea();
 int32_t __fastcall UTILITY_CalcPercent(int32_t nValue, double nPercent, uint32_t nBase);
 wchar_t* GetTblEntryByIndex(int nIndex, int nSource);
 int ItemColorFromQuality(unsigned int quality);
+
+int PlaySoundWithVolumeAndPriority(UnitAny* pUnit, int nSound, int nVolume, int nPriority);

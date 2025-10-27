@@ -367,3 +367,73 @@ wchar_t* GetTblEntryByIndex(int nIndex, int nOffset)
 	int nEntryIndex = nIndex + nOffset;
 	return D2LANG_GetLocaleText(nEntryIndex);
 }
+
+int PlaySoundWithVolumeAndPriority(UnitAny* pUnit, int nSound, int nVolume, int nPriority)
+{
+	int nSoundFrame = *p_D2CLIENT_DAT_SoundFrame;
+	if (*p_D2CLIENT_DAT_SoundEnabled == 0 || nSound < 1)
+	{
+		return 0;
+	}
+
+	SoundsTxt* pSoundsTxt = NULL;
+	if (*p_D2CLIENT_SoundsTxt == NULL || *p_D2CLIENT_SoundRecords <= nSound)
+	{
+		return 0;
+	}
+	else
+	{
+		pSoundsTxt = *p_D2CLIENT_SoundsTxt + nSound;
+		if (pSoundsTxt == NULL)
+		{
+			return 0;
+		}
+	}
+
+	SoundInstance* pSoundInstance = NULL;
+	if (pSoundsTxt->compound != 0)
+	{
+		pSoundInstance = D2CLIENT_GetExistingSoundInstanceInQueue_STUB(nSound, NULL);
+	}
+
+	if (pSoundInstance == NULL)
+	{
+		pSoundInstance = D2CLIENT_CreateSoundInstance();
+		if (pSoundInstance == NULL)
+		{
+			return 0;
+		}
+
+		pSoundInstance->bSoundIsMusic = FALSE;
+		pSoundInstance->nSound = nSound;
+		pSoundInstance->nStartFrame = nSoundFrame;
+		pSoundInstance->nPrevSampleOffset = 0;
+		pSoundInstance->nVolumeAdjust = nVolume;
+		pSoundInstance->priority = nPriority;
+
+		float fPos[3] = {};
+		if (pUnit == NULL)
+		{
+			// Ambient coords?
+			fPos[0] = 0.0;
+			fPos[1] = 0;
+			fPos[2] = 0x43a00000;
+			D2CLIENT_SetSoundInstanceCoords(fPos, pSoundInstance);
+		}
+		else
+		{
+			D2CLIENT_AdjustSoundBasedOnCoords_STUB(fPos, pUnit, nSound);
+			D2CLIENT_SetSoundInstanceCoords(fPos, pSoundInstance);
+			float fCollisionAdjust = D2CLIENT_SoundTestCollision_STUB(nSound, pUnit);
+			pSoundInstance->fCollisionAdjust = fCollisionAdjust;
+		}
+	}
+
+	if (pUnit != NULL)
+	{
+		D2SOUND_10034_LinkSoundInstance(&pSoundInstance->pInstanceLink, pUnit);
+		D2CLIENT_LinkSoundInstanceToClientUnit_STUB(pUnit, pSoundInstance->nSoundInstanceId);
+	}
+
+	return pSoundInstance->nSoundInstanceId;
+}
