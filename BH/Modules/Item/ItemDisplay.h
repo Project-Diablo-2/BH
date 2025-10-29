@@ -390,6 +390,25 @@ private:
 		Condition* arg2);
 };
 
+class RerollLevelCondition : public Condition
+{
+public:
+	RerollLevelCondition(BYTE operation,
+		BYTE rerollLevel1,
+		BYTE rerollLevel2) : operation_(operation),
+		rerollLevel1_(rerollLevel1),
+		rerollLevel2_(rerollLevel2) {
+		conditionType = CT_Operand;
+	};
+private:
+	BYTE operation_;
+	BYTE rerollLevel1_;
+	BYTE rerollLevel2_;
+	bool EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
 class AutomodCondition : public Condition
 {
 public:
@@ -961,6 +980,7 @@ string NameVarGemType(UnitItemInfo* uInfo);
 string NameVarIlvl(UnitItemInfo* uInfo);
 string NameVarAlvl(UnitItemInfo* uInfo);
 string NameVarCraftAlvl(UnitItemInfo* uInfo);
+string NameVarRerollAlvl(UnitItemInfo* uInfo);
 string NameVarLevelReq(UnitItemInfo* uInfo);
 string NameVarWeaponSpeed(ItemsTxt* itemTxt);
 string NameVarRangeAdder(ItemsTxt* itemTxt);
@@ -975,3 +995,4 @@ BYTE GetAffixLevel(BYTE ilvl,
 BYTE GetRequiredLevel(UnitAny* item);
 BYTE RuneNumberFromItemCode(char* code);
 int GetStatFromList(UnitItemInfo* uInfo, int itemStat);
+BYTE ComputeRerollAffixLevel(UnitItemInfo* uInfo);
