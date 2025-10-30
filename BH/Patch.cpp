@@ -12,7 +12,7 @@ Patch::Patch(PatchType type, Dll dll, Offsets offsets, int function, int length)
 int Patch::GetDllOffset(Dll dll, int offset) {
 	const char* szDlls[] = {"D2CLIENT.dll", "D2COMMON.dll", "D2GFX.dll", "D2LANG.dll",
 							"D2WIN.dll", "D2NET.dll", "D2GAME.dll", "D2LAUNCH.dll",
-							"FOG.dll", "BNCLIENT.dll", "STORM.dll", "D2CMP.dll", "D2MULTI.dll", "D2MCPCLIENT.dll", "D2CMP.dll"};
+							"FOG.dll", "BNCLIENT.dll", "STORM.dll", "D2CMP.dll", "D2MULTI.dll", "D2MCPCLIENT.dll", "D2CMP.dll", "D2SOUND.dll"};
 	//Attempt to get the module of the given DLL
 	HMODULE hModule = GetModuleHandle(szDlls[dll]);
 
