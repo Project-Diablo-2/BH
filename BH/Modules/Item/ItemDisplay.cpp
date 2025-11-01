@@ -493,6 +493,8 @@ enum FilterCondition
 	COND_PRICE,
 	COND_ITEMCODE,
 	COND_ADD,
+	COND_TRUE,
+	COND_FALSE,
 
 	COND_NULL
 };
@@ -503,6 +505,8 @@ std::map<std::string, FilterCondition> condition_map =
 	{"&&", COND_AND},
 	{"OR", COND_OR},
 	{"||", COND_OR},
+	{"TRUE", COND_TRUE},
+	{"FALSE", COND_FALSE},
 	{"ETH", COND_ETH},
 	{"SOCK", COND_SOCK},
 	{"SOCKETS", COND_SOCK},
@@ -2285,6 +2289,12 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_OR:
 		Condition::AddNonOperand(conditions, new OrOperator());
 		break;
+	case COND_TRUE:
+		Condition::AddOperand(conditions, new TrueCondition());
+		break;
+	case COND_FALSE:
+		Condition::AddOperand(conditions, new FalseCondition());
+		break;
 	case COND_ETH:
 		Condition::AddOperand(conditions, new FlagsCondition(ITEM_ETHEREAL));
 		break;
@@ -3393,4 +3403,3 @@ void HandleUnknownItemCode(char* code,
 		UnknownItemCodes[code] = 1;
 	}
 }
-
