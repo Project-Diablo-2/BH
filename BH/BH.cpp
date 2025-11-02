@@ -78,6 +78,7 @@ void BH::Initialize()
 	lootFilter = new Config("loot.filter");
 	LoadLootFilter();
 	CheckForD2GL();
+	CheckForPD2();
 
 	// Do this asynchronously because D2GFX_GetHwnd() will be null if
 	// we inject on process start
@@ -254,6 +255,20 @@ void BH::CheckForD2GL()
 	{
 		App.d2gl.usingD2GL.value = true;
 		App.d2gl.usingD2GL.value = d2glConfigQueryImpl(D2GL_CONFIG_HD_TEXT);
+	}
+}
+
+void BH::CheckForPD2()
+{
+	typedef BOOL(__stdcall* pd2PlaySoundImpl_t)(UnitAny*, int, int, int);
+	static pd2PlaySoundImpl_t pd2PlaySoundImpl = NULL;
+
+	HMODULE pd2Handle = GetModuleHandleA("ProjectDiablo.dll");
+
+	if (pd2Handle)
+	{
+		FARPROC proc = GetProcAddress(pd2Handle, "_D2Client_PlaySoundWithCustomVolumeOrPriority@16");
+		App.pd2.pd2PlaySoundImpl = proc ? (pd2PlaySoundImpl_t)proc : NULL;
 	}
 }
 

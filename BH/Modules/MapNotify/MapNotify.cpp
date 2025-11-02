@@ -85,14 +85,12 @@ void MapNotify::OnDraw() {
 							{
 								SoundsTxt* pSoundsTxt = *p_D2CLIENT_SoundsTxt;
 								int soundID = (*it)->action.soundID;
-								if (soundID > 0 && soundID < *p_D2CLIENT_SoundRecords &&
-									(soundID < 4657 || soundID > 4698) &&	// Don't allow music
-									App.lootfilter.dropSounds.value && pSoundsTxt)
+								if (App.pd2.pd2PlaySoundImpl && pSoundsTxt && soundID > 0 && soundID < *p_D2CLIENT_SoundRecords)
 								{
 									pSoundsTxt = pSoundsTxt + soundID;
-									if (pSoundsTxt && pSoundsTxt->loop == 0)
+									if (pSoundsTxt && pSoundsTxt->loop == 0 && pSoundsTxt->nSoundGroup != 2)
 									{
-										D2CLIENT_PlaySound_STUB(soundID, NULL, 0, 0, 0);
+										App.pd2.pd2PlaySoundImpl(NULL, soundID, 255, pSoundsTxt->priority);
 									}
 								}
 

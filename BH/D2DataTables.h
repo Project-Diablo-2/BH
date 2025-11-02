@@ -125,6 +125,7 @@ struct SoundsTxt
 	struct AsyncData* pAsyncData;
 	enum ESOUNDDATASTATE eDataState;
 	DWORD dwRefCount;
+	DWORD nSoundGroup;
 };
 
 struct PropertiesTxt
