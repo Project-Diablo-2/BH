@@ -44,7 +44,7 @@ namespace BH
 	void CheckForPD2();
 };
 
-typedef BOOL(__stdcall* pd2PlaySoundImpl_t)(UnitAny* pUnit, int nSound, int nVolume, int nPriority);
+typedef BOOL(__stdcall* pd2PlaySoundImpl_t)(UnitAny* pUnit, int nSound, int nVolume, int nPriority, BOOL bDropSound);
 
 struct BHApp
 {

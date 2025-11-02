@@ -260,14 +260,13 @@ void BH::CheckForD2GL()
 
 void BH::CheckForPD2()
 {
-	typedef BOOL(__stdcall* pd2PlaySoundImpl_t)(UnitAny*, int, int, int);
-	static pd2PlaySoundImpl_t pd2PlaySoundImpl = NULL;
+	typedef BOOL(__stdcall* pd2PlaySoundImpl_t)(UnitAny*, int, int, int, BOOL);
 
 	HMODULE pd2Handle = GetModuleHandleA("ProjectDiablo.dll");
 
 	if (pd2Handle)
 	{
-		FARPROC proc = GetProcAddress(pd2Handle, "_D2Client_PlaySoundWithCustomVolumeOrPriority@16");
+		FARPROC proc = GetProcAddress(pd2Handle, "_D2Client_PlaySoundWithCustomVolumeOrPriority@20");
 		App.pd2.pd2PlaySoundImpl = proc ? (pd2PlaySoundImpl_t)proc : NULL;
 	}
 }

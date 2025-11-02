@@ -90,7 +90,7 @@ void MapNotify::OnDraw() {
 									pSoundsTxt = pSoundsTxt + soundID;
 									if (pSoundsTxt && pSoundsTxt->loop == 0 && pSoundsTxt->nSoundGroup != 2)
 									{
-										App.pd2.pd2PlaySoundImpl(NULL, soundID, 255, pSoundsTxt->priority);
+										App.pd2.pd2PlaySoundImpl(NULL, soundID, 255, pSoundsTxt->priority, TRUE);
 									}
 								}
 
