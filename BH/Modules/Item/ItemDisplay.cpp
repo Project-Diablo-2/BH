@@ -813,6 +813,8 @@ struct ReplacementSpec {
 	static string ReplaceConst(ReplaceContext& ctx, const ReplacementValue& val);
 	// %NAME%
 	static string ReplaceName(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASENAME%
+	static string ReplaceBaseName(ReplaceContext& ctx, const ReplacementValue& val);
 	// %SOCKETS%
 	static string ReplaceSockets(ReplaceContext& ctx, const ReplacementValue& val);
 	// %RUNENUM%
@@ -876,6 +878,7 @@ struct ReplacementSpec {
 unordered_map<string, ReplacementSpec> ReplacementMap = {
 	// STATIC
 	{ "NAME", { 0, ReplacementSpec::ReplaceName } },
+	{ "BASENAME", { 0, ReplacementSpec::ReplaceBaseName } },
 	{ "SOCKETS", { 0, ReplacementSpec::ReplaceSockets } },
 	{ "RUNENUM", { 0, ReplacementSpec::ReplaceRuneNumber } },
 	{ "RUNENAME", { 0, ReplacementSpec::ReplaceRuneName } },
@@ -1047,6 +1050,15 @@ string ReplacementSpec::ReplaceName(ReplaceContext& ctx, const ReplacementValue&
 		ctx.name.resize(1023);
 	}
 	return ctx.name;
+}
+
+string ReplacementSpec::ReplaceBaseName(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	if (ctx.info == nullptr || ctx.info->attrs == nullptr) {
+		return "";
+	}
+
+	return MaybeStripColorPrefix(ctx.info->attrs->name);
 }
 
 string ReplacementSpec::ReplaceSockets(ReplaceContext& ctx, const ReplacementValue& val)
