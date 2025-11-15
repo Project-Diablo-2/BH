@@ -85,7 +85,7 @@ void MapNotify::OnDraw() {
 							{
 								SoundsTxt* pSoundsTxt = *p_D2CLIENT_SoundsTxt;
 								int soundID = (*it)->action.soundID;
-								if (App.pd2.pd2PlaySoundImpl && pSoundsTxt && soundID > 0 && soundID < *p_D2CLIENT_SoundRecords)
+								if (App.pd2.pd2PlaySoundImpl && App.lootfilter.dropSounds.value && pSoundsTxt && soundID > 0 && soundID < *p_D2CLIENT_SoundRecords)
 								{
 									pSoundsTxt = pSoundsTxt + soundID;
 									if (pSoundsTxt && pSoundsTxt->loop == 0 && pSoundsTxt->nSoundGroup != 2)
