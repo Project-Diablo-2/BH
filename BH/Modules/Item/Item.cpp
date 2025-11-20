@@ -503,11 +503,41 @@ void GetMiscAttributes()
 		BYTE stackable = pMisc->bstackable > 0 ? pMisc->bstackable : 0;
 		BYTE useable = pMisc->buseable > 0 ? pMisc->buseable : 0;
 		BYTE throwable = throwableMap[pMisc->nType] > 0 ? throwableMap[pMisc->nType] : 0;
+		unsigned int baseFlags = 0;
 		unsigned int miscFlags = 0;
 
 		std::set<WORD> ancestorTypes;
 		FindAncestorTypes(pMisc->nType, ancestorTypes, parentMap1, parentMap2);
 		FindAncestorTypes(pMisc->wtype2, ancestorTypes, parentMap1, parentMap2);
+
+		// Hardcoded arrows & bolts (aqv/aqv2/aqv3 & cqv/cqv2/cqv3)
+		if (pMisc->dwcode == 863400289 || pMisc->dwcode == 863400291)
+		{
+			baseFlags |= ITEM_GROUP_ELITE;
+		}
+		else if (pMisc->dwcode == 846623073 || pMisc->dwcode == 846623075)
+		{
+			baseFlags |= ITEM_GROUP_EXCEPTIONAL;
+		}
+		else if (pMisc->dwcode == 544633185 || pMisc->dwcode == 544633187)
+		{
+			baseFlags |= ITEM_GROUP_NORMAL;
+		}
+
+		/* dwnormcode bricks TP book skills for some reason. TODO for another day (maybe)
+		if (pMisc->dwcode == pMisc->dwultracode)
+		{
+			baseFlags |= ITEM_GROUP_ELITE;
+		}
+		else if (pMisc->dwcode == pMisc->dwubercode)
+		{
+			baseFlags |= ITEM_GROUP_EXCEPTIONAL;
+		}
+		else
+		{
+			baseFlags |= ITEM_GROUP_NORMAL;
+		}
+		*/
 
 		if (ancestorTypes.find(ITEM_TYPE_RUNE) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_STACK_RUNE) != ancestorTypes.end()) {
 			miscFlags |= ITEM_GROUP_RUNE;
@@ -575,7 +605,7 @@ void GetMiscAttributes()
 		attrs->stackable = stackable;
 		attrs->useable = useable;
 		attrs->throwable = throwable;
-		attrs->baseFlags = 0;
+		attrs->baseFlags = baseFlags;
 		attrs->weaponFlags = 0;
 		attrs->armorFlags = 0;
 		attrs->miscFlags = miscFlags;
