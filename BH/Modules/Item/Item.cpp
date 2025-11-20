@@ -510,21 +510,6 @@ void GetMiscAttributes()
 		FindAncestorTypes(pMisc->nType, ancestorTypes, parentMap1, parentMap2);
 		FindAncestorTypes(pMisc->wtype2, ancestorTypes, parentMap1, parentMap2);
 
-		// Hardcoded arrows & bolts (aqv/aqv2/aqv3 & cqv/cqv2/cqv3)
-		if (pMisc->dwcode == 863400289 || pMisc->dwcode == 863400291)
-		{
-			baseFlags |= ITEM_GROUP_ELITE;
-		}
-		else if (pMisc->dwcode == 846623073 || pMisc->dwcode == 846623075)
-		{
-			baseFlags |= ITEM_GROUP_EXCEPTIONAL;
-		}
-		else if (pMisc->dwcode == 544633185 || pMisc->dwcode == 544633187)
-		{
-			baseFlags |= ITEM_GROUP_NORMAL;
-		}
-
-		/* dwnormcode bricks TP book skills for some reason. TODO for another day (maybe)
 		if (pMisc->dwcode == pMisc->dwultracode)
 		{
 			baseFlags |= ITEM_GROUP_ELITE;
@@ -537,7 +522,6 @@ void GetMiscAttributes()
 		{
 			baseFlags |= ITEM_GROUP_NORMAL;
 		}
-		*/
 
 		if (ancestorTypes.find(ITEM_TYPE_RUNE) != ancestorTypes.end() || ancestorTypes.find(ITEM_TYPE_STACK_RUNE) != ancestorTypes.end()) {
 			miscFlags |= ITEM_GROUP_RUNE;
