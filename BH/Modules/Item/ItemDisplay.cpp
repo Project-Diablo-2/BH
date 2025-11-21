@@ -461,6 +461,10 @@ enum FilterCondition
 	COND_SIN,
 	COND_SOR,
 	COND_ZON,
+	COND_MISC,
+	COND_JEWELRY,
+	COND_CHARM,
+	COND_QUIVER,
 	COND_SHOP,
 	COND_EQUIPPED,
 	COND_1H,
@@ -601,6 +605,10 @@ std::map<std::string, FilterCondition> condition_map =
 	{"SIN", COND_SIN},
 	{"SOR", COND_SOR},
 	{"ZON", COND_ZON},
+	{"MISC", COND_MISC},
+	{"JEWELRY", COND_JEWELRY},
+	{"CHARM", COND_CHARM},
+	{"QUIVER", COND_QUIVER},
 	{"SHOP", COND_SHOP},
 	{"EQUIPPED", COND_EQUIPPED},
 	{"1H", COND_1H},
@@ -2597,6 +2605,18 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		break;
 	case COND_ZON:
 		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_AMAZON_WEAPON, ITEMFLAG_WEAPON));
+		break;
+	case COND_MISC:
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_ALLMISC, ITEMFLAG_MISC));
+		break;
+	case COND_JEWELRY:
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_JEWELRY, ITEMFLAG_MISC));
+		break;
+	case COND_CHARM:
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_CHARM, ITEMFLAG_MISC));
+		break;
+	case COND_QUIVER:
+		Condition::AddOperand(conditions, new ItemGroupCondition(ITEM_GROUP_QUIVER, ITEMFLAG_MISC));
 		break;
 	case COND_SHOP:
 		Condition::AddOperand(conditions, new ShopCondition());

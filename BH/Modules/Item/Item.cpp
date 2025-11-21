@@ -504,7 +504,7 @@ void GetMiscAttributes()
 		BYTE useable = pMisc->buseable > 0 ? pMisc->buseable : 0;
 		BYTE throwable = throwableMap[pMisc->nType] > 0 ? throwableMap[pMisc->nType] : 0;
 		unsigned int baseFlags = 0;
-		unsigned int miscFlags = 0;
+		unsigned int miscFlags = ITEM_GROUP_ALLMISC;
 
 		std::set<WORD> ancestorTypes;
 		FindAncestorTypes(pMisc->nType, ancestorTypes, parentMap1, parentMap2);
