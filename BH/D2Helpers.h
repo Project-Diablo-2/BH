@@ -9,6 +9,7 @@
 
 bool IsValidMonster(UnitAny* pUnit);
 int GetRelation(UnitAny* unit);
+UnitAny* __stdcall GetClientMercUnit();
 RosterUnit* FindPlayerRoster(DWORD unitId);
 void Print(char* format, ...);
 void PartyPrint(char* format, ...);

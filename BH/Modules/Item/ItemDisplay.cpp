@@ -1,6 +1,7 @@
 ﻿#include "ItemDisplay.h"
 #include "Item.h"
 #include "../../Drawing/Stats/StatsDisplay.h"
+#include "../../D2Helpers.h"
 #include <cctype>
 #include <vector>
 #include <string>
@@ -357,6 +358,16 @@ enum AttributeFlagTypes
 	ITEMFLAG_MISC
 };
 
+enum LocationFlagTypes
+{
+	LOCATIONFLAG_EQUIPPED,
+	LOCATIONFLAG_MERCEQUIPPED,
+	LOCATIONFLAG_INVENTORY,
+	LOCATIONFLAG_CUBE,
+	LOCATIONFLAG_STASH,
+	LOCATIONFLAG_GROUND
+};
+
 enum Operation
 {
 	EQUAL,
@@ -467,6 +478,11 @@ enum FilterCondition
 	COND_QUIVER,
 	COND_SHOP,
 	COND_EQUIPPED,
+	COND_MERC,
+	COND_INVENTORY,
+	COND_CUBE,
+	COND_STASH,
+	COND_GROUND,
 	COND_1H,
 	COND_2H,
 	COND_AXE,
@@ -611,6 +627,11 @@ std::map<std::string, FilterCondition> condition_map =
 	{"QUIVER", COND_QUIVER},
 	{"SHOP", COND_SHOP},
 	{"EQUIPPED", COND_EQUIPPED},
+	{"MERC", COND_MERC},
+	{"CUBE", COND_CUBE},
+	{"INVENTORY", COND_INVENTORY},
+	{"STASH", COND_STASH},
+	{"GROUND", COND_GROUND},
 	{"1H", COND_1H},
 	{"2H", COND_2H},
 	{"AXE", COND_AXE},
@@ -2622,7 +2643,22 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new ShopCondition());
 		break;
 	case COND_EQUIPPED:
-		Condition::AddOperand(conditions, new EquippedCondition());
+		Condition::AddOperand(conditions, new LocationCondition(LOCATIONFLAG_EQUIPPED));
+		break;
+	case COND_MERC:
+		Condition::AddOperand(conditions, new LocationCondition(LOCATIONFLAG_MERCEQUIPPED));
+		break;
+	case COND_INVENTORY:
+		Condition::AddOperand(conditions, new LocationCondition(LOCATIONFLAG_INVENTORY));
+		break;
+	case COND_CUBE:
+		Condition::AddOperand(conditions, new LocationCondition(LOCATIONFLAG_CUBE));
+		break;
+	case COND_STASH:
+		Condition::AddOperand(conditions, new LocationCondition(LOCATIONFLAG_STASH));
+		break;
+	case COND_GROUND:
+		Condition::AddOperand(conditions, new LocationCondition(LOCATIONFLAG_GROUND));
 		break;
 	case COND_1H:
 		Condition::AddOperand(conditions, new OneHandedCondition());
@@ -3189,17 +3225,67 @@ bool FoolsCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	return IntegerCompare(value, (BYTE)EQUAL, 3);
 }
 
-bool EquippedCondition::EvaluateInternal(UnitItemInfo* uInfo,
+bool LocationCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	bool is_equipped = false;
-	if (uInfo->item->pItemData->BodyLocation > 0 && uInfo->item->pItemData->ItemLocation == STORAGE_NULL)
+	bool has_location = false;
+	UnitAny* pMerc = NULL;
+	if (uInfo->item && uInfo->item->pItemData)
 	{
-		is_equipped = true;
+		ItemData* pItemData = uInfo->item->pItemData;
+		switch (location)
+		{
+		case LOCATIONFLAG_EQUIPPED:
+			if (pItemData->ItemLocation == STORAGE_NULL &&
+				pItemData->BodyLocation > 0 &&
+				pItemData->pOwnerInventory && pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit())
+			{
+				has_location = true;
+			}
+			break;
+		case LOCATIONFLAG_MERCEQUIPPED:
+			pMerc = GetClientMercUnit();
+			if (pMerc &&
+				pItemData->ItemLocation == STORAGE_NULL &&
+				pItemData->BodyLocation > 0 &&
+				pItemData->pOwnerInventory && pItemData->pOwnerInventory->pOwner == pMerc)
+			{
+				has_location = true;
+			}
+			break;
+		case LOCATIONFLAG_INVENTORY:
+			if (pItemData->ItemLocation == STORAGE_INVENTORY &&
+				uInfo->item->dwMode == ITEM_MODE_INV_STASH_CUBE_STORE &&
+				pItemData->pOwnerInventory && pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit())
+			{
+				has_location = true;
+			}
+			break;
+		case LOCATIONFLAG_CUBE:
+			if (pItemData->ItemLocation == STORAGE_CUBE &&
+				pItemData->pOwnerInventory && pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit())
+			{
+				has_location = true;
+			}
+			break;
+		case LOCATIONFLAG_STASH:
+			if (pItemData->ItemLocation == STORAGE_STASH &&
+				pItemData->pOwnerInventory && pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit())
+			{
+				has_location = true;
+			}
+			break;
+		case LOCATIONFLAG_GROUND:
+			if (uInfo->item->dwMode == ITEM_MODE_ON_GROUND || uInfo->item->dwMode == ITEM_MODE_BEING_DROPPED)
+			{
+				has_location = true;
+			}
+			break;
+		}
 	}
 
-	return IntegerCompare(is_equipped, (BYTE)EQUAL, 1);
+	return IntegerCompare(has_location, (BYTE)EQUAL, 1);
 }
 
 bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,

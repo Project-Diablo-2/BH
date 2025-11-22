@@ -193,6 +193,23 @@ struct Waypoint {
 	BYTE flags;						//0x00
 };
 
+struct ClientPetData
+{
+	DWORD nPetType;			// 0x00
+	int nPetTypeId;			// 0x04
+	int nPetUnitId;			// 0x08
+	int nOwnerId;			// 0x0C
+	DWORD nPetLevelId;		// 0x10		Levels.txt
+	DWORD _0x14;			// 0x14
+	DWORD _0x18;			// 0x18
+	DWORD nPetLifePercent;	// 0x1C
+	int nOwnerType;			// 0x20
+	DWORD nSeed;			// 0x24
+	DWORD nNameId;			// 0x28
+	DWORD _0x2C;			// 0x2C
+	ClientPetData* pNext;	// 0x30
+};
+
 struct PlayerData {
 	char szName[0x10];				//0x00
 	QuestInfo* pNormalQuest;		//0x10

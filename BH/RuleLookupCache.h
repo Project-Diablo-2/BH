@@ -41,7 +41,7 @@ public:
 		// on item flag changes. This should cover everything that I can think of, including IDing
 		// items, crafting items, making runewords, etc. Still would be nice to get some reassurance
 		// that GUIDs aren't reused in some unexpected way. Having a cache that is wrong is no bueno.
-		DWORD flags = uInfo->item->pItemData->dwFlags;
+		DWORD flags = uInfo->item->pItemData->dwFlags + uInfo->item->dwMode + uInfo->item->pItemData->ItemLocation;
 		DWORD orig_cached_flags; // the cached flags
 		T cached_T; // the cached T after rules applied
 		bool cache_hit = false;

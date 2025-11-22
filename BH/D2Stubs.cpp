@@ -178,6 +178,46 @@ __declspec(naked) void __stdcall D2CLIENT_GetItemFromPacketIntercept_NewGround_S
   }
 }
 
+__declspec(naked) void __stdcall D2CLIENT_ItemPacketBuildAction2_DropToGround_STUB(px9c* packet)
+{
+	__asm
+	{
+		mov EAX, [esp + 4]                                   // packet
+		call D2CLIENT_ItemPacketBuildAction2_DropToGround   // 0x84990
+		retn 4
+	}
+}
+
+__declspec(naked) void __stdcall D2CLIENT_ItemPacketBuildAction2_DropToGround_INTERCEPT_STUB()
+{
+	__asm
+	{
+		push EAX                                             // packet
+		call GetItemFromPacket_DropToGround // 0x84990
+		retn 0
+	}
+}
+
+__declspec(naked) void __stdcall D2CLIENT_ItemPacketBuildAction4_PutInContainer_STUB(px9c* packet)
+{
+	__asm
+	{
+		mov EAX, [esp + 4]                                   // packet
+		call D2CLIENT_ItemPacketBuildAction4_PutInContainer // 0x84750
+		retn 4
+	}
+}
+
+__declspec(naked) void __stdcall D2CLIENT_ItemPacketBuildAction4_PutInContainer_INTERCEPT_STUB()
+{
+	__asm
+	{
+		push EAX                                             // packet
+		call GetItemFromPacket_PutInContainer // 0x84750
+		retn 0
+	}
+}
+
 __declspec(naked) void __stdcall D2CLIENT_GetItemDescription_STUB(ItemsTxt* pItemTxtRec, wchar_t* pBuffer, UnitAny* pItem)
 {
 	__asm

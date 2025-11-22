@@ -583,11 +583,12 @@ private:
 		Condition* arg2);
 };
 
-class EquippedCondition : public Condition
+class LocationCondition : public Condition
 {
 public:
-	EquippedCondition() { conditionType = CT_Operand; };
+	LocationCondition(unsigned int nLocation) : location(nLocation) { conditionType = CT_Operand; };
 private:
+	unsigned int location;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);

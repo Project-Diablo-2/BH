@@ -77,6 +77,35 @@ int GetRelation(UnitAny* unit) {
 	return 2;//Neutral
 }
 
+UnitAny* __stdcall GetClientMercUnit()
+{
+	UnitAny* pMerc = NULL;
+	UnitAny* pPlayer = *p_D2CLIENT_PlayerUnit;
+	ClientPetData* pPetData = *p_D2CLIENT_ClientPetData;
+	if (pPlayer)
+	{
+		while (pPetData)
+		{
+			if (pPetData->nPetTypeId == PETTYPE_HIREABLE)
+			{
+				if (pPetData->nOwnerId == pPlayer->dwUnitId && pPetData->nOwnerType == UNIT_PLAYER)
+				{
+					int nPetUnitId = pPetData->nPetUnitId;
+					if (nPetUnitId != -1)
+					{
+						pMerc = D2CLIENT_FindServerSideUnit(nPetUnitId, UNIT_MONSTER);
+						return pMerc;
+					}
+				}
+			}
+
+			pPetData = pPetData->pNext;
+		}
+	}
+
+	return pMerc;
+}
+
 bool IsValidMonster(UnitAny* pUnit)
 {
 	//Have we even been given a unit?

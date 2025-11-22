@@ -109,7 +109,6 @@ FUNCPTR(D2CLIENT, GetCurrentInteractingNPC, UnitAny* __fastcall, (void), 0x46150
 FUNCPTR(D2CLIENT, GetSelectedUnit, UnitAny* __stdcall, (void), 0x51A80, 0x17280)
 FUNCPTR(D2CLIENT, GetCursorItem, UnitAny* __fastcall, (void), 0x16020, 0x144A0)
 FUNCPTR(D2CLIENT, GetMercUnit, UnitAny* __fastcall, (void), 0x97CD0, 0x9C0A0)
-FUNCPTR(D2CLIENT, ItemPacketBuildAction3_OldGround, void __stdcall, (px9c* pPacket), 0x86810)
 // FUNCPTR(D2CLIENT, UnitTestSelect, DWORD __stdcall, (UnitAny* pUnit, DWORD _1, DWORD _2, DWORD _3), 0x8D030) // unused but we need to use it
 
 FUNCPTR(D2CLIENT, SetSelectedUnit_I, void __fastcall, (UnitAny* pUnit), 0x51860, 0x17060)
@@ -234,6 +233,7 @@ VARPTR(D2CLIENT, GameInfo, GameStructInfo*, 0x11B980, 0x109738)
 VARPTR(D2CLIENT, WaypointTable, DWORD, 0xFCDD1, 0x1088FD)
 
 VARPTR(D2CLIENT, PlayerUnit, UnitAny*, 0x11BBFC, 0x11D050)
+VARPTR(D2CLIENT, ClientPetData, ClientPetData*, 0x11C4D4);
 VARPTR(D2CLIENT, SelectedInvItem, UnitAny*, 0x11BC38, 0x11CB28)
 //VARPTR(D2CLIENT, SelectedUnit, UnitAny*, 0x11C4D8) // unused, but can we use it somewhere maybe? // 1.12 still
 VARPTR(D2CLIENT, PlayerUnitList, RosterUnit*, 0x11BC14, 0x11CB04)
@@ -333,7 +333,10 @@ ASMPTR(D2WIN, DrawTextBuffer, 0x12940, 0x134D0)
 
 ASMPTR(D2CLIENT, ParseStats_J, 0x54E10, 0x2CE40)
 ASMPTR(D2CLIENT, GetItemPropertiesString, 0x55B20);
+FUNCPTR(D2CLIENT, ItemPacketBuildAction3_OldGround, void __stdcall, (px9c* pPacket), 0x86810)
 ASMPTR(D2CLIENT, ItemPacketBuildAction0_NewGround, 0x84BB0);
+ASMPTR(D2CLIENT, ItemPacketBuildAction2_DropToGround, 0x84990);
+ASMPTR(D2CLIENT, ItemPacketBuildAction4_PutInContainer, 0x84750);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

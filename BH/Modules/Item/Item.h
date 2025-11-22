@@ -110,7 +110,9 @@ void PermShowItemsPatch4_ASM();
 
 int CreateUnitItemInfo(UnitItemInfo* uInfo, UnitAny* item);
 void __stdcall GetItemFromPacket_NewGround(px9c* packet);
+void __stdcall GetItemFromPacket_DropToGround(px9c* packet);
 void __stdcall GetItemFromPacket_OldGround(px9c* packet);
+void __stdcall GetItemFromPacket_PutInContainer(px9c* pPacket);
 int ItemGetCorruptor(UnitAny* pItem, int nStat);
 BOOL StatIsCorrupted(int nStat, int nCorruptor);
 
