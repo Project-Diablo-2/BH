@@ -376,7 +376,7 @@ FUNCPTR(D2COMMON, GetTargetUnitType, Path* __stdcall, (Path* pPath), -10392, -10
 FUNCPTR(D2COMMON, GetSkillLevel, int __stdcall, (UnitAny* pUnit, Skill* pSkill, BOOL bTotal), -10306, -10007)
 
 FUNCPTR(D2COMMON, GetItemLevelRequirement, DWORD __stdcall, (UnitAny* pItem, UnitAny* pPlayer), -11015, -10929)
-FUNCPTR(D2COMMON, GetItemPrice, DWORD __stdcall, (UnitAny* MyUnit, UnitAny* pItem, DWORD U1_, DWORD U2_, DWORD U3_, DWORD U4_), -10107, -10186)
+FUNCPTR(D2COMMON, GetItemPrice, DWORD __stdcall, (UnitAny* pPlayer, UnitAny* pItem, DWORD nDifficulty, DWORD pQuestInfo, DWORD nVendorId, DWORD nTransactionType), -10107, -10186)
 FUNCPTR(D2COMMON, GetRepairCost, DWORD __stdcall, (DWORD _1, UnitAny* pUnit, DWORD dwNpcId, DWORD dwDifficulty, DWORD dwItemPriceList, DWORD _2), -10071, -10807)
 FUNCPTR(D2COMMON, GetItemMagicalMods, AutoMagicTxt* __stdcall, (int wPrefixNum), -10248, -10174)
 FUNCPTR(D2COMMON, GetItemFromInventory, UnitAny* __stdcall, (Inventory* inv), -10460, -11132)

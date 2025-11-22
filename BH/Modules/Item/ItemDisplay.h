@@ -753,16 +753,19 @@ class ItemPriceCondition : public Condition
 public:
 	ItemPriceCondition(BYTE op,
 		unsigned int target,
-		unsigned int target2)
+		unsigned int target2,
+		unsigned int transactionType)
 		: operation(op),
 		targetStat(target),
-		targetStat2(target2) {
+		targetStat2(target2),
+		nTransactionType(transactionType){
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE         operation;
 	unsigned int targetStat;
 	unsigned int targetStat2;
+	unsigned int nTransactionType;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -985,6 +988,7 @@ string NameVarRerollAlvl(UnitItemInfo* uInfo);
 string NameVarLevelReq(UnitItemInfo* uInfo);
 string NameVarWeaponSpeed(ItemsTxt* itemTxt);
 string NameVarRangeAdder(ItemsTxt* itemTxt);
+string NameVarBuyValue(UnitItemInfo* uInfo, ItemsTxt* itemTxt);
 string NameVarSellValue(UnitItemInfo* uInfo, ItemsTxt* itemTxt);
 string NameVarQty(UnitItemInfo* uInfo);
 string NameVarAllRes(UnitItemInfo* uInfo);

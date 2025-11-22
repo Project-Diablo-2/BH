@@ -511,6 +511,8 @@ enum FilterCondition
 	COND_STAT,
 	COND_CHARSTAT,
 	COND_MULTI,
+	COND_BUYPRICE,
+	COND_SELLPRICE,
 	COND_PRICE,
 	COND_ITEMCODE,
 	COND_ADD,
@@ -679,6 +681,8 @@ std::map<std::string, FilterCondition> condition_map =
 	{"WP12", COND_WAND},
 	{"WP13", COND_SCEPTER},
 	{"ALLSK", COND_ALLSK},
+	{"BUYPRICE", COND_BUYPRICE},
+	{"SELLPRICE", COND_PRICE},
 	{"PRICE", COND_PRICE},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
@@ -758,6 +762,21 @@ std::string join(C const& strings,
 	);
 	ostr << *last;
 	return ostr.str();
+}
+
+int GetShopPrice(UnitAny* pPlayer, UnitAny* pItem, int nTransactionType)
+{
+	int nNpcId = NPCID_Malah;
+	if (nTransactionType == TRANSACTIONTYPE_BUY)
+	{
+		UnitAny* pVendor = D2CLIENT_GetCurrentInteractingNPC();
+		if (pVendor)
+		{
+			nNpcId = pVendor->dwTxtFileNo;
+		}
+	}
+
+	return D2COMMON_GetItemPrice(pPlayer, pItem, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), nNpcId, nTransactionType);
 }
 
 int ShopNPCs[] = {
@@ -876,6 +895,8 @@ struct ReplacementSpec {
 	static string ReplaceRange(ReplaceContext& ctx, const ReplacementValue& val);
 	// %CODE%
 	static string ReplaceCode(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BUYPRICE%
+	static string ReplaceBuyPrice(ReplaceContext& ctx, const ReplacementValue& val);
 	// %PRICE%
 	static string ReplacePrice(ReplaceContext& ctx, const ReplacementValue& val);
 	// %QTY%
@@ -933,6 +954,8 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "LBRACE", { 0, ReplacementSpec::ReplaceBindString("{") } },
 	// %RBRACE%
 	{ "RBRACE", { 0, ReplacementSpec::ReplaceBindString("}") } },
+	{ "BUYPRICE", { 0, ReplacementSpec::ReplaceBuyPrice } },
+	{ "SELLPRICE", { 0, ReplacementSpec::ReplacePrice } },
 	{ "PRICE", { 0, ReplacementSpec::ReplacePrice } },
 	{ "QTY", { 0, ReplacementSpec::ReplaceQuantity } },
 	{ "RES", { 0, ReplacementSpec::ReplaceAllResist } },
@@ -1162,6 +1185,11 @@ string ReplacementSpec::ReplaceRange(ReplaceContext& ctx, const ReplacementValue
 string ReplacementSpec::ReplaceCode(ReplaceContext& ctx, const ReplacementValue& val)
 {
 	return ctx.info->itemCode;
+}
+
+string ReplacementSpec::ReplaceBuyPrice(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return NameVarBuyValue(ctx.info, ctx.text);
 }
 
 string ReplacementSpec::ReplacePrice(ReplaceContext& ctx, const ReplacementValue& val)
@@ -1588,13 +1616,27 @@ string NameVarRangeAdder(ItemsTxt* itemTxt)
 	return rangeadder;
 }
 
+string NameVarBuyValue(UnitItemInfo* uInfo,
+	ItemsTxt* itemTxt)
+{
+	char sellvalue[16] = "";
+	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
+	if (pUnit && itemTxt->bquest == 0)
+	{
+		sprintf_s(sellvalue, "%d", GetShopPrice(pUnit, uInfo->item, TRANSACTIONTYPE_BUY));
+	}
+	return sellvalue;
+}
+
 string NameVarSellValue(UnitItemInfo* uInfo,
 	ItemsTxt* itemTxt)
 {
 	char sellvalue[16] = "";
 	UnitAny* pUnit = D2CLIENT_GetPlayerUnit();
 	if (pUnit && itemTxt->bquest == 0)
-		sprintf_s(sellvalue, "%d", D2COMMON_GetItemPrice(pUnit, uInfo->item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1));
+	{
+		sprintf_s(sellvalue, "%d", GetShopPrice(pUnit, uInfo->item, TRANSACTIONTYPE_SELL));
+	}
 	return sellvalue;
 }
 
@@ -2759,8 +2801,11 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 			Condition::AddOperand(conditions, new ItemStatCondition(stat1, stat2, operation, value, value2));
 		}
 		break;
+	case COND_BUYPRICE:
+		Condition::AddOperand(conditions, new ItemPriceCondition(operation, value, value2, TRANSACTIONTYPE_BUY));
+		break;
 	case COND_PRICE:
-		Condition::AddOperand(conditions, new ItemPriceCondition(operation, value, value2));
+		Condition::AddOperand(conditions, new ItemPriceCondition(operation, value, value2, TRANSACTIONTYPE_SELL));
 		break;
 	case COND_ITEMCODE:
 		Condition::AddOperand(conditions, new ItemCodeCondition(key.substr(0, 4).c_str()));
@@ -3464,7 +3509,8 @@ bool ItemPriceCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	return IntegerCompare(D2COMMON_GetItemPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), 0x201, 1), operation, targetStat, targetStat2);
+	int nPrice = GetShopPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, nTransactionType);
+	return IntegerCompare(nPrice, operation, targetStat, targetStat2);
 }
 
 bool ResistAllCondition::EvaluateInternal(UnitItemInfo* uInfo,
