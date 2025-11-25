@@ -764,21 +764,6 @@ std::string join(C const& strings,
 	return ostr.str();
 }
 
-int GetShopPrice(UnitAny* pPlayer, UnitAny* pItem, int nTransactionType)
-{
-	int nNpcId = NPCID_Malah;
-	if (nTransactionType == TRANSACTIONTYPE_BUY)
-	{
-		UnitAny* pVendor = D2CLIENT_GetCurrentInteractingNPC();
-		if (pVendor)
-		{
-			nNpcId = pVendor->dwTxtFileNo;
-		}
-	}
-
-	return D2COMMON_GetItemPrice(pPlayer, pItem, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), nNpcId, nTransactionType);
-}
-
 int ShopNPCs[] = {
 	NPCID_Akara,	// Act 1
 	NPCID_Gheed,	// Act 1
@@ -797,6 +782,24 @@ int ShopNPCs[] = {
 	NPCID_Malah,	// Act 5
 	NPCID_Anya		// Act 5
 };
+
+int GetShopPrice(UnitAny* pPlayer, UnitAny* pItem, int nTransactionType)
+{
+	int nNpcId = NPCID_Malah;
+	if (nTransactionType == TRANSACTIONTYPE_BUY)
+	{
+		UnitAny* pVendor = D2CLIENT_GetCurrentInteractingNPC();
+		if (pVendor)
+		{
+			if (find(begin(ShopNPCs), end(ShopNPCs), pVendor->dwTxtFileNo) != end(ShopNPCs))
+			{
+				nNpcId = pVendor->dwTxtFileNo;
+			}
+		}
+	}
+
+	return D2COMMON_GetItemPrice(pPlayer, pItem, D2CLIENT_GetDifficulty(), (DWORD)D2CLIENT_GetQuestInfo(), nNpcId, nTransactionType);
+}
 
 char* GemLevels[] = {
 	"NONE",
