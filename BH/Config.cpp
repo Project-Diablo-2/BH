@@ -250,6 +250,7 @@ void Config::SaveConfig()
 	jsonScreen["automap_info"] = App.screen.automapInfo.values;
 	if (App.screen.additionalStats.values.size() > 0) { jsonScreen["additional_stats"] = App.screen.additionalStats.values; }
 	jsonScreen["hide_game_password"] = App.screen.hideGamePassword.value;
+	jsonScreen["show_automap_on_join"] = App.screen.showAutomapOnJoin.value;
 	App.jsonConfig["screen_info"] = jsonScreen;
 
 	// Stash Export
@@ -399,6 +400,7 @@ void Config::LoadConfig()
 	App.screen.automapInfo.values = GetArray("/screen_info"_json_pointer, "automap_info", App.screen.automapInfo);
 	App.screen.additionalStats.values = GetAssoc("/screen_info"_json_pointer, "additional_stats", App.screen.additionalStats);
 	App.screen.hideGamePassword.value = GetBool("/screen_info"_json_pointer, "hide_game_password", App.screen.hideGamePassword);
+	App.screen.showAutomapOnJoin.value = GetBool("/screen_info"_json_pointer, "show_automap_on_join", App.screen.showAutomapOnJoin);
 
 	// Stash Export
 	App.stash.includeEquipment.toggle = GetToggle("/stash_export"_json_pointer, "include_equipment", App.stash.includeEquipment);

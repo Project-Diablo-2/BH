@@ -49,6 +49,10 @@ void ScreenInfo::LoadConfig()
 
 void ScreenInfo::OnGameJoin()
 {
+	if (App.screen.showAutomapOnJoin.value) {
+		*p_D2CLIENT_AutomapOn = 1;
+	}
+
 	BnetData* pInfo = (*p_D2LAUNCH_BnData);
 	UnitAny* unit = D2CLIENT_GetPlayerUnit();
 	/*if (unit) {
