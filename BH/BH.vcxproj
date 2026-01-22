@@ -228,6 +228,7 @@ powershell.exe -NoProfile -File "$(ProjectDir)..\..\scripts\CopyDataFolder.ps1"<
     <ClInclude Include="Drawing\Stats\StatsDisplay.h" />
     <ClInclude Include="Drawing\UI\UI.h" />
     <ClInclude Include="Drawing\UI\UITab.h" />
+    <ClInclude Include="Formula.h" />
     <ClInclude Include="JSONObject.h" />
     <ClInclude Include="lrucache.hpp" />
     <ClInclude Include="Modules.h" />

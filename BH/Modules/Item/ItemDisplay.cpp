@@ -8,6 +8,56 @@
 
 #define MAP_COLOR_WHITE     0x20
 
+// must be lowercase
+std::unordered_map<std::string, FormulaVarDefinition<FormulaContext>> formulaVarDefs = {
+	{ "stat", { 1, [](FormulaStatus& err, UnitItemInfo* ctx, const std::vector<int>& ids) -> float {
+			auto stat = ids[0];
+			int tmpVal = D2COMMON_GetUnitStat(ctx->item, stat, 0);
+			if (stat == STAT_MAXHP || stat == STAT_MAXMANA) {
+				tmpVal /= 256;
+			}
+			else if (
+				stat == STAT_ENHANCEDDEFENSE ||				// return 0
+				stat == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
+				stat == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
+				stat == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
+				stat == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
+				stat == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
+				stat == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
+				) {
+				tmpVal = GetStatFromList(ctx, stat);
+			}
+			return (float)tmpVal;
+		}
+	}},
+	{ "multi", { 2, [](FormulaStatus& err, UnitItemInfo* ctx, const std::vector<int>& ids) -> float {
+			auto stat = ids[0];
+			auto layer = ids[1];
+			int tmpVal = D2COMMON_GetUnitStat(ctx->item, stat, layer);
+			if (stat == STAT_MAXHP || stat == STAT_MAXMANA) {
+				tmpVal /= 256;
+			}
+			else if (
+				stat == STAT_ENHANCEDDEFENSE ||				// return 0
+				stat == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
+				stat == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
+				stat == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
+				stat == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
+				stat == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
+				stat == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
+				) {
+				tmpVal = GetStatFromList(ctx, stat);
+			}
+			return (float)tmpVal;
+		}
+	}},
+	{ "charstat", { 1, [](FormulaStatus& err, UnitItemInfo* ctx, const std::vector<int>& ids) -> float {
+			auto stat = ids[0];
+			return D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat, 0);
+		}
+	}},
+};
+
 // All colors here must also be defined in ReplacementMap
 #define MAP_COLOR_REPLACEMENTS	\
 	{"WHITE", 0x20},		\
@@ -518,6 +568,7 @@ enum FilterCondition
 	COND_ADD,
 	COND_TRUE,
 	COND_FALSE,
+	COND_FORMULA,
 
 	COND_NULL
 };
@@ -706,7 +757,7 @@ struct SkillReplace {
 };
 
 // case-sensitive searches for AddCondition
-const unordered_map<string, const SkillReplace> skills = {
+const unordered_map<string, SkillReplace> skills = {
 	{{"LIFE"}, { STAT_MAXHP, 0}},
 	{{"MANA"}, { STAT_MAXMANA, 0}},
 	{{"STR"}, { STAT_STRENGTH, 0}},
@@ -726,7 +777,10 @@ const unordered_map<string, const SkillReplace> skills = {
 	{{"MULTI"}, { ~0UL, 2}},
 };
 
+unordered_map<string, std::shared_ptr<Formula<FormulaContext>>> formulaMap;
+
 std::map<std::string, int>   UnknownItemCodes;
+vector<pair<string, string>> formulas;
 vector<pair<string, string>> aliases;
 vector<pair<string, string>> rules;
 vector<Rule*>                RuleList;
@@ -934,6 +988,7 @@ struct ReplacementSpec {
 	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceHDTextDependentColor(const string& primary, const string& secondary);
 	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceBindString(const string& str);
 	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceNamedStat(int id);
+	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceBindFormula(shared_ptr<Formula<FormulaContext>> f);
 };
 
 unordered_map<string, ReplacementSpec> ReplacementMap = {
@@ -1024,6 +1079,8 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "DARK_GREEN", { 0, ReplacementSpec::ReplaceBindString("ÿc:") } },
 };
 
+unordered_map<string, ReplacementSpec> FormulaReplacementMap;
+
 regex ReplacementRegex("%([A-Z_]+)(?:(\\d{1,9})(?:,(\\d{1,9}))?)?%", regex::ECMAScript);
 vector<ReplacementValue> BuildReplacementActions(const string& action)
 {
@@ -1068,10 +1125,13 @@ ReplacementValue ReplacementSpec::MakeReplacementValue(const string& str)
 
 ReplacementValue ReplacementSpec::MakeReplacementValue(const smatch& match, bool& fail)
 {
-	const auto& spec = ReplacementMap.find(match[1]);
+	auto& spec = ReplacementMap.find(match[1]);
 	if (spec == ReplacementMap.end()) {
-		fail = true;
-		return ReplacementValue(match.str(), 0, 0, ReplacementSpec::ReplaceNone);
+		spec = FormulaReplacementMap.find(match[1]);
+		if (spec == FormulaReplacementMap.end()) {
+			fail = true;
+			return ReplacementValue(match.str(), 0, 0, ReplacementSpec::ReplaceNone);
+		}
 	}
 	const auto& replacer = spec->second;
 	const int count = (match[2].length() != 0) + (match[3].length() != 0);
@@ -1095,6 +1155,35 @@ function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSp
 {
 	return [str](ReplaceContext& ctx, const ReplacementValue& val) -> string {
 		return str;
+	};
+}
+
+function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSpec::ReplaceBindFormula(shared_ptr<Formula<FormulaContext>> f)
+{
+	return [f](ReplaceContext& ctx, const ReplacementValue& val) -> string {
+		float out = 0.0f;
+		if (f->execute(ctx.info, out) != FormulaStatus::OK || !std::isfinite(out))
+		{
+			return "f_err";
+		}
+		char buffer[64];
+		if (std::fabs(out) >= 1e6f) {
+			snprintf(buffer, sizeof(buffer), "%.2e", out);
+			return buffer;
+		}
+		int len = snprintf(buffer, sizeof(buffer), "%.2f", out);
+		if (len < 2) {
+			return "f_err";
+		}
+		// remove .00
+		if (buffer[len - 1] == '0' && buffer[len - 2] == '0') {
+			buffer[len - 3] = '\0';
+		}
+		// remove a single trailing 0
+		else if (buffer[len - 1] == '0') {
+			buffer[len - 1] = '\0';
+		}
+		return buffer;
 	};
 }
 
@@ -1807,6 +1896,25 @@ unsigned int GetItemCodeIndex(char codeChar)
 	return codeChar - (codeChar < 90 ? 48 : 87);
 }
 
+bool FloatCompare(float Lvalue,
+	BYTE         operation,
+	int Rvalue,
+	int Bvalue = 0)
+{
+	switch (operation) {
+		case EQUAL:
+			return Lvalue == Rvalue;
+		case GREATER_THAN:
+			return Lvalue > Rvalue;
+		case LESS_THAN:
+			return Lvalue < Rvalue;
+		case BETWEEN:
+			return (Rvalue <= Lvalue && Lvalue <= Bvalue);
+		default:
+			return false;
+	}
+}
+
 bool IntegerCompare(int Lvalue,
 	BYTE         operation,
 	int Rvalue,
@@ -1827,6 +1935,92 @@ bool IntegerCompare(int Lvalue,
 	}
 }
 
+void RegisterFormula(const std::string& ref, std::unique_ptr<Formula<FormulaContext>>& ptr)
+{
+	formulaMap.insert_or_assign(ref, std::move(ptr));
+	FormulaReplacementMap.insert_or_assign(ref, ReplacementSpec{ 0, ReplacementSpec::ReplaceBindFormula(formulaMap.find(ref)->second) });
+}
+
+struct IslandReplacementHelper
+{
+	const std::string IslandIdentifier = "$f(";
+	const std::string IslandPrefix = "ISLAND_";
+	vector<char> IslandSuffix;
+
+	IslandReplacementHelper()
+	{
+		reset();
+	}
+
+	void reset()
+	{
+		IslandSuffix = { 'A' - 1 };
+	}
+
+	string GetNextFormulaIslandRef()
+	{
+		for (size_t i = 0; i < IslandSuffix.size(); ++i) {
+			if (IslandSuffix[i] == 'Z') {
+				IslandSuffix[i] = 'A';
+				if (i + 1 >= IslandSuffix.size()) {
+					IslandSuffix.push_back('A');
+					break;
+				}
+			}
+			else {
+				IslandSuffix[i] += 1;
+				break;
+			}
+		}
+
+		string res = IslandPrefix;
+		for (size_t i = 0; i < IslandSuffix.size(); ++i) {
+			res += IslandSuffix[i];
+		}
+
+		return res;
+	}
+
+	void ReplaceFormulaIslands(std::string& text, std::string& pre, std::string& suf)
+	{
+		size_t offset = 0;
+		while (offset < text.length()) {
+			const auto start = text.find(IslandIdentifier, offset);
+			if (start == string::npos) {
+				return;
+			}
+			size_t i = start + IslandIdentifier.length();
+			for (size_t count = 1; i < text.length(); ++i) {
+				if (text[i] == '(') {
+					count += 1;
+				}
+				else if (text[i] == ')') {
+					count -= 1;
+					if (count == 0) {
+						break;
+					}
+				}
+			}
+			if (i < text.length()) {
+				std::unique_ptr<Formula<FormulaContext>> out;
+				size_t len = i - (start + IslandIdentifier.length());
+				if (Formula<FormulaContext>::Compile(text.substr(start + IslandIdentifier.length(), len), out, formulaVarDefs) == FormulaStatus::OK) {
+					const auto ref = GetNextFormulaIslandRef();
+					RegisterFormula(ref, out);
+					const auto replacement = pre + ref + suf;
+					text.replace(start, len + IslandIdentifier.length() + 1, replacement);
+					len = replacement.length() - IslandIdentifier.length() - 1;
+				}
+				offset = start + len + IslandIdentifier.length() + 1;
+				continue;
+			}
+			// found start pattern but didn't match ')'
+			offset = start + IslandIdentifier.length();
+		}
+	}
+};
+IslandReplacementHelper islandReplacementHelper;
+
 namespace ItemDisplay
 {
 	bool item_display_initialized = false;
@@ -1840,8 +2034,13 @@ namespace ItemDisplay
 		item_display_initialized = true;
 		rules.clear();
 		aliases.clear();
+		formulas.clear();
+		formulaMap.clear();
+		FormulaReplacementMap.clear();
+		islandReplacementHelper.reset();
 		ResetCaches();
 		BH::lootFilter->ReadMapList("Alias", aliases);
+		BH::lootFilter->ReadMapList("Formula", formulas);
 		BH::lootFilter->ReadMapList("ItemDisplay", rules);
 
 		// Limit aliases to single keywords
@@ -1853,6 +2052,25 @@ namespace ItemDisplay
 				aliases[i].first.erase(aliases[i].first.find(" "));
 		}
 
+		for (const auto& f : formulas)
+		{
+			const auto& key = f.first;
+			const auto& text = f.second;
+
+			auto formulaRef = "FORMULA" + key;
+			transform(formulaRef.begin(), formulaRef.end(), formulaRef.begin(), toupper);
+
+			std::unique_ptr<Formula<FormulaContext>> out;
+			if (Formula<FormulaContext>::Compile(text, out, formulaVarDefs) != FormulaStatus::OK)
+			{
+				continue;
+			}
+
+			RegisterFormula(formulaRef, out);
+		}
+
+		std::string percent = "%";
+		std::string empty = "";
 		for (unsigned int i = 0; i < rules.size(); i++)
 		{
 			for (auto alias : aliases)
@@ -1867,6 +2085,10 @@ namespace ItemDisplay
 				while (rules[i].second.find("%" + alias.first + "%") != string::npos)
 					rules[i].second.replace(rules[i].second.find("%" + alias.first + "%"), alias.first.length() + 2, alias.second);
 			}
+
+			// find inline formula islands
+			islandReplacementHelper.ReplaceFormulaIslands(rules[i].first, empty, empty);
+			islandReplacementHelper.ReplaceFormulaIslands(rules[i].second, percent, percent);
 
 			string         buf;
 			stringstream   ss(rules[i].first);
@@ -2384,6 +2606,10 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	{
 		condition = COND_MULTI;
 	}
+	else if (formulaMap.find(key) != formulaMap.end())
+	{
+		condition = COND_FORMULA;
+	}
 
 	switch (condition)
 	{
@@ -2818,6 +3044,9 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		break;
 
 	case COND_NULL:
+		break;
+	case COND_FORMULA:
+		Condition::AddOperand(conditions, new FormulaCondition(key, operation, value, value2));
 		break;
 	default:
 		break;
@@ -3540,10 +3769,15 @@ void AddCondition::Init()
 		smatch match;
 		if (regex_search(code, match, statRegex)) {
 			if (skills.find(match[1]) == skills.end()) {
+				if (formulaMap.find(match[1]) == formulaMap.end()) {
+					continue;
+				}
+				fs.emplace_back(formulaMap.find(match[1])->second);
 				continue;
 			}
-			DWORD id = skills.find(match[1])->second.id;
-			DWORD params = skills.find(match[1])->second.params;
+			auto& found = skills.find(match[1]);
+			DWORD id = found->second.id;
+			DWORD params = found->second.params;
 			int paramCount = (match[2].length() != 0) + (match[3].length() != 0);
 			if (params != paramCount) {
 				continue;
@@ -3583,8 +3817,48 @@ bool AddCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		}
 		value += tmpVal;
 	}
+	float fvalue = 0.0f;
+	for (const auto& f : fs)
+	{
+		float out;
+		if (f->execute(uInfo, out) == FormulaStatus::OK)
+		{
+			fvalue += out;
+		}
+	}
 
+	if (fs.size() > 0) {
+		return FloatCompare(value + fvalue, operation, targetStat);
+	}
 	return IntegerCompare(value, operation, targetStat);
+}
+
+FormulaCondition::FormulaCondition(string& k,
+	BYTE         op,
+	unsigned int target,
+	unsigned int target2) : key(k),
+	operation(op),
+	targetStat(target),
+	targetStat2(target2)
+{
+	conditionType = CT_Operand;
+	f = formulaMap.find(key)->second.get();
+};
+
+bool FormulaCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	float out;
+	if (f->execute(uInfo, out) != FormulaStatus::OK)
+	{
+		return false;
+	}
+	if (operation == NONE)
+	{
+		return Formula<FormulaContext>::IsTrue(out);
+	}
+	return FloatCompare(out, operation, targetStat, targetStat2);
 }
 
 int GetStatFromList(UnitItemInfo* uInfo, int itemStat)
