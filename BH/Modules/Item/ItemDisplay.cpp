@@ -8,56 +8,6 @@
 
 #define MAP_COLOR_WHITE     0x20
 
-// must be lowercase
-std::unordered_map<std::string, FormulaVarDefinition<FormulaContext>> formulaVarDefs = {
-	{ "stat", { 1, [](FormulaStatus& err, UnitItemInfo* ctx, const std::vector<int>& ids) -> float {
-			auto stat = ids[0];
-			int tmpVal = D2COMMON_GetUnitStat(ctx->item, stat, 0);
-			if (stat == STAT_MAXHP || stat == STAT_MAXMANA) {
-				tmpVal /= 256;
-			}
-			else if (
-				stat == STAT_ENHANCEDDEFENSE ||				// return 0
-				stat == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
-				stat == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
-				stat == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
-				stat == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
-				stat == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
-				stat == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
-				) {
-				tmpVal = GetStatFromList(ctx, stat);
-			}
-			return (float)tmpVal;
-		}
-	}},
-	{ "multi", { 2, [](FormulaStatus& err, UnitItemInfo* ctx, const std::vector<int>& ids) -> float {
-			auto stat = ids[0];
-			auto layer = ids[1];
-			int tmpVal = D2COMMON_GetUnitStat(ctx->item, stat, layer);
-			if (stat == STAT_MAXHP || stat == STAT_MAXMANA) {
-				tmpVal /= 256;
-			}
-			else if (
-				stat == STAT_ENHANCEDDEFENSE ||				// return 0
-				stat == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
-				stat == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
-				stat == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
-				stat == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
-				stat == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
-				stat == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
-				) {
-				tmpVal = GetStatFromList(ctx, stat);
-			}
-			return (float)tmpVal;
-		}
-	}},
-	{ "charstat", { 1, [](FormulaStatus& err, UnitItemInfo* ctx, const std::vector<int>& ids) -> float {
-			auto stat = ids[0];
-			return D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat, 0);
-		}
-	}},
-};
-
 // All colors here must also be defined in ReplacementMap
 #define MAP_COLOR_REPLACEMENTS	\
 	{"WHITE", 0x20},		\
@@ -399,6 +349,26 @@ std::map<int, int> maptiers = {
 	{ITEM_TYPE_T4_MAP, 4},
 	{ITEM_TYPE_T5_MAP, 5},
 };
+
+int GetAdjustedUnitStat(UnitItemInfo* uInfo, DWORD stat, DWORD layer)
+{
+	int tmpVal = D2COMMON_GetUnitStat(uInfo->item, stat, layer);
+	if (stat == STAT_MAXHP || stat == STAT_MAXMANA) {
+		tmpVal /= 256;
+	}
+	else if (
+		stat == STAT_ENHANCEDDEFENSE ||				// return 0
+		stat == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
+		stat == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
+		stat == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
+		stat == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
+		stat == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
+		stat == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
+		) {
+		tmpVal = GetStatFromList(uInfo, stat);
+	}
+	return (float)tmpVal;
+}
 
 enum AttributeFlagTypes
 {
@@ -1511,6 +1481,882 @@ bool IsRune(ItemAttributes* attrs)
 }
 
 BYTE RuneNumberFromItemCode(char* code) { return (BYTE)(((code[1] - '0') * 10) + code[2] - '0'); }
+
+// must be lowercase
+std::unordered_map<std::string, FormulaVarDefinition<FormulaContext>> formulaVarDefs = {
+	{ "stat", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto stat = ids[0];
+			return GetAdjustedUnitStat(uInfo, stat, 0);
+		}
+	} },
+	{ "multi", { 2, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto stat = ids[0];
+			auto layer = ids[1];
+			return GetAdjustedUnitStat(uInfo, stat, layer);
+		}
+	} },
+	{ "charstat", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto stat = ids[0];
+			return D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat, 0);
+		}
+	} },
+	{ "onehand", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (code_to_dwtxtfileno.find(uInfo->itemCode) != code_to_dwtxtfileno.end()) {
+				int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+				WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+
+				if (weapon_type == WeaponType::kAxe ||
+					weapon_type == WeaponType::kWand ||
+					weapon_type == WeaponType::kClub ||
+					weapon_type == WeaponType::kScepter ||
+					weapon_type == WeaponType::kMace ||
+					weapon_type == WeaponType::kHammer ||
+					weapon_type == WeaponType::kSword ||
+					weapon_type == WeaponType::kKnife ||
+					weapon_type == WeaponType::kThrowing ||
+					weapon_type == WeaponType::kJavelin ||
+					weapon_type == WeaponType::kThrowingPot ||
+					weapon_type == WeaponType::kClaw1 ||
+					weapon_type == WeaponType::kClaw2 ||
+					weapon_type == WeaponType::kOrb ||
+					weapon_type == WeaponType::kAmaJav
+					) {
+					return 1;
+				}
+			}
+			return 0;
+		}
+	} },
+	{ "twohand", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (code_to_dwtxtfileno.find(uInfo->itemCode) != code_to_dwtxtfileno.end()) {
+				int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+				WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+
+				if (weapon_type == WeaponType::kAxe2H ||
+					weapon_type == WeaponType::kHammer2H ||
+					weapon_type == WeaponType::kSword2H ||
+					weapon_type == WeaponType::kSpear ||
+					weapon_type == WeaponType::kPole ||
+					weapon_type == WeaponType::kStaff ||
+					weapon_type == WeaponType::kBow ||
+					weapon_type == WeaponType::kCrossbow ||
+					weapon_type == WeaponType::kAmaBow ||
+					weapon_type == WeaponType::kAmaSpear
+					) {
+					return 1;
+				}
+			}
+			return 0;
+		}
+	} },
+	{ "allsk", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_ALLSKILLS, 0);
+		}
+	} },
+	{ "alvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			BYTE qlvl = uInfo->attrs->qualityLevel;
+			return GetAffixLevel((BYTE)uInfo->item->pItemData->dwItemLevel, (BYTE)uInfo->attrs->qualityLevel, uInfo->attrs->magicLevel);
+		}
+	} },
+	{ "amazon", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 0;
+		}
+	} },
+	{ "ar", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_ATTACKRATING, 0);
+		}
+	} },
+	{ "armor", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_ALLARMOR) != 0;
+		}
+	} },
+	{ "arper", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_TOHITPERCENT, 0);
+		}
+	} },
+	{ "assassin", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 6;
+		}
+	} },
+	{ "automod", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto itemData = uInfo->item->pItemData;
+			if ((itemData->dwQuality == ITEM_QUALITY_MAGIC || itemData->dwQuality == ITEM_QUALITY_RARE) && !(itemData->dwFlags & ITEM_IDENTIFIED)) {
+				return false;
+			}
+			return itemData->wAutoPrefix - AUTOMOD_OFFSET;
+		}
+	} },
+	{ "axe", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_AXE) != 0;
+		}
+	} },
+	{ "bar", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_BARBARIAN_HELM) != 0;
+		}
+	} },
+	{ "barbarian", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 4;
+		}
+	} },
+	{ "belt", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_BELT) != 0;
+		}
+	} },
+	{ "boots", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_BOOTS) != 0;
+		}
+	} },
+	{ "bow", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_BOW) != 0;
+		}
+	} },
+	{ "buyprice", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetShopPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, TRANSACTIONTYPE_BUY);
+		}
+	} },
+	{ "charm", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->miscFlags & ITEM_GROUP_CHARM) != 0;
+		}
+	} },
+	{ "chest", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_BODY_ARMOR) != 0;
+		}
+	} },
+	{ "chsk", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto skill = ids[0];
+			if (skill < 0 || skill > SKILL_MAX) {
+				err = FormulaStatus::MATH_ERROR;
+				return 0;
+			}
+			DWORD     value = 0;
+			Stat      aStatList[256] = { NULL };
+			StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+			if (pStatList) {
+				DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
+				for (UINT i = 0; i < dwStats; i++) {
+					//if (aStatList[i].wStatIndex == STAT_CHARGED)
+					//	PrintText(1, "ChargedCondition::EvaluateInternal: Index=%hx, SubIndex=%hx, Value=%x", aStatList[i].wStatIndex, aStatList[i].wSubIndex, aStatList[i].dwStatValue);
+					if (aStatList[i].wStatIndex == STAT_CHARGED && (aStatList[i].wSubIndex >> 6) == skill) {
+						// 10 MSBs of subindex is the skill ID
+						unsigned int level = aStatList[i].wSubIndex & 0x3F;     // 6 LSBs are the skill level
+						value = (level > value) ? level : value; // use highest level
+					}
+				}
+			}
+			return value;
+		}
+	} },
+	{ "circ", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_CIRCLET) != 0;
+		}
+	} },
+	{ "cl", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto classId = ids[0];
+			switch (classId) {
+				case 1:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_DRUID_PELT) != 0;
+				}
+				case 2:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_BARBARIAN_HELM) != 0;
+				}
+				case 3:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_PALADIN_SHIELD) != 0;
+				}
+				case 4:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_NECROMANCER_SHIELD) != 0;
+				}
+				case 5:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_ASSASSIN_KATAR) != 0;
+				}
+				case 6:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_SORCERESS_ORB) != 0;
+				}
+				case 7:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_AMAZON_WEAPON) != 0;
+				}
+				default:
+				{
+					err = FormulaStatus::MATH_ERROR;
+					return 0;
+				}
+			}
+		}
+	} },
+	{ "class", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->baseFlags & ITEM_GROUP_CLASS) != 0;
+		}
+	} },
+	{ "clsk", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto classId = ids[0];
+			if (classId < 0 || classId >= CLASS_NA) {
+				err = FormulaStatus::MATH_ERROR;
+				return 0;
+			}
+			return GetAdjustedUnitStat(uInfo, STAT_CLASSSKILLS, classId);
+		}
+	} },
+	{ "club", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_CLUB) != 0;
+		}
+	} },
+	{ "clvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
+		}
+	} },
+	{ "craft", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_CRAFT;
+		}
+	} },
+	{ "craftalvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			int clvl = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
+			int craft_alvl = GetAffixLevel(
+				(int)(0.5 * clvl) + (int)(0.5 * uInfo->item->pItemData->dwItemLevel),
+				uInfo->attrs->qualityLevel,
+				uInfo->attrs->magicLevel
+			);
+			return craft_alvl;
+		}
+	} },
+	{ "cres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_COLDRESIST, 0);
+		}
+	} },
+	{ "cube", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (!uInfo->item || !uInfo->item->pItemData) {
+				return 0;
+			}
+			const auto pItemData = uInfo->item->pItemData;
+			return pItemData->ItemLocation == STORAGE_CUBE
+				&& pItemData->pOwnerInventory
+				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+		}
+	} },
+	{ "dagger", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_DAGGER) != 0;
+		}
+	} },
+	{ "def", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_DEFENSE, 0);
+		}
+	} },
+	{ "dex", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_DEXTERITY, 0);
+		}
+	} },
+	{ "diff", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetDifficulty();
+		}
+	} },
+	{ "din", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_PALADIN_SHIELD) != 0;
+		}
+	} },
+	{ "dru", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_DRUID_PELT) != 0;
+		}
+	} },
+	{ "druid", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 5;
+		}
+	} },
+	{ "dtm", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_DAMAGETOMANA, 0);
+		}
+	} },
+	{ "ed", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			WORD stat;
+			if (uInfo->attrs->armorFlags & ITEM_GROUP_ALLARMOR) { stat = STAT_ENHANCEDDEFENSE; }
+			else {
+				// Normal %ED will have the same value for STAT_ENHANCEDMAXIMUMDAMAGE and STAT_ENHANCEDMINIMUMDAMAGE
+				stat = STAT_ENHANCEDMAXIMUMDAMAGE;
+			}
+			DWORD     value = 0;
+			StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+			if (pStatList) {
+				value += D2COMMON_GetStatValueFromStatList(pStatList, stat, 0);
+			}
+			return value;
+		}
+	} },
+	{ "edam", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_ENHANCEDMAXIMUMDAMAGE, 0);
+		}
+	} },
+	{ "edef", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_ENHANCEDDEFENSE, 0);
+		}
+	} },
+	{ "elt", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->baseFlags & ITEM_GROUP_ELITE) != 0;
+		}
+	} },
+	{ "eq", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			const auto id = ids[0];
+			switch (id) {
+				case 1:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_HELM) != 0;
+				}
+				case 2:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_BODY_ARMOR) != 0;
+				}
+				case 3:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_SHIELD) != 0;
+				}
+				case 4:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_GLOVES) != 0;
+				}
+				case 5:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_BOOTS) != 0;
+				}
+				case 6:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_BELT) != 0;
+				}
+				case 7:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_CIRCLET) != 0;
+				}
+				default:
+				{
+					err = FormulaStatus::MATH_ERROR;
+					return 0;
+				}
+			}
+		}
+	} },
+	{ "equipped", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (!uInfo->item || !uInfo->item->pItemData) {
+				return 0;
+			}
+			const auto pItemData = uInfo->item->pItemData;
+			return pItemData->ItemLocation == STORAGE_NULL
+				&& pItemData->BodyLocation > 0
+				&& pItemData->pOwnerInventory
+				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+		}
+	} },
+	{ "eth", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) != 0;
+		}
+	} },
+	{ "exc", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->baseFlags & ITEM_GROUP_EXCEPTIONAL) != 0;
+		}
+	} },
+	{ "false", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return 0;
+		}
+	} },
+	{ "fbr", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_FASTERBLOCK, 0);
+		}
+	} },
+	{ "fcr", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_FASTERCAST, 0);
+		}
+	} },
+	{ "fhr", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_FASTERHITRECOVERY, 0);
+		}
+	} },
+	{ "filtlvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return Item::GetFilterLevel();
+		}
+	} },
+	{ "fools", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			unsigned int value = 0;
+			Stat         aStatList[256] = { NULL };
+			StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+			if (pStatList) {
+				DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
+				for (UINT i = 0; i < dwStats; i++) {
+					if (aStatList[i].wStatIndex == STAT_MAXDAMAGEPERLEVEL && aStatList[i].wSubIndex == 0) { value += 1; }
+					if (aStatList[i].wStatIndex == STAT_ATTACKRATINGPERLEVEL && aStatList[i].wSubIndex == 0) { value += 2; }
+				}
+			}
+			return value == 3;
+		}
+	} },
+	{ "fres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_FIRERESIST, 0);
+		}
+	} },
+	{ "frw", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_FASTERRUNWALK, 0);
+		}
+	} },
+	{ "gem", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (IsGem(uInfo->attrs)) {
+				return GetGemLevel(uInfo->attrs);
+			}
+			return 0;
+		}
+	} },
+	{ "gemlevel", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (IsGem(uInfo->attrs)) {
+				return GetGemLevel(uInfo->attrs);
+			}
+			return 0;
+		}
+	} },
+	{ "gemmed", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (uInfo->item->pInventory) {
+				return uInfo->item->pInventory->dwItemCount > 0;
+			}
+			return 0;
+		}
+	} },
+	{ "gemtype", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (IsGem(uInfo->attrs)) {
+				return GetGemType(uInfo->attrs);
+			}
+			return 0;
+		}
+	} },
+	{ "gfind", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_GOLDFIND, 0);
+		}
+	} },
+	{ "gloves", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_GLOVES) != 0;
+		}
+	} },
+	{ "gold", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (uInfo->itemCode[0] == 'g' && uInfo->itemCode[1] == 'l' && uInfo->itemCode[2] == 'd') {
+				return D2COMMON_GetUnitStat(uInfo->item, STAT_GOLD, 0);
+			}
+			return 0;
+		}
+	} },
+	{ "ground", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->dwMode == ITEM_MODE_ON_GROUND || uInfo->item->dwMode == ITEM_MODE_BEING_DROPPED;
+		}
+	} },
+	{ "hammer", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_HAMMER) != 0;
+		}
+	} },
+	{ "helm", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_HELM) != 0;
+		}
+	} },
+	{ "ias", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_IAS, 0);
+		}
+	} },
+	{ "id", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) != 0;
+		}
+	} },
+	{ "ilvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwItemLevel;
+		}
+	} },
+	{ "inf", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_INFERIOR;
+		}
+	} },
+	{ "inventory", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (!uInfo->item || !uInfo->item->pItemData) {
+				return 0;
+			}
+			const auto pItemData = uInfo->item->pItemData;
+			return pItemData->ItemLocation == STORAGE_INVENTORY
+				&& uInfo->item->dwMode == ITEM_MODE_INV_STASH_CUBE_STORE
+				&& pItemData->pOwnerInventory
+				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+		}
+	} },
+	{ "jav", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_JAVELIN) != 0;
+		}
+	} },
+	{ "jewelry", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->miscFlags & ITEM_GROUP_JEWELRY) != 0;
+		}
+	} },
+	{ "life", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MAXHP, 0);
+		}
+	} },
+	{ "lres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_LIGHTNINGRESIST, 0);
+		}
+	} },
+	{ "lvlreq", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetRequiredLevel(uInfo->item);
+		}
+	} },
+	{ "mace", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_ALLMACE) != 0;
+		}
+	} },
+	{ "maek", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MANAAFTEREACHKILL, 0);
+		}
+	} },
+	{ "mag", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_MAGIC;
+		}
+	} },
+	{ "mana", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MAXMANA, 0);
+		}
+	} },
+	{ "mapid", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			UnitAny* player = D2CLIENT_GetPlayerUnit();
+			if (player) {
+				int map_id = D2COMMON_GetLevelIdFromRoom(D2COMMON_GetRoomFromUnit(player));
+				return map_id;
+			}
+			return 0;
+		}
+	} },
+	{ "maptier", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (maptiers.find(uInfo->attrs->category) != maptiers.end()) {
+				return maptiers.at(uInfo->attrs->category);
+			}
+			return -1;
+		}
+	} },
+	{ "maxdmg", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MAXIMUMDAMAGE, 0);
+		}
+	} },
+	{ "maxdur", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			DWORD     value = 0;
+			Stat      aStatList[256] = { NULL };
+			StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+			if (pStatList) {
+				DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
+				for (UINT i = 0; i < dwStats; i++) { if (aStatList[i].wStatIndex == STAT_ENHANCEDMAXDURABILITY && aStatList[i].wSubIndex == 0) { value += aStatList[i].dwStatValue; } }
+			}
+			return value;
+		}
+	} },
+	{ "merc", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto pMerc = GetClientMercUnit();
+			auto pItemData = uInfo->item->pItemData;
+			return pMerc
+				&& pItemData->ItemLocation == STORAGE_NULL
+				&& pItemData->BodyLocation > 0
+				&& pItemData->pOwnerInventory
+				&& pItemData->pOwnerInventory->pOwner == pMerc;
+		}
+	} },
+	{ "mfind", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MAGICFIND, 0);
+		}
+	} },
+	{ "mindmg", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MINIMUMDAMAGE, 0);
+		}
+	} },
+	{ "misc", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->miscFlags & ITEM_GROUP_ALLMISC) != 0;
+		}
+	} },
+	{ "nec", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_NECROMANCER_SHIELD) != 0;
+		}
+	} },
+	{ "necromancer", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 2;
+		}
+	} },
+	{ "nmag", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_INFERIOR
+				|| uInfo->item->pItemData->dwQuality == ITEM_QUALITY_NORMAL
+				|| uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR;
+		}
+	} },
+	{ "norm", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->baseFlags & ITEM_GROUP_NORMAL) != 0;
+		}
+	} },
+	{ "os", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto skill = ids[0];
+			if (skill < 0 || skill > SKILL_MAX) {
+				err = FormulaStatus::MATH_ERROR;
+				return 0;
+			}
+			return GetAdjustedUnitStat(uInfo, STAT_NONCLASSSKILL, skill);
+		}
+	} },
+	{ "paladin", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 3;
+		}
+	} },
+	{ "polearm", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_POLEARM) != 0;
+		}
+	} },
+	{ "pres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_POISONRESIST, 0);
+		}
+	} },
+	{ "price", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetShopPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, TRANSACTIONTYPE_SELL);
+		}
+	} },
+	{ "qlvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->attrs->qualityLevel;
+		}
+	} },
+	{ "qty", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_AMMOQUANTITY, 0);
+		}
+	} },
+	{ "quiver", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->miscFlags & ITEM_GROUP_QUIVER) != 0;
+		}
+	} },
+	{ "rare", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_RARE;
+		}
+	} },
+	{ "repair", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_REPAIRSDURABILITY, 0);
+		}
+	} },
+	{ "replife", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_REPLENISHLIFE, 0);
+		}
+	} },
+	{ "repquant", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_REPLENISHESQUANTITY, 0);
+		}
+	} },
+	{ "rerollalvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ComputeRerollAffixLevel(uInfo);
+		}
+	} },
+	{ "res", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			int fRes = D2COMMON_GetUnitStat(uInfo->item, STAT_FIRERESIST, 0);
+			int lRes = D2COMMON_GetUnitStat(uInfo->item, STAT_LIGHTNINGRESIST, 0);
+			int cRes = D2COMMON_GetUnitStat(uInfo->item, STAT_COLDRESIST, 0);
+			int pRes = D2COMMON_GetUnitStat(uInfo->item, STAT_POISONRESIST, 0);
+			if (fRes && lRes && cRes && pRes) {
+				return min(min(fRes, lRes), min(cRes, pRes));
+			}
+			return 0;
+		}
+	} },
+	{ "rune", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (IsRune(uInfo->attrs)) {
+				return RuneNumberFromItemCode(uInfo->itemCode);
+			}
+			return 0;
+		}
+	} },
+	{ "rw", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) != 0;
+		}
+	} },
+	{ "scepter", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_SCEPTER) != 0;
+		}
+	} },
+	{ "sellprice", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetShopPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, TRANSACTIONTYPE_SELL);
+		}
+	} },
+	{ "set", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SET;
+		}
+	} },
+	{ "shield", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_SHIELD) != 0;
+		}
+	} },
+	{ "shop", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (uInfo->item->pItemData &&
+				uInfo->item->pItemData->pOwnerInventory &&
+				uInfo->item->pItemData->pOwnerInventory->pOwner) {
+				auto wNpcId = uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo;
+				if (find(begin(ShopNPCs), end(ShopNPCs), wNpcId) != end(ShopNPCs)) {
+					return 1;
+				}
+			}
+			return 0;
+		}
+	} },
+	{ "sin", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_ASSASSIN_KATAR) != 0;
+		}
+	} },
+	{ "sk", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto skill = ids[0];
+			if (skill < 0 || skill > SKILL_MAX) {
+				err = FormulaStatus::MATH_ERROR;
+				return 0;
+			}
+			return GetAdjustedUnitStat(uInfo, STAT_SINGLESKILL, skill);
+		}
+	} },
+	{ "sock", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_SOCKETS, 0);
+		}
+	} },
+	{ "sockets", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_SOCKETS, 0);
+		}
+	} },
+	{ "sor", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_SORCERESS_ORB) != 0;
+		}
+	} },
+	{ "sorceress", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 1;
+		}
+	} },
+	{ "spear", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_SPEAR) != 0;
+		}
+	} },
+	{ "staff", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_STAFF) != 0;
+		}
+	} },
+	{ "stash", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (!uInfo->item || !uInfo->item->pItemData) {
+				return 0;
+			}
+			const auto pItemData = uInfo->item->pItemData;
+			return pItemData->ItemLocation == STORAGE_STASH
+				&& pItemData->pOwnerInventory
+				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+		}
+	} },
+	{ "str", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_STRENGTH, 0);
+		}
+	} },
+	{ "sup", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR;
+		}
+	} },
+	{ "sword", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_SWORD) != 0;
+		}
+	} },
+	{ "tabsk", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto skill = ids[0];
+			if (skill < 0 || skill > SKILL_MAX) {
+				err = FormulaStatus::MATH_ERROR;
+				return 0;
+			}
+			return GetAdjustedUnitStat(uInfo, STAT_SKILLTAB, skill);
+		}
+	} },
+	{ "throwing", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_THROWING) != 0;
+		}
+	} },
+	{ "tmace", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_TIPPED_MACE) != 0;
+		}
+	} },
+	{ "true", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return 1;
+		}
+	} },
+	{ "uni", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_UNIQUE;
+		}
+	} },
+	{ "wand", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_WAND) != 0;
+		}
+	} },
+	{ "weapon", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_ALLWEAPON) != 0;
+		}
+	} },
+	{ "wp", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			const auto id = ids[0];
+			switch (id) {
+				case 1:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_AXE) != 0;
+				}
+				case 2:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_ALLMACE) != 0;
+				}
+				case 3:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_SWORD) != 0;
+				}
+				case 4:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_DAGGER) != 0;
+				}
+				case 5:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_THROWING) != 0;
+				}
+				case 6:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_JAVELIN) != 0;
+				}
+				case 7:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_SPEAR) != 0;
+				}
+				case 8:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_POLEARM) != 0;
+				}
+				case 9:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_BOW) != 0;
+				}
+				case 10:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_CROSSBOW) != 0;
+				}
+				case 11:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_STAFF) != 0;
+				}
+				case 12:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_WAND) != 0;
+				}
+				case 13:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_SCEPTER) != 0;
+				}
+				default:
+				{
+					err = FormulaStatus::MATH_ERROR;
+					return 0;
+				}
+			}
+		}
+	} },
+	{ "xbow", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_CROSSBOW) != 0;
+		}
+	} },
+	{ "zon", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_AMAZON_WEAPON) != 0;
+		}
+	} },
+};
 
 // Find the item description. This code is called only when there's a cache miss
 string ItemDescLookupCache::make_cached_T(UnitItemInfo* uInfo)
