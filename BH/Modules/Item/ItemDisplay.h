@@ -3,6 +3,7 @@
 #include "../../D2Ptrs.h"
 #include "../../Config.h"
 #include "../../BH.h"
+#include "../../Formula.h"
 #include <cstdlib>
 #include <regex>
 #include "../../RuleLookupCache.h"
@@ -18,7 +19,6 @@
 #define DEAD_COLOR        0xdead
 #define UNDEFINED_COLOR   0xbeef
 
-
 // Collection of item data from the internal UnitAny structure
 struct UnitItemInfo
 {
@@ -27,6 +27,7 @@ struct UnitItemInfo
 	ItemAttributes* attrs;
 };
 
+typedef UnitItemInfo FormulaContext;
 extern std::map<std::string, int> UnknownItemCodes;
 
 enum ConditionType
@@ -805,10 +806,29 @@ public:
 private:
 	BYTE           operation;
 	vector<string> codes;
+	vector<shared_ptr<Formula<FormulaContext>>> fs;
 	vector<tuple<DWORD, DWORD>>  stats;
 	unsigned int   targetStat;
 	string         key;
 	void           Init();
+	bool           EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
+class FormulaCondition : public Condition
+{
+public:
+	FormulaCondition(string& k,
+		BYTE         op,
+		unsigned int target,
+		unsigned int target2);
+private:
+	Formula<FormulaContext>* f;
+	BYTE           operation;
+	unsigned int   targetStat;
+	unsigned int   targetStat2;
+	string         key;
 	bool           EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);

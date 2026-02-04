@@ -201,6 +201,7 @@
     <ClInclude Include="Modules\GameSettings\GameSettings.h">
       <Filter>Modules\GameSettings</Filter>
     </ClInclude>
+    <ClInclude Include="Formula.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
