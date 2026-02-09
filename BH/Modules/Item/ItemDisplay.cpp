@@ -518,6 +518,7 @@ enum FilterCondition
 	COND_ADD,
 	COND_TRUE,
 	COND_FALSE,
+	COND_ALLATTRIB,
 
 	COND_NULL
 };
@@ -684,6 +685,7 @@ std::map<std::string, FilterCondition> condition_map =
 	{"BUYPRICE", COND_BUYPRICE},
 	{"SELLPRICE", COND_PRICE},
 	{"PRICE", COND_PRICE},
+	{"ALLATTRIB", COND_ALLATTRIB},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
 	//{"OS", COND_OS},
@@ -912,6 +914,8 @@ struct ReplacementSpec {
 	static string ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val);
 	// %NL%
 	static string ReplaceNewLine(ReplaceContext& ctx, const ReplacementValue& val);
+	// %ALLATTRIB%
+	static string ReplaceAllAttributes(ReplaceContext& ctx, const ReplacementValue& val);
 
 	// DYNAMIC keywords
 	// %STAT%
@@ -965,6 +969,7 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "ED", { 0, ReplacementSpec::ReplaceEnhancedD } },
 	{ "CL", { 0, ReplacementSpec::ReplaceConditionalLine } },
 	{ "NL", { 0, ReplacementSpec::ReplaceNewLine } },
+	{ "ALLATTRIB", { 0, ReplacementSpec::ReplaceAllAttributes } },
 	// named stats
 	{ "EDEF", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDDEFENSE) } },
 	{ "EDAM", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDMAXIMUMDAMAGE) } },
@@ -1213,6 +1218,13 @@ string ReplacementSpec::ReplaceAllResist(ReplaceContext& ctx, const ReplacementV
 string ReplacementSpec::ReplaceEnhancedD(ReplaceContext& ctx, const ReplacementValue& val)
 {
 	return NameVarEd(ctx.info);
+}
+
+string ReplacementSpec::ReplaceAllAttributes(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", AllAttributesCondition::GetValue(ctx.info));
+	return buffer;
 }
 
 string ReplacementSpec::ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val)
@@ -2816,6 +2828,9 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_ADD:
 		Condition::AddOperand(conditions, new AddCondition(key, operation, value));
 		break;
+	case COND_ALLATTRIB:
+		Condition::AddOperand(conditions, new AllAttributesCondition(operation, value, value2));
+		break;
 
 	case COND_NULL:
 		break;
@@ -3585,6 +3600,25 @@ bool AddCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	}
 
 	return IntegerCompare(value, operation, targetStat);
+}
+
+int AllAttributesCondition::GetValue(UnitItemInfo* uInfo)
+{
+	int str = D2COMMON_GetUnitStat(uInfo->item, STAT_STRENGTH, 0);
+	int dex = D2COMMON_GetUnitStat(uInfo->item, STAT_DEXTERITY, 0);
+	int ene = D2COMMON_GetUnitStat(uInfo->item, STAT_ENERGY, 0);
+	int vit = D2COMMON_GetUnitStat(uInfo->item, STAT_VITALITY, 0);
+	if (str && dex && ene && vit) {
+		return min(min(str, dex), min(vit, ene));
+	}
+	return 0;
+}
+
+bool AllAttributesCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	return IntegerCompare(GetValue(uInfo), operation, targetStat, targetStat2);
 }
 
 int GetStatFromList(UnitItemInfo* uInfo, int itemStat)
