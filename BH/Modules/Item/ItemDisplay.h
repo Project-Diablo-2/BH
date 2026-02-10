@@ -821,6 +821,7 @@ public:
 	{
 		STRENGTH,
 		DEXTERITY,
+		LEVEL,
 	};
 	UpStatCondition(UpStatType t, BYTE op, unsigned int target, unsigned int target2) :
 		type(t),
@@ -831,7 +832,7 @@ public:
 		conditionType = CT_Operand;
 	}
 
-	static int GetUpReqs(UpStatType type, UnitItemInfo* info);
+	static int GetValue(UpStatType type, UnitItemInfo* info);
 	static ItemsTxt* GetUpTxt(UnitItemInfo* info);
 private:
 	UpStatType	 type;
