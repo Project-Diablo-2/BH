@@ -518,6 +518,7 @@ enum FilterCondition
 	COND_ADD,
 	COND_TRUE,
 	COND_FALSE,
+	COND_REQSTAT,
 
 	COND_NULL
 };
@@ -684,6 +685,9 @@ std::map<std::string, FilterCondition> condition_map =
 	{"BUYPRICE", COND_BUYPRICE},
 	{"SELLPRICE", COND_PRICE},
 	{"PRICE", COND_PRICE},
+	{"REQSTR", COND_REQSTAT},
+	{"REQDEX", COND_REQSTAT},
+	{"REQLVL", COND_REQSTAT},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
 	//{"OS", COND_OS},
@@ -912,6 +916,12 @@ struct ReplacementSpec {
 	static string ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val);
 	// %NL%
 	static string ReplaceNewLine(ReplaceContext& ctx, const ReplacementValue& val);
+	// %REQDEX%
+	static string ReplaceReqDex(ReplaceContext& ctx, const ReplacementValue& val);
+	// %REQSTR%
+	static string ReplaceReqStr(ReplaceContext& ctx, const ReplacementValue& val);
+	// %REQLVL%
+	static string ReplaceReqLvl(ReplaceContext& ctx, const ReplacementValue& val);
 
 	// DYNAMIC keywords
 	// %STAT%
@@ -965,6 +975,9 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "ED", { 0, ReplacementSpec::ReplaceEnhancedD } },
 	{ "CL", { 0, ReplacementSpec::ReplaceConditionalLine } },
 	{ "NL", { 0, ReplacementSpec::ReplaceNewLine } },
+	{ "REQSTR", { 0, ReplacementSpec::ReplaceReqStr } },
+	{ "REQDEX", { 0, ReplacementSpec::ReplaceReqDex } },
+	{ "REQLVL", { 0, ReplacementSpec::ReplaceReqLvl } },
 	// named stats
 	{ "EDEF", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDDEFENSE) } },
 	{ "EDAM", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDMAXIMUMDAMAGE) } },
@@ -1213,6 +1226,30 @@ string ReplacementSpec::ReplaceAllResist(ReplaceContext& ctx, const ReplacementV
 string ReplacementSpec::ReplaceEnhancedD(ReplaceContext& ctx, const ReplacementValue& val)
 {
 	return NameVarEd(ctx.info);
+}
+
+string ReplacementSpec::ReplaceReqStr(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::STRENGTH, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceReqDex(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::DEXTERITY, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceReqLvl(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::LEVEL, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
+	return buffer;
 }
 
 string ReplacementSpec::ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val)
@@ -2816,6 +2853,18 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_ADD:
 		Condition::AddOperand(conditions, new AddCondition(key, operation, value));
 		break;
+	case COND_REQSTAT:
+	{
+		auto type = ReqStatCondition::ReqStatType::STRENGTH;
+		if (key == "REQDEX") {
+			type = ReqStatCondition::ReqStatType::DEXTERITY;
+		}
+		else if (key == "REQLVL") {
+			type = ReqStatCondition::ReqStatType::LEVEL;
+		}
+		Condition::AddOperand(conditions, new ReqStatCondition(type, operation, value, value2));
+		break;
+	}
 
 	case COND_NULL:
 		break;
@@ -3585,6 +3634,31 @@ bool AddCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	}
 
 	return IntegerCompare(value, operation, targetStat);
+}
+
+int ReqStatCondition::GetValue(ReqStatType type, UnitItemInfo* info)
+{
+	auto txt = D2COMMON_GetItemText(info->item->dwTxtFileNo);
+	if (!txt) {
+		return 0;
+	}
+	if (type == ReqStatType::LEVEL) {
+		return D2COMMON_GetItemLevelRequirement(info->item, D2CLIENT_GetPlayerUnit());
+	}
+	int req = type == ReqStatType::STRENGTH ? txt->wreqstr : txt->wreqdex;
+	int ease = D2COMMON_GetUnitStat(info->item, STAT_REDUCEDREQUIREMENTS, 0);
+
+	int delta = req * ease / 100;
+	if (info->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+		delta -= 10;
+	}
+
+	return (std::max)(0, req + delta);
+}
+
+bool ReqStatCondition::EvaluateInternal(UnitItemInfo* info, Condition* arg1, Condition* arg2)
+{
+	return IntegerCompare(GetValue(type, info), operation, targetStat, targetStat2);
 }
 
 int GetStatFromList(UnitItemInfo* uInfo, int itemStat)
