@@ -541,6 +541,7 @@ enum FilterCondition
 	COND_ADD,
 	COND_TRUE,
 	COND_FALSE,
+	COND_MAXSOCKETS,
 	COND_FORMULA,
 
 	COND_NULL
@@ -708,6 +709,7 @@ std::map<std::string, FilterCondition> condition_map =
 	{"BUYPRICE", COND_BUYPRICE},
 	{"SELLPRICE", COND_PRICE},
 	{"PRICE", COND_PRICE},
+	{"MAXSOCKETS", COND_MAXSOCKETS},
 	{"WIDTH", COND_WIDTH},
 	{"HEIGHT", COND_HEIGHT},
 	{"AREA", COND_AREA},
@@ -942,6 +944,8 @@ struct ReplacementSpec {
 	static string ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val);
 	// %NL%
 	static string ReplaceNewLine(ReplaceContext& ctx, const ReplacementValue& val);
+	// %MAXSOCKETS%
+	static string ReplaceMaxSockets(ReplaceContext& ctx, const ReplacementValue& val);
 
 	// DYNAMIC keywords
 	// %STAT%
@@ -996,6 +1000,7 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "ED", { 0, ReplacementSpec::ReplaceEnhancedD } },
 	{ "CL", { 0, ReplacementSpec::ReplaceConditionalLine } },
 	{ "NL", { 0, ReplacementSpec::ReplaceNewLine } },
+	{ "MAXSOCKETS", { 0, ReplacementSpec::ReplaceMaxSockets } },
 	// named stats
 	{ "EDEF", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDDEFENSE) } },
 	{ "EDAM", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDMAXIMUMDAMAGE) } },
@@ -1278,6 +1283,14 @@ string ReplacementSpec::ReplaceAllResist(ReplaceContext& ctx, const ReplacementV
 string ReplacementSpec::ReplaceEnhancedD(ReplaceContext& ctx, const ReplacementValue& val)
 {
 	return NameVarEd(ctx.info);
+}
+
+string ReplacementSpec::ReplaceMaxSockets(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	BYTE max = MaxSocketsCondition::GetValue(ctx.info);
+	snprintf(buffer, 16, "%d", max);
+	return buffer;
 }
 
 string ReplacementSpec::ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val)
@@ -3903,6 +3916,9 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_ADD:
 		Condition::AddOperand(conditions, new AddCondition(key, operation, value));
 		break;
+	case COND_MAXSOCKETS:
+		Condition::AddOperand(conditions, new MaxSocketsCondition(operation, value, value2));
+		break;
 
 	case COND_NULL:
 		break;
@@ -4714,6 +4730,21 @@ bool AddCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		return FloatCompare(value + fvalue, operation, targetStat);
 	}
 	return IntegerCompare(value, operation, targetStat);
+}
+
+int MaxSocketsCondition::GetValue(UnitItemInfo* uInfo)
+{
+	BYTE res = D2COMMON_GetMaxSockets(uInfo->item);
+	auto txt = D2COMMON_GetItemText(uInfo->item->dwTxtFileNo);
+	return min(res, txt->binvheight * txt->binvwidth);
+}
+
+bool MaxSocketsCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	BYTE max = D2COMMON_GetMaxSockets(uInfo->item);
+	return IntegerCompare(max, operation, targetStat, targetStat2);
 }
 
 FormulaCondition::FormulaCondition(string& k,
