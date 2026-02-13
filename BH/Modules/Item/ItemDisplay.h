@@ -843,6 +843,35 @@ private:
 		Condition* arg2);
 };
 
+class ReqStatCondition : public Condition
+{
+public:
+	enum class ReqStatType
+	{
+		STRENGTH,
+		DEXTERITY,
+		LEVEL,
+	};
+	ReqStatCondition(ReqStatType t, BYTE op, unsigned int target, unsigned int target2) :
+		type(t),
+		operation(op),
+		targetStat(target),
+		targetStat2(target2)
+	{
+		conditionType = CT_Operand;
+	}
+
+	static int GetValue(ReqStatType type, UnitItemInfo* info);
+private:
+	ReqStatType	 type;
+	BYTE         operation;
+	unsigned int targetStat;
+	unsigned int targetStat2;
+	bool EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
 class BaseWeaponDamageCondition : public Condition
 {
 public:
