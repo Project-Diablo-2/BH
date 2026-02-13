@@ -5175,6 +5175,9 @@ bool ReqStatCondition::EvaluateInternal(UnitItemInfo* info, Condition* arg1, Con
 int BaseWeaponDamageCondition::GetValue(DamageType type, UnitItemInfo* uInfo)
 {
 	auto txt = D2COMMON_GetItemText(uInfo->item->dwTxtFileNo);
+	const auto etherealDamage = [](int damage) {
+		return (damage + damage / 2) * 5 / 6;
+	};
 	switch (type) {
 		case DamageType::MINSMITE:
 		{
@@ -5194,6 +5197,9 @@ int BaseWeaponDamageCondition::GetValue(DamageType type, UnitItemInfo* uInfo)
 		{
 			if (uInfo->attrs->armorFlags & (ITEM_GROUP_SHIELD | ITEM_GROUP_BOOTS)) {
 				return 0;
+			}
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->bmindam);
 			}
 			return txt->bmindam;
 		}
@@ -5216,22 +5222,37 @@ int BaseWeaponDamageCondition::GetValue(DamageType type, UnitItemInfo* uInfo)
 			if (uInfo->attrs->armorFlags & (ITEM_GROUP_SHIELD | ITEM_GROUP_BOOTS)) {
 				return 0;
 			}
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->bmaxdam);
+			}
 			return txt->bmaxdam;
 		}
 		case DamageType::MIN2H:
 		{
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->b2handmindam);
+			}
 			return txt->b2handmindam;
 		}
 		case DamageType::MAX2H:
 		{
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->b2handmaxdam);
+			}
 			return txt->b2handmaxdam;
 		}
 		case DamageType::MINTHROW:
 		{
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->bminmisdam);
+			}
 			return txt->bminmisdam;
 		}
 		case DamageType::MAXTHROW:
 		{
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->bmaxmisdam);
+			}
 			return txt->bmaxmisdam;
 		}
 	}
