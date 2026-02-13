@@ -843,6 +843,28 @@ private:
 		Condition* arg2);
 };
 
+class AllAttributesCondition : public Condition
+{
+public:
+	AllAttributesCondition(BYTE op,
+		unsigned int target,
+		unsigned int target2) : operation(op),
+		targetStat(target),
+		targetStat2(target2)
+	{
+		conditionType = CT_Operand;
+	}
+
+	static int GetValue(UnitItemInfo* uInfo);
+private:
+	BYTE           operation;
+	unsigned int   targetStat;
+	unsigned int   targetStat2;
+	bool           EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
 class MaxResCondition : public Condition
 {
 public:
