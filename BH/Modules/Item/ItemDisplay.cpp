@@ -541,6 +541,16 @@ enum FilterCondition
 	COND_ADD,
 	COND_TRUE,
 	COND_FALSE,
+	COND_BASEDAMAGEMIN1H,
+	COND_BASEDAMAGEMIN2H,
+	COND_BASEDAMAGEMINTHROW,
+	COND_BASEDAMAGEMINKICK,
+	COND_BASEDAMAGEMINSMITE,
+	COND_BASEDAMAGEMAX1H,
+	COND_BASEDAMAGEMAX2H,
+	COND_BASEDAMAGEMAXTHROW,
+	COND_BASEDAMAGEMAXKICK,
+	COND_BASEDAMAGEMAXSMITE,
 	COND_BASEBLOCK,
 	COND_ALLATTRIB,
 	COND_MAXRES,
@@ -713,6 +723,16 @@ std::map<std::string, FilterCondition> condition_map =
 	{"BUYPRICE", COND_BUYPRICE},
 	{"SELLPRICE", COND_PRICE},
 	{"PRICE", COND_PRICE},
+	{"BASEMINONEH", COND_BASEDAMAGEMIN1H},
+	{"BASEMINTWOH", COND_BASEDAMAGEMIN2H},
+	{"BASEMINTHROW", COND_BASEDAMAGEMINTHROW},
+	{"BASEMINKICK", COND_BASEDAMAGEMINKICK},
+	{"BASEMINSMITE", COND_BASEDAMAGEMINSMITE},
+	{"BASEMAXONEH", COND_BASEDAMAGEMAX1H},
+	{"BASEMAXTWOH", COND_BASEDAMAGEMAX2H},
+	{"BASEMAXTHROW", COND_BASEDAMAGEMAXTHROW},
+	{"BASEMAXKICK", COND_BASEDAMAGEMAXKICK},
+	{"BASEMAXSMITE", COND_BASEDAMAGEMAXSMITE},
 	{"BASEBLOCK", COND_BASEBLOCK},
 	{"ALLATTRIB", COND_ALLATTRIB},
 	{"MAXRES", COND_MAXRES},
@@ -954,6 +974,26 @@ struct ReplacementSpec {
 	static string ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val);
 	// %NL%
 	static string ReplaceNewLine(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMINONEH%
+	static string ReplaceBaseMin1h(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMAXONEH%
+	static string ReplaceBaseMax1h(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMINTWOH%
+	static string ReplaceBaseMin2h(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMAXTWOH%
+	static string ReplaceBaseMax2h(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMINTHROW%
+	static string ReplaceBaseMinThrow(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMAXTHROW%
+	static string ReplaceBaseMaxThrow(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMINKICK%
+	static string ReplaceBaseMinKick(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMAXKICK%
+	static string ReplaceBaseMaxKick(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMINSMITE%
+	static string ReplaceBaseMinSmite(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMAXSMITE%
+	static string ReplaceBaseMaxSmite(ReplaceContext& ctx, const ReplacementValue& val);
 	// %BASEBLOCK%
 	static string ReplaceBaseBlock(ReplaceContext& ctx, const ReplacementValue& val);
 	// %ALLATTRIB%
@@ -1022,6 +1062,16 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "ED", { 0, ReplacementSpec::ReplaceEnhancedD } },
 	{ "CL", { 0, ReplacementSpec::ReplaceConditionalLine } },
 	{ "NL", { 0, ReplacementSpec::ReplaceNewLine } },
+	{ "BASEMINONEH", { 0, ReplacementSpec::ReplaceBaseMin1h } },
+	{ "BASEMAXONEH", { 0, ReplacementSpec::ReplaceBaseMax1h } },
+	{ "BASEMINTWOH", { 0, ReplacementSpec::ReplaceBaseMin2h } },
+	{ "BASEMAXTWOH", { 0, ReplacementSpec::ReplaceBaseMax2h } },
+	{ "BASEMINTHROW", { 0, ReplacementSpec::ReplaceBaseMinThrow } },
+	{ "BASEMAXTHROW", { 0, ReplacementSpec::ReplaceBaseMaxThrow } },
+	{ "BASEMINKICK", { 0, ReplacementSpec::ReplaceBaseMinKick } },
+	{ "BASEMAXKICK", { 0, ReplacementSpec::ReplaceBaseMaxKick } },
+	{ "BASEMINSMITE", { 0, ReplacementSpec::ReplaceBaseMinSmite } },
+	{ "BASEMAXSMITE", { 0, ReplacementSpec::ReplaceBaseMaxSmite } },
 	{ "BASEBLOCK", { 0, ReplacementSpec::ReplaceBaseBlock } },
 	{ "ALLATTRIB", { 0, ReplacementSpec::ReplaceAllAttributes } },
 	{ "MAXRES", { 0, ReplacementSpec::ReplaceMaxRes } },
@@ -1311,6 +1361,76 @@ string ReplacementSpec::ReplaceAllResist(ReplaceContext& ctx, const ReplacementV
 string ReplacementSpec::ReplaceEnhancedD(ReplaceContext& ctx, const ReplacementValue& val)
 {
 	return NameVarEd(ctx.info);
+}
+
+string ReplacementSpec::ReplaceBaseMin1h(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MIN1H, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMax1h(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAX1H, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMin2h(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MIN2H, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMax2h(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAX2H, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMinThrow(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINTHROW, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMaxThrow(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXTHROW, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMinKick(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINKICK, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMaxKick(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXKICK, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMinSmite(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINSMITE, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMaxSmite(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXSMITE, ctx.info));
+	return buffer;
 }
 
 string ReplacementSpec::ReplaceBaseBlock(ReplaceContext& ctx, const ReplacementValue& val)
@@ -3989,6 +4109,66 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_ADD:
 		Condition::AddOperand(conditions, new AddCondition(key, operation, value));
 		break;
+	case COND_BASEDAMAGEMIN1H:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MIN1H;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMIN2H:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MIN2H;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMINSMITE:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MINSMITE;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMINKICK:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MINKICK;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMINTHROW:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MINTHROW;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMAX1H:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MAX1H;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMAX2H:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MAX2H;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMAXSMITE:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MAXSMITE;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMAXKICK:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MAXKICK;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMAXTHROW:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MAXTHROW;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
 	case COND_BASEBLOCK:
 		Condition::AddOperand(conditions, new BaseBlockCondition(operation, value, value2));
 		break;
@@ -4824,6 +5004,79 @@ bool AddCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		return FloatCompare(value + fvalue, operation, targetStat);
 	}
 	return IntegerCompare(value, operation, targetStat);
+}
+
+int BaseWeaponDamageCondition::GetValue(DamageType type, UnitItemInfo* uInfo)
+{
+	auto txt = D2COMMON_GetItemText(uInfo->item->dwTxtFileNo);
+	switch (type) {
+		case DamageType::MINSMITE:
+		{
+			if (!(uInfo->attrs->armorFlags & ITEM_GROUP_SHIELD)) {
+				return 0;
+			}
+			return txt->bmindam;
+		}
+		case DamageType::MINKICK:
+		{
+			if (!(uInfo->attrs->armorFlags & ITEM_GROUP_BOOTS)) {
+				return 0;
+			}
+			return txt->bmindam;
+		}
+		case DamageType::MIN1H:
+		{
+			if (uInfo->attrs->armorFlags & (ITEM_GROUP_SHIELD | ITEM_GROUP_BOOTS)) {
+				return 0;
+			}
+			return txt->bmindam;
+		}
+		case DamageType::MAXSMITE:
+		{
+			if (!(uInfo->attrs->armorFlags & ITEM_GROUP_SHIELD)) {
+				return 0;
+			}
+			return txt->bmaxdam;
+		}
+		case DamageType::MAXKICK:
+		{
+			if (!(uInfo->attrs->armorFlags & ITEM_GROUP_BOOTS)) {
+				return 0;
+			}
+			return txt->bmaxdam;
+		}
+		case DamageType::MAX1H:
+		{
+			if (uInfo->attrs->armorFlags & (ITEM_GROUP_SHIELD | ITEM_GROUP_BOOTS)) {
+				return 0;
+			}
+			return txt->bmaxdam;
+		}
+		case DamageType::MIN2H:
+		{
+			return txt->b2handmindam;
+		}
+		case DamageType::MAX2H:
+		{
+			return txt->b2handmaxdam;
+		}
+		case DamageType::MINTHROW:
+		{
+			return txt->bminmisdam;
+		}
+		case DamageType::MAXTHROW:
+		{
+			return txt->bmaxmisdam;
+		}
+	}
+	return 0;
+}
+
+bool BaseWeaponDamageCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	return IntegerCompare(GetValue(type, uInfo), operation, targetStat, targetStat2);
 }
 
 int BaseBlockCondition::GetValue(UnitItemInfo* uInfo)
