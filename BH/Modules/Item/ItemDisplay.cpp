@@ -2605,6 +2605,98 @@ std::unordered_map<std::string, FormulaVarDefinition<FormulaContext>> formulaVar
 			return (uInfo->attrs->weaponFlags & ITEM_GROUP_AMAZON_WEAPON) != 0;
 		}
 	} },
+	{ "width", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->attrs->width;
+		}
+	} },
+	{ "height", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->attrs->height;
+		}
+	} },
+	{ "area", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->attrs->width * uInfo->attrs->height;
+		}
+	} },
+	{ "maxsockets", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return MaxSocketsCondition::GetValue(uInfo);
+		}
+	} },
+	{ "uplvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return UpStatCondition::GetValue(UpStatCondition::UpStatType::LEVEL, uInfo);
+		}
+	} },
+	{ "upstr", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return UpStatCondition::GetValue(UpStatCondition::UpStatType::STRENGTH, uInfo);
+		}
+	} },
+	{ "updex", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return UpStatCondition::GetValue(UpStatCondition::UpStatType::DEXTERITY, uInfo);
+		}
+	} },
+	{ "maxres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return MaxResCondition::GetValue(uInfo);
+		}
+	} },
+	{ "allattrib", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return AllAttributesCondition::GetValue(uInfo);
+		}
+	} },
+	{ "baseblock", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseBlockCondition::GetValue(uInfo);
+		}
+	} },
+	{ "baseminoneh", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MIN1H, uInfo);
+		}
+	} },
+	{ "basemintwoh", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MIN2H, uInfo);
+		}
+	} },
+	{ "baseminsmite", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINSMITE, uInfo);
+		}
+	} },
+	{ "baseminkick", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINKICK, uInfo);
+		}
+	} },
+	{ "baseminthrow", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINTHROW, uInfo);
+		}
+	} },
+	{ "basemaxoneh", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAX1H, uInfo);
+		}
+	} },
+	{ "basemaxtwoh", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAX2H, uInfo);
+		}
+	} },
+	{ "basemaxsmite", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXSMITE, uInfo);
+		}
+	} },
+	{ "basemaxkick", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXKICK, uInfo);
+		}
+	} },
+	{ "basemaxthrow", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXTHROW, uInfo);
+		}
+	} },
+	{ "reqlvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::LEVEL, uInfo);
+		}
+	} },
+	{ "reqstr", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::STRENGTH, uInfo);
+		}
+	} },
+	{ "reqdex", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::DEXTERITY, uInfo);
+		}
+	} },
 };
 
 // Find the item description. This code is called only when there's a cache miss
