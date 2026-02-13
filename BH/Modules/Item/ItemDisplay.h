@@ -814,6 +814,45 @@ private:
 		Condition* arg2);
 };
 
+class BaseWeaponDamageCondition : public Condition
+{
+public:
+	enum class DamageType
+	{
+		MIN1H,
+		MAX1H,
+		MIN2H,
+		MAX2H,
+		MINTHROW,
+		MAXTHROW,
+		MINKICK,
+		MAXKICK,
+		MINSMITE,
+		MAXSMITE,
+	};
+
+	BaseWeaponDamageCondition(DamageType t,
+		BYTE op,
+		unsigned int target,
+		unsigned int target2) : type(t),
+		operation(op),
+		targetStat(target),
+		targetStat2(target2)
+	{
+		conditionType = CT_Operand;
+	}
+
+	static int GetValue(DamageType type, UnitItemInfo* uInfo);
+private:
+	DamageType	   type;
+	BYTE           operation;
+	unsigned int   targetStat;
+	unsigned int   targetStat2;
+	bool           EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
 extern TrueCondition* trueCondition;
 extern FalseCondition* falseCondition;
 
