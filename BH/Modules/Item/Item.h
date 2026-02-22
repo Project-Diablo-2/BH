@@ -134,8 +134,8 @@ bool IsInitialized();
 struct ItemAttributes {
 	std::string name;
 	WORD category;
-	BYTE width;					// Delete. Inventory related, which is unnecessary
-	BYTE height;				// Delete. Inventory related, which is unnecessary
+	BYTE width;
+	BYTE height;
 	BYTE stackable;
 	BYTE useable;
 	BYTE throwable;
