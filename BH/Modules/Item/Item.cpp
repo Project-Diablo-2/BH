@@ -391,8 +391,8 @@ void GetWeaponAttributes()
 		ItemAttributes* attrs = new ItemAttributes();
 		attrs->name = UnicodeToAnsi(GetTblEntryByIndex(pWeapons->wnamestr, TBLOFFSET_STRING));
 		attrs->category = pWeapons->nType;
-		attrs->width = 0;
-		attrs->height = 0;
+		attrs->width = pWeapons->binvwidth;
+		attrs->height = pWeapons->binvheight;
 		attrs->stackable = stackable;
 		attrs->useable = useable;
 		attrs->throwable = throwable;
@@ -477,8 +477,8 @@ void GetArmorAttributes()
 		ItemAttributes* attrs = new ItemAttributes();
 		attrs->name = UnicodeToAnsi(GetTblEntryByIndex(pArmor->wnamestr, TBLOFFSET_STRING));
 		attrs->category = pArmor->nType;
-		attrs->width = 0;
-		attrs->height = 0;
+		attrs->width = pArmor->binvwidth;
+		attrs->height = pArmor->binvheight;
 		attrs->stackable = stackable;
 		attrs->useable = useable;
 		attrs->throwable = throwable;
@@ -588,8 +588,8 @@ void GetMiscAttributes()
 		ItemAttributes* attrs = new ItemAttributes();
 		attrs->name = UnicodeToAnsi(GetTblEntryByIndex(pMisc->wnamestr, TBLOFFSET_STRING));
 		attrs->category = pMisc->nType;
-		attrs->width = 0;
-		attrs->height = 0;
+		attrs->width = pMisc->binvwidth;
+		attrs->height = pMisc->binvheight;
 		attrs->stackable = stackable;
 		attrs->useable = useable;
 		attrs->throwable = throwable;
@@ -1673,7 +1673,7 @@ void __stdcall Item::OnProperties(wchar_t* wTxt)
 					// TODO: potion damage??
 					//if (D2COMMON_IsMatchingType(pItem, ITEM_TYPE_MISSILE_POT))
 					//{
-					//	
+					//
 					//}
 
 					int minDamage1h = D2COMMON_10823_GetMinDamageStat(pItem, 0);
