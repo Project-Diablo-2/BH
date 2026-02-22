@@ -521,6 +521,7 @@ enum FilterCondition
 	COND_ADD,
 	COND_TRUE,
 	COND_FALSE,
+	COND_MAXRES,
 	COND_UPSTAT,
 
 	COND_NULL
@@ -688,6 +689,7 @@ std::map<std::string, FilterCondition> condition_map =
 	{"BUYPRICE", COND_BUYPRICE},
 	{"SELLPRICE", COND_PRICE},
 	{"PRICE", COND_PRICE},
+	{"MAXRES", COND_MAXRES},
   {"WIDTH", COND_WIDTH},
 	{"HEIGHT", COND_HEIGHT},
 	{"AREA", COND_AREA},
@@ -922,6 +924,8 @@ struct ReplacementSpec {
 	static string ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val);
 	// %NL%
 	static string ReplaceNewLine(ReplaceContext& ctx, const ReplacementValue& val);
+	// %MAXRES%
+	static string ReplaceMaxRes(ReplaceContext& ctx, const ReplacementValue& val);
 	// %UPDEX%
 	static string ReplaceUpDex(ReplaceContext& ctx, const ReplacementValue& val);
 	// %UPSTR%
@@ -981,6 +985,7 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "ED", { 0, ReplacementSpec::ReplaceEnhancedD } },
 	{ "CL", { 0, ReplacementSpec::ReplaceConditionalLine } },
 	{ "NL", { 0, ReplacementSpec::ReplaceNewLine } },
+	{ "MAXRES", { 0, ReplacementSpec::ReplaceMaxRes } },
 	{ "UPSTR", { 0, ReplacementSpec::ReplaceUpStr } },
 	{ "UPDEX", { 0, ReplacementSpec::ReplaceUpDex } },
 	{ "UPLVL", { 0, ReplacementSpec::ReplaceUpLvl } },
@@ -1232,6 +1237,13 @@ string ReplacementSpec::ReplaceAllResist(ReplaceContext& ctx, const ReplacementV
 string ReplacementSpec::ReplaceEnhancedD(ReplaceContext& ctx, const ReplacementValue& val)
 {
 	return NameVarEd(ctx.info);
+}
+
+string ReplacementSpec::ReplaceMaxRes(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", MaxResCondition::GetValue(ctx.info));
+	return buffer;
 }
 
 string ReplacementSpec::ReplaceUpStr(ReplaceContext& ctx, const ReplacementValue& val)
@@ -2868,6 +2880,9 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_ADD:
 		Condition::AddOperand(conditions, new AddCondition(key, operation, value));
 		break;
+	case COND_MAXRES:
+		Condition::AddOperand(conditions, new MaxResCondition(operation, value, value2));
+		break;
 	case COND_UPSTAT:
 	{
 		auto type = UpStatCondition::UpStatType::STRENGTH;
@@ -3671,6 +3686,25 @@ bool AddCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	}
 
 	return IntegerCompare(value, operation, targetStat);
+}
+
+int MaxResCondition::GetValue(UnitItemInfo* uInfo)
+{
+	int maxFire = D2COMMON_GetUnitStat(uInfo->item, STAT_MAXFIRERESIST, 0);
+	int maxCold = D2COMMON_GetUnitStat(uInfo->item, STAT_MAXCOLDRESIST, 0);
+	int maxLight = D2COMMON_GetUnitStat(uInfo->item, STAT_MAXLIGHTNINGRESIST, 0);
+	int maxPois = D2COMMON_GetUnitStat(uInfo->item, STAT_MAXPOISONRESIST, 0);
+	if (maxFire && maxCold && maxLight && maxPois) {
+		return min(min(maxFire, maxCold), min(maxLight, maxPois));
+	}
+	return 0;
+}
+
+bool MaxResCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	return IntegerCompare(GetValue(uInfo), operation, targetStat, targetStat2);
 }
 
 ItemsTxt* UpStatCondition::GetUpTxt(UnitItemInfo* info)
