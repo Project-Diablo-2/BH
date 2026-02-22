@@ -514,6 +514,9 @@ enum FilterCondition
 	COND_BUYPRICE,
 	COND_SELLPRICE,
 	COND_PRICE,
+	COND_WIDTH,
+	COND_HEIGHT,
+	COND_AREA,
 	COND_ITEMCODE,
 	COND_ADD,
 	COND_TRUE,
@@ -684,6 +687,9 @@ std::map<std::string, FilterCondition> condition_map =
 	{"BUYPRICE", COND_BUYPRICE},
 	{"SELLPRICE", COND_PRICE},
 	{"PRICE", COND_PRICE},
+	{"WIDTH", COND_WIDTH},
+	{"HEIGHT", COND_HEIGHT},
+	{"AREA", COND_AREA},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
 	//{"OS", COND_OS},
@@ -2810,6 +2816,15 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_PRICE:
 		Condition::AddOperand(conditions, new ItemPriceCondition(operation, value, value2, TRANSACTIONTYPE_SELL));
 		break;
+	case COND_WIDTH:
+		Condition::AddOperand(conditions, new ItemSizeCondition(operation, value, value2, ItemSizeCondition::Dimension::kWidth));
+		break;
+	case COND_HEIGHT:
+		Condition::AddOperand(conditions, new ItemSizeCondition(operation, value, value2, ItemSizeCondition::Dimension::kHeight));
+		break;
+	case COND_AREA:
+		Condition::AddOperand(conditions, new ItemSizeCondition(operation, value, value2, ItemSizeCondition::Dimension::kArea));
+		break;
 	case COND_ITEMCODE:
 		Condition::AddOperand(conditions, new ItemCodeCondition(key.substr(0, 4).c_str()));
 		break;
@@ -3514,6 +3529,28 @@ bool ItemPriceCondition::EvaluateInternal(UnitItemInfo* uInfo,
 {
 	int nPrice = GetShopPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, nTransactionType);
 	return IntegerCompare(nPrice, operation, targetStat, targetStat2);
+}
+
+bool ItemSizeCondition::EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2)
+{
+	int value;
+	auto attrs = uInfo->attrs;
+
+	switch (dimension_) {
+		case ItemSizeCondition::Dimension::kHeight:
+			value = attrs->height;
+			break;
+		case ItemSizeCondition::Dimension::kWidth:
+			value = attrs->width;
+			break;
+		case ItemSizeCondition::Dimension::kArea:
+			value = attrs->height * attrs->width;
+			break;
+		default:
+			return false;
+	}
+
+	return IntegerCompare(value, op_, targetStat_, targetStat2_);
 }
 
 bool ResistAllCondition::EvaluateInternal(UnitItemInfo* uInfo,
