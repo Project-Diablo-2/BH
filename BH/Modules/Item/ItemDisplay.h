@@ -771,6 +771,33 @@ private:
 		Condition* arg2);
 };
 
+class ItemSizeCondition: public Condition
+{
+public:
+	enum Dimension {
+		kWidth = 0,
+		kHeight,
+		kArea,
+	};
+
+	ItemSizeCondition(BYTE op,
+		unsigned int targetStat,
+		unsigned int targetStat2,
+		Dimension dimension)
+		: op_(op),
+		targetStat_(targetStat),
+		targetStat2_(targetStat2),
+		dimension_(dimension){
+		conditionType = CT_Operand;
+	};
+private:
+	BYTE op_;
+	unsigned int targetStat_;
+	unsigned int targetStat2_;
+	Dimension dimension_;
+	bool EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2);
+};
+
 class ResistAllCondition : public Condition
 {
 public:
@@ -832,6 +859,80 @@ private:
 	unsigned int   targetStat;
 	unsigned int   targetStat2;
 	bool           EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
+class MaxResCondition : public Condition
+{
+public:
+	MaxResCondition(BYTE op,
+		unsigned int target,
+		unsigned int target2) : operation(op),
+		targetStat(target),
+		targetStat2(target2)
+	{
+		conditionType = CT_Operand;
+	}
+
+	static int GetValue(UnitItemInfo* uInfo);
+private:
+	BYTE           operation;
+	unsigned int   targetStat;
+	unsigned int   targetStat2;
+	bool           EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
+class AllAttributesCondition : public Condition
+{
+public:
+	AllAttributesCondition(BYTE op,
+		unsigned int target,
+		unsigned int target2) : operation(op),
+		targetStat(target),
+		targetStat2(target2)
+	{
+		conditionType = CT_Operand;
+	}
+
+	static int GetValue(UnitItemInfo* uInfo);
+private:
+	BYTE           operation;
+	unsigned int   targetStat;
+	unsigned int   targetStat2;
+	bool           EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
+class UpStatCondition : public Condition
+{
+public:
+	enum class UpStatType
+	{
+		STRENGTH,
+		DEXTERITY,
+		LEVEL,
+	};
+	UpStatCondition(UpStatType t, BYTE op, unsigned int target, unsigned int target2) :
+		type(t),
+		operation(op),
+		targetStat(target),
+		targetStat2(target2)
+	{
+		conditionType = CT_Operand;
+	}
+
+	static int GetValue(UpStatType type, UnitItemInfo* info);
+	static ItemsTxt* GetUpTxt(UnitItemInfo* info);
+private:
+	UpStatType	 type;
+	BYTE         operation;
+	unsigned int targetStat;
+	unsigned int targetStat2;
+	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
 };
