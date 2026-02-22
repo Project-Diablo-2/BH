@@ -70,7 +70,7 @@ enum Font
 #define UI_CHAT_CONSOLE			0x05
 #define UI_UNK					0x06   //auto disabled
 #define UI_UNK_EX				0x07   //auto disabled
-#define UI_NPCMENU				0x08	
+#define UI_NPCMENU				0x08
 #define UI_DIALOG				0x08
 #define UI_ESCMENU_MAIN			0x09
 #define UI_AUTOMAP				0x0A
@@ -1247,7 +1247,7 @@ enum QuestFlags {
 #define ITEM_NEW				0x00002000 // Set when an item first drops
 #define ITEM_ISEAR				0x00010000 // Player's ear
 #define ITEM_STARTITEM			0x00020000 // Start item(1 selling/repair value)
-#define ITEM_COMPACTSAVE		0x00200000 
+#define ITEM_COMPACTSAVE		0x00200000
 #define ITEM_ETHEREAL			0x00400000 // Ethreal
 #define ITEM_PERSONALIZED		0x01000000 // Personalized
 #define ITEM_RUNEWORD			0x04000000 // Runeword
@@ -1372,7 +1372,7 @@ enum UNITFLAGEX
 	UNITFLAGEX_CONVERTING = 0x00000040,       // Set while the cursor is in conversion mode (legacy).
 	UNITFLAGEX_VISIBLE = 0x00000080,       // Unit is within line of sight of the player.
 	UNITFLAGEX_DEACTIVATED = 0x00000100,       // Set for units that have been deactivated by SUNIT_Deactivate.
-	UNITFLAGEX_REACTIVATED = 0x00000200,       // Set for units that have been reactivated by SUNIT_Reactivate.    
+	UNITFLAGEX_REACTIVATED = 0x00000200,       // Set for units that have been reactivated by SUNIT_Reactivate.
 	UNITFLAGEX_OWNED = 0x00000400,       // This unit has an owner stored at pUnit->dwOwnerID and pUnit->eOwnerTOU (usually used by missile, but also set for pets).
 	UNITFLAGEX_POSITIONED = 0x00000800,       // SMESSAGE_SETUNITPOS, bFadeOutScreen = FALSE.
 	UNITFLAGEX_MOVING = 0x00002000,       // Set for critters while they're moving on the client.
@@ -1549,7 +1549,7 @@ const std::vector<std::set<int>> ValidCorruptZones =
 	{106, 107}, // City of the Damned + River of Flame
 	{108}, // Chaos Sanctuary
 	{110, 111}, // Bloody Foothills + Frigid Highlands
-	{112, 113, 114}, // Arreat Plateau + Crystalline Passage + Frozen River 
+	{112, 113, 114}, // Arreat Plateau + Crystalline Passage + Frozen River
 	{115, 116, 117}, // Glacial Trail + Drifter Cavern + Frozen Tundra
 	{118, 119}, // Ancient's Way + Icy Cellar
 	{121, 122, 123, 124}, // Nihlathak's Temple

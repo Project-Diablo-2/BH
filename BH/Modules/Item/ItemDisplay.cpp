@@ -514,11 +514,16 @@ enum FilterCondition
 	COND_BUYPRICE,
 	COND_SELLPRICE,
 	COND_PRICE,
+	COND_WIDTH,
+	COND_HEIGHT,
+	COND_AREA,
 	COND_ITEMCODE,
 	COND_ADD,
 	COND_TRUE,
 	COND_FALSE,
 	COND_ALLATTRIB,
+	COND_MAXRES,
+	COND_UPSTAT,
 
 	COND_NULL
 };
@@ -686,6 +691,13 @@ std::map<std::string, FilterCondition> condition_map =
 	{"SELLPRICE", COND_PRICE},
 	{"PRICE", COND_PRICE},
 	{"ALLATTRIB", COND_ALLATTRIB},
+	{"MAXRES", COND_MAXRES},
+  {"WIDTH", COND_WIDTH},
+	{"HEIGHT", COND_HEIGHT},
+	{"AREA", COND_AREA},
+	{"UPSTR", COND_UPSTAT},
+	{"UPDEX", COND_UPSTAT},
+	{"UPLVL", COND_UPSTAT},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
 	//{"OS", COND_OS},
@@ -916,6 +928,14 @@ struct ReplacementSpec {
 	static string ReplaceNewLine(ReplaceContext& ctx, const ReplacementValue& val);
 	// %ALLATTRIB%
 	static string ReplaceAllAttributes(ReplaceContext& ctx, const ReplacementValue& val);
+	// %MAXRES%
+	static string ReplaceMaxRes(ReplaceContext& ctx, const ReplacementValue& val);
+	// %UPDEX%
+	static string ReplaceUpDex(ReplaceContext& ctx, const ReplacementValue& val);
+	// %UPSTR%
+	static string ReplaceUpStr(ReplaceContext& ctx, const ReplacementValue& val);
+	// %UPLVL%
+	static string ReplaceUpLvl(ReplaceContext& ctx, const ReplacementValue& val);
 
 	// DYNAMIC keywords
 	// %STAT%
@@ -970,6 +990,10 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "CL", { 0, ReplacementSpec::ReplaceConditionalLine } },
 	{ "NL", { 0, ReplacementSpec::ReplaceNewLine } },
 	{ "ALLATTRIB", { 0, ReplacementSpec::ReplaceAllAttributes } },
+	{ "MAXRES", { 0, ReplacementSpec::ReplaceMaxRes } },
+	{ "UPSTR", { 0, ReplacementSpec::ReplaceUpStr } },
+	{ "UPDEX", { 0, ReplacementSpec::ReplaceUpDex } },
+	{ "UPLVL", { 0, ReplacementSpec::ReplaceUpLvl } },
 	// named stats
 	{ "EDEF", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDDEFENSE) } },
 	{ "EDAM", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDMAXIMUMDAMAGE) } },
@@ -1224,6 +1248,37 @@ string ReplacementSpec::ReplaceAllAttributes(ReplaceContext& ctx, const Replacem
 {
 	char buffer[16];
 	snprintf(buffer, 16, "%d", AllAttributesCondition::GetValue(ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceMaxRes(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", MaxResCondition::GetValue(ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceUpStr(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = UpStatCondition::GetValue(UpStatCondition::UpStatType::STRENGTH, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceUpDex(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = UpStatCondition::GetValue(UpStatCondition::UpStatType::DEXTERITY, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceUpLvl(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = UpStatCondition::GetValue(UpStatCondition::UpStatType::LEVEL, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
 	return buffer;
 }
 
@@ -2822,6 +2877,15 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_PRICE:
 		Condition::AddOperand(conditions, new ItemPriceCondition(operation, value, value2, TRANSACTIONTYPE_SELL));
 		break;
+	case COND_WIDTH:
+		Condition::AddOperand(conditions, new ItemSizeCondition(operation, value, value2, ItemSizeCondition::Dimension::kWidth));
+		break;
+	case COND_HEIGHT:
+		Condition::AddOperand(conditions, new ItemSizeCondition(operation, value, value2, ItemSizeCondition::Dimension::kHeight));
+		break;
+	case COND_AREA:
+		Condition::AddOperand(conditions, new ItemSizeCondition(operation, value, value2, ItemSizeCondition::Dimension::kArea));
+		break;
 	case COND_ITEMCODE:
 		Condition::AddOperand(conditions, new ItemCodeCondition(key.substr(0, 4).c_str()));
 		break;
@@ -2831,6 +2895,21 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_ALLATTRIB:
 		Condition::AddOperand(conditions, new AllAttributesCondition(operation, value, value2));
 		break;
+	case COND_MAXRES:
+		Condition::AddOperand(conditions, new MaxResCondition(operation, value, value2));
+		break;
+	case COND_UPSTAT:
+	{
+		auto type = UpStatCondition::UpStatType::STRENGTH;
+		if (key == "UPDEX") {
+			type = UpStatCondition::UpStatType::DEXTERITY;
+		}
+		else if (key == "UPLVL") {
+			type = UpStatCondition::UpStatType::LEVEL;
+		}
+		Condition::AddOperand(conditions, new UpStatCondition(type, operation, value, value2));
+		break;
+	}
 
 	case COND_NULL:
 		break;
@@ -3531,6 +3610,28 @@ bool ItemPriceCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	return IntegerCompare(nPrice, operation, targetStat, targetStat2);
 }
 
+bool ItemSizeCondition::EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2)
+{
+	int value;
+	auto attrs = uInfo->attrs;
+
+	switch (dimension_) {
+		case ItemSizeCondition::Dimension::kHeight:
+			value = attrs->height;
+			break;
+		case ItemSizeCondition::Dimension::kWidth:
+			value = attrs->width;
+			break;
+		case ItemSizeCondition::Dimension::kArea:
+			value = attrs->height * attrs->width;
+			break;
+		default:
+			return false;
+	}
+
+	return IntegerCompare(value, op_, targetStat_, targetStat2_);
+}
+
 bool ResistAllCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
@@ -3619,6 +3720,67 @@ bool AllAttributesCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg2)
 {
 	return IntegerCompare(GetValue(uInfo), operation, targetStat, targetStat2);
+}
+
+int MaxResCondition::GetValue(UnitItemInfo* uInfo)
+{
+	int maxFire = D2COMMON_GetUnitStat(uInfo->item, STAT_MAXFIRERESIST, 0);
+	int maxCold = D2COMMON_GetUnitStat(uInfo->item, STAT_MAXCOLDRESIST, 0);
+	int maxLight = D2COMMON_GetUnitStat(uInfo->item, STAT_MAXLIGHTNINGRESIST, 0);
+	int maxPois = D2COMMON_GetUnitStat(uInfo->item, STAT_MAXPOISONRESIST, 0);
+	if (maxFire && maxCold && maxLight && maxPois) {
+		return min(min(maxFire, maxCold), min(maxLight, maxPois));
+	}
+	return 0;
+}
+
+bool MaxResCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	return IntegerCompare(GetValue(uInfo), operation, targetStat, targetStat2);
+}
+
+ItemsTxt* UpStatCondition::GetUpTxt(UnitItemInfo* info)
+{
+	auto txt = D2COMMON_GetItemText(info->item->dwTxtFileNo);
+	if (!txt) {
+		return nullptr;
+	}
+	int id = 0;
+	if (txt->dwnormcode == txt->dwcode) {
+		return D2COMMON_GetItemTextFromItemCode(txt->dwubercode, &id);
+	}
+	if (txt->dwubercode == txt->dwcode) {
+		return D2COMMON_GetItemTextFromItemCode(txt->dwultracode, &id);
+	}
+	return nullptr;
+}
+
+int UpStatCondition::GetValue(UpStatType type, UnitItemInfo* info)
+{
+	auto upTxt = GetUpTxt(info);
+	if (!upTxt) {
+		return 0;
+	}
+	if (type == UpStatType::LEVEL) {
+		auto currentReq = D2COMMON_GetItemLevelRequirement(info->item, D2CLIENT_GetPlayerUnit());
+		return max(upTxt->blevelreq, currentReq);
+	}
+	int req = type == UpStatType::STRENGTH ? upTxt->wreqstr : upTxt->wreqdex;
+	int ease = D2COMMON_GetUnitStat(info->item, STAT_REDUCEDREQUIREMENTS, 0);
+
+	int delta = req * ease / 100;
+	if (info->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+		delta -= 10;
+	}
+
+	return (std::max)(0, req + delta);
+}
+
+bool UpStatCondition::EvaluateInternal(UnitItemInfo* info, Condition* arg1, Condition* arg2)
+{
+	return IntegerCompare(GetValue(type, info), operation, targetStat, targetStat2);
 }
 
 int GetStatFromList(UnitItemInfo* uInfo, int itemStat)
