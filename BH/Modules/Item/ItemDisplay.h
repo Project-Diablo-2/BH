@@ -841,6 +841,36 @@ private:
 		Condition* arg2);
 };
 
+class UpStatCondition : public Condition
+{
+public:
+	enum class UpStatType
+	{
+		STRENGTH,
+		DEXTERITY,
+		LEVEL,
+	};
+	UpStatCondition(UpStatType t, BYTE op, unsigned int target, unsigned int target2) :
+		type(t),
+		operation(op),
+		targetStat(target),
+		targetStat2(target2)
+	{
+		conditionType = CT_Operand;
+	}
+
+	static int GetValue(UpStatType type, UnitItemInfo* info);
+	static ItemsTxt* GetUpTxt(UnitItemInfo* info);
+private:
+	UpStatType	 type;
+	BYTE         operation;
+	unsigned int targetStat;
+	unsigned int targetStat2;
+	bool EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
 extern TrueCondition* trueCondition;
 extern FalseCondition* falseCondition;
 

@@ -521,6 +521,7 @@ enum FilterCondition
 	COND_ADD,
 	COND_TRUE,
 	COND_FALSE,
+	COND_UPSTAT,
 
 	COND_NULL
 };
@@ -687,9 +688,12 @@ std::map<std::string, FilterCondition> condition_map =
 	{"BUYPRICE", COND_BUYPRICE},
 	{"SELLPRICE", COND_PRICE},
 	{"PRICE", COND_PRICE},
-	{"WIDTH", COND_WIDTH},
+  {"WIDTH", COND_WIDTH},
 	{"HEIGHT", COND_HEIGHT},
 	{"AREA", COND_AREA},
+	{"UPSTR", COND_UPSTAT},
+	{"UPDEX", COND_UPSTAT},
+	{"UPLVL", COND_UPSTAT},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
 	//{"OS", COND_OS},
@@ -918,6 +922,12 @@ struct ReplacementSpec {
 	static string ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val);
 	// %NL%
 	static string ReplaceNewLine(ReplaceContext& ctx, const ReplacementValue& val);
+	// %UPDEX%
+	static string ReplaceUpDex(ReplaceContext& ctx, const ReplacementValue& val);
+	// %UPSTR%
+	static string ReplaceUpStr(ReplaceContext& ctx, const ReplacementValue& val);
+	// %UPLVL%
+	static string ReplaceUpLvl(ReplaceContext& ctx, const ReplacementValue& val);
 
 	// DYNAMIC keywords
 	// %STAT%
@@ -971,6 +981,9 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "ED", { 0, ReplacementSpec::ReplaceEnhancedD } },
 	{ "CL", { 0, ReplacementSpec::ReplaceConditionalLine } },
 	{ "NL", { 0, ReplacementSpec::ReplaceNewLine } },
+	{ "UPSTR", { 0, ReplacementSpec::ReplaceUpStr } },
+	{ "UPDEX", { 0, ReplacementSpec::ReplaceUpDex } },
+	{ "UPLVL", { 0, ReplacementSpec::ReplaceUpLvl } },
 	// named stats
 	{ "EDEF", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDDEFENSE) } },
 	{ "EDAM", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDMAXIMUMDAMAGE) } },
@@ -1219,6 +1232,30 @@ string ReplacementSpec::ReplaceAllResist(ReplaceContext& ctx, const ReplacementV
 string ReplacementSpec::ReplaceEnhancedD(ReplaceContext& ctx, const ReplacementValue& val)
 {
 	return NameVarEd(ctx.info);
+}
+
+string ReplacementSpec::ReplaceUpStr(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = UpStatCondition::GetValue(UpStatCondition::UpStatType::STRENGTH, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceUpDex(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = UpStatCondition::GetValue(UpStatCondition::UpStatType::DEXTERITY, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceUpLvl(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = UpStatCondition::GetValue(UpStatCondition::UpStatType::LEVEL, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
+	return buffer;
 }
 
 string ReplacementSpec::ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val)
@@ -2831,6 +2868,18 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_ADD:
 		Condition::AddOperand(conditions, new AddCondition(key, operation, value));
 		break;
+	case COND_UPSTAT:
+	{
+		auto type = UpStatCondition::UpStatType::STRENGTH;
+		if (key == "UPDEX") {
+			type = UpStatCondition::UpStatType::DEXTERITY;
+		}
+		else if (key == "UPLVL") {
+			type = UpStatCondition::UpStatType::LEVEL;
+		}
+		Condition::AddOperand(conditions, new UpStatCondition(type, operation, value, value2));
+		break;
+	}
 
 	case COND_NULL:
 		break;
@@ -3622,6 +3671,48 @@ bool AddCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	}
 
 	return IntegerCompare(value, operation, targetStat);
+}
+
+ItemsTxt* UpStatCondition::GetUpTxt(UnitItemInfo* info)
+{
+	auto txt = D2COMMON_GetItemText(info->item->dwTxtFileNo);
+	if (!txt) {
+		return nullptr;
+	}
+	int id = 0;
+	if (txt->dwnormcode == txt->dwcode) {
+		return D2COMMON_GetItemTextFromItemCode(txt->dwubercode, &id);
+	}
+	if (txt->dwubercode == txt->dwcode) {
+		return D2COMMON_GetItemTextFromItemCode(txt->dwultracode, &id);
+	}
+	return nullptr;
+}
+
+int UpStatCondition::GetValue(UpStatType type, UnitItemInfo* info)
+{
+	auto upTxt = GetUpTxt(info);
+	if (!upTxt) {
+		return 0;
+	}
+	if (type == UpStatType::LEVEL) {
+		auto currentReq = D2COMMON_GetItemLevelRequirement(info->item, D2CLIENT_GetPlayerUnit());
+		return max(upTxt->blevelreq, currentReq);
+	}
+	int req = type == UpStatType::STRENGTH ? upTxt->wreqstr : upTxt->wreqdex;
+	int ease = D2COMMON_GetUnitStat(info->item, STAT_REDUCEDREQUIREMENTS, 0);
+
+	int delta = req * ease / 100;
+	if (info->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+		delta -= 10;
+	}
+
+	return (std::max)(0, req + delta);
+}
+
+bool UpStatCondition::EvaluateInternal(UnitItemInfo* info, Condition* arg1, Condition* arg2)
+{
+	return IntegerCompare(GetValue(type, info), operation, targetStat, targetStat2);
 }
 
 int GetStatFromList(UnitItemInfo* uInfo, int itemStat)
