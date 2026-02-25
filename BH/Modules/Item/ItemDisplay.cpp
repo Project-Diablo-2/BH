@@ -1234,17 +1234,13 @@ function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSp
 {
 	return [f](ReplaceContext& ctx, const ReplacementValue& val) -> string {
 		float out = 0.0f;
-		if (f->execute(ctx.info, out) != FormulaStatus::OK || !std::isfinite(out))
+		if (f->execute(ctx.info, out) != FormulaStatus::OK || std::abs(out) > 2147483648.0f)
 		{
 			return "f_err";
 		}
 		char buffer[64];
-		if (std::fabs(out) >= 1e6f) {
-			snprintf(buffer, sizeof(buffer), "%.2e", out);
-			return buffer;
-		}
 		int len = snprintf(buffer, sizeof(buffer), "%.2f", out);
-		if (len < 2) {
+		if (len < 3) {
 			return "f_err";
 		}
 		// remove .00
