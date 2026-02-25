@@ -63,7 +63,9 @@ enum class FormulaOpCode
 	SQRT,
 	COUNT,
 	COUNTIF,
-	XOR
+	XOR,
+	ABS,
+	SIGN,
 };
 
 template<typename T>
@@ -251,7 +253,9 @@ namespace FormulaData
 		{"pow", FormulaOpCode::POW},
 		{"count", FormulaOpCode::COUNT},
 		{"countif", FormulaOpCode::COUNTIF},
-		{"xor", FormulaOpCode::XOR}
+		{"xor", FormulaOpCode::XOR},
+		{"abs", FormulaOpCode::ABS},
+		{"sign", FormulaOpCode::SIGN},
 	};
 }
 
@@ -458,6 +462,8 @@ class FormulaParser
 			case FormulaOpCode::CEIL:
 			case FormulaOpCode::ROUND:
 			case FormulaOpCode::SQRT:
+			case FormulaOpCode::ABS:
+			case FormulaOpCode::SIGN:
 			{
 				ok = count == 1;
 				break;
@@ -683,6 +689,15 @@ float Formula<T>::eval(const std::unique_ptr<FormulaNode<T>>& n, T* ctx, Formula
 				res += eval(c, ctx, e) == lastEl;
 			}
 			return res;
+		}
+		case FormulaOpCode::ABS:
+		{
+			return fabsf(eval(n->children[0], ctx, e));
+		}
+		case FormulaOpCode::SIGN:
+		{
+			const float v = eval(n->children[0], ctx, e);
+			return (0 < v) - (v < 0);
 		}
 		default:
 		{
