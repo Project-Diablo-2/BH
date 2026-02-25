@@ -1234,7 +1234,7 @@ function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSp
 {
 	return [f](ReplaceContext& ctx, const ReplacementValue& val) -> string {
 		float out = 0.0f;
-		if (f->execute(ctx.info, out) != FormulaStatus::OK || std::abs(out) > 2147483648.0f)
+		if (f->execute(ctx.info, out) != FormulaStatus::OK || !std::isfinite(out) || std::abs(out) > 2147483648.0f)
 		{
 			return "f_err";
 		}
