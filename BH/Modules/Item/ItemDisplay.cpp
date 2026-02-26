@@ -974,6 +974,8 @@ struct ReplacementSpec {
 	static string ReplaceAllResist(ReplaceContext& ctx, const ReplacementValue& val);
 	// enhance damage or enhance defense %ED%
 	static string ReplaceEnhancedD(ReplaceContext& ctx, const ReplacementValue& val);
+	// %CS%
+	static string ReplaceConditionalSpace(ReplaceContext& ctx, const ReplacementValue& val);
 	// %CL%
 	static string ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val);
 	// %NL%
@@ -1070,6 +1072,7 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "QTY", { 0, ReplacementSpec::ReplaceQuantity } },
 	{ "RES", { 0, ReplacementSpec::ReplaceAllResist } },
 	{ "ED", { 0, ReplacementSpec::ReplaceEnhancedD } },
+	{ "CS", { 0, ReplacementSpec::ReplaceConditionalSpace } },
 	{ "CL", { 0, ReplacementSpec::ReplaceConditionalLine } },
 	{ "NL", { 0, ReplacementSpec::ReplaceNewLine } },
 	{ "REQSTR", { 0, ReplacementSpec::ReplaceReqStr } },
@@ -1517,6 +1520,11 @@ string ReplacementSpec::ReplaceMaxSockets(ReplaceContext& ctx, const Replacement
 	BYTE max = MaxSocketsCondition::GetValue(ctx.info);
 	snprintf(buffer, 16, "%d", max);
 	return buffer;
+}
+
+string ReplacementSpec::ReplaceConditionalSpace(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return "\b";
 }
 
 string ReplacementSpec::ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val)
@@ -2960,21 +2968,52 @@ string NameVarEd(UnitItemInfo* uInfo)
 	return ed;
 }
 
+bool IsWhitespaceEquivalent(char ch)
+{
+	return isspace(ch) || ch == '\b';
+}
+
 void TrimItemText(UnitItemInfo* uInfo,
 	string& name,
 	BOOL bLimit)
 {
-	// Collapse paired CLs
-	while (name.find("\r\r") != string::npos)
-		name.replace(name.find("\r\r"), 2, "\r");
-	// Delete leading/trailing CLs
-	if (name.find("\r") == 0)
-		name.erase(0, 1);
-	if (!name.empty() && name.rfind("\r") == name.size() - 1)
-		name.resize(name.size() - 1);
-	// Convert to new line
-	while (name.find("\r") != string::npos)
-		name.replace(name.find("\r"), 1, "\n");
+	int offset = 0;
+	for (int i = 0; i < name.length(); ++i) {
+		const char ch = name[i];
+		switch (ch) {
+			case '\r':
+			{
+				// only need a newline if
+				// 1) the previous character isn't a newline
+				// 2) there is non-newline next
+				if (offset == 0 || name[offset - 1] == '\n') {
+					break;
+				}
+				if (i + 1 < name.length() && name[i + 1] != '\n' && name[i + 1] != '\r') {
+					name[offset++] = '\n';
+				}
+				break;
+			}
+			case '\b':
+			{
+				// only need a space if
+				// 1) the previous character isn't whitespace
+				// 2) there is non-whitespace next
+				if (offset == 0 || IsWhitespaceEquivalent(name[offset - 1])) {
+					break;
+				}
+				if (i + 1 < name.length() && !IsWhitespaceEquivalent(name[i + 1])) {
+					name[offset++] = ' ';
+				}
+				break;
+			}
+			default:
+			{
+				name[offset++] = ch;
+			}
+		}
+	}
+	name.resize(offset);
 
 	int nColorCodesSize = 0;
 	int lengthLimit = 0;
