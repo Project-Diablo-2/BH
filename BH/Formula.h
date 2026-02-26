@@ -72,9 +72,9 @@ template<typename T>
 struct FormulaVarDefinition
 {
 	int paramCount;
-	std::function<float(FormulaStatus& err, T*, const std::vector<int>&)> resolver;
+	float (*resolver)(FormulaStatus& err, T*, const std::vector<int>&);
 
-	FormulaVarDefinition(int params, std::function<float(FormulaStatus& err, T*, const std::vector<int>&)> res)
+	FormulaVarDefinition(int params, float (*res)(FormulaStatus& err, T*, const std::vector<int>&))
 		: paramCount(params),
 		resolver(res)
 	{}
@@ -86,7 +86,8 @@ struct FormulaNode
 	FormulaOpCode op = FormulaOpCode::NONE;
 	float literalValue = 0;
 	std::vector<std::unique_ptr<FormulaNode<T>>> children;
-	std::function<float(FormulaStatus&, T*)> resolver = nullptr;
+	std::vector<int> params;
+	float (*resolver)(FormulaStatus& err, T*, const std::vector<int>&) = nullptr;
 
 	FormulaNode(FormulaOpCode o) : op(o)
 	{}
@@ -383,10 +384,8 @@ class FormulaParser
 			}
 
 			auto n = std::make_unique<FormulaNode<T>>(FormulaOpCode::RESOLVER);
-			auto& res = def.resolver;
-			n->resolver = [res, ids](FormulaStatus& err, T* ctx) {
-				return res(err, ctx, ids);
-			};
+			n->resolver = def.resolver;
+			n->params = std::move(ids);
 			return n;
 		}
 
@@ -534,7 +533,7 @@ float Formula<T>::eval(const std::unique_ptr<FormulaNode<T>>& n, T* ctx, Formula
 		}
 		case FormulaOpCode::RESOLVER:
 		{
-			return n->resolver(e, ctx);
+			return n->resolver(e, ctx, n->params);
 		}
 		case FormulaOpCode::NEGATE:
 		{
