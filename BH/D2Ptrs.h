@@ -384,6 +384,7 @@ FUNCPTR(D2COMMON, GetItemFromInventory, UnitAny* __stdcall, (Inventory* inv), -1
 FUNCPTR(D2COMMON, GetNextItemFromInventory, UnitAny* __stdcall, (UnitAny* pItem), -10464, -10879)
 FUNCPTR(D2COMMON, GetItemType, int __stdcall, (UnitAny* pItem), -11088, -10121)
 FUNCPTR(D2COMMON, IsMatchingType, BOOL __stdcall, (UnitAny* pItem, int iType), -10744, -10601)
+FUNCPTR(D2COMMON, GetMaxSockets, BYTE __stdcall, (UnitAny* pItem), -11151)
 
 FUNCPTR(D2COMMON, GetRunesTxt, RunesTxt* __stdcall, (int RecordNo), -10006, -10405)
 FUNCPTR(D2COMMON, GetRunesTxtRecords, int* __stdcall, (void), -11032, -10981)

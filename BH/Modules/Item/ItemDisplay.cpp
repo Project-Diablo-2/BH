@@ -350,6 +350,26 @@ std::map<int, int> maptiers = {
 	{ITEM_TYPE_T5_MAP, 5},
 };
 
+int GetAdjustedUnitStat(UnitItemInfo* uInfo, DWORD stat, DWORD layer)
+{
+	int tmpVal = D2COMMON_GetUnitStat(uInfo->item, stat, layer);
+	if (stat == STAT_MAXHP || stat == STAT_MAXMANA) {
+		tmpVal /= 256;
+	}
+	else if (
+		stat == STAT_ENHANCEDDEFENSE ||				// return 0
+		stat == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
+		stat == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
+		stat == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
+		stat == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
+		stat == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
+		stat == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
+		) {
+		tmpVal = GetStatFromList(uInfo, stat);
+	}
+	return (float)tmpVal;
+}
+
 enum AttributeFlagTypes
 {
 	ITEMFLAG_BASE,
@@ -521,10 +541,23 @@ enum FilterCondition
 	COND_ADD,
 	COND_TRUE,
 	COND_FALSE,
+	COND_REQSTAT,
+	COND_BASEDAMAGEMIN1H,
+	COND_BASEDAMAGEMIN2H,
+	COND_BASEDAMAGEMINTHROW,
+	COND_BASEDAMAGEMINKICK,
+	COND_BASEDAMAGEMINSMITE,
+	COND_BASEDAMAGEMAX1H,
+	COND_BASEDAMAGEMAX2H,
+	COND_BASEDAMAGEMAXTHROW,
+	COND_BASEDAMAGEMAXKICK,
+	COND_BASEDAMAGEMAXSMITE,
 	COND_BASEBLOCK,
 	COND_ALLATTRIB,
 	COND_MAXRES,
 	COND_UPSTAT,
+	COND_MAXSOCKETS,
+	COND_FORMULA,
 
 	COND_NULL
 };
@@ -691,15 +724,29 @@ std::map<std::string, FilterCondition> condition_map =
 	{"BUYPRICE", COND_BUYPRICE},
 	{"SELLPRICE", COND_PRICE},
 	{"PRICE", COND_PRICE},
+	{"REQSTR", COND_REQSTAT},
+	{"REQDEX", COND_REQSTAT},
+	{"REQLVL", COND_REQSTAT},
+	{"BASEMINONEH", COND_BASEDAMAGEMIN1H},
+	{"BASEMINTWOH", COND_BASEDAMAGEMIN2H},
+	{"BASEMINTHROW", COND_BASEDAMAGEMINTHROW},
+	{"BASEMINKICK", COND_BASEDAMAGEMINKICK},
+	{"BASEMINSMITE", COND_BASEDAMAGEMINSMITE},
+	{"BASEMAXONEH", COND_BASEDAMAGEMAX1H},
+	{"BASEMAXTWOH", COND_BASEDAMAGEMAX2H},
+	{"BASEMAXTHROW", COND_BASEDAMAGEMAXTHROW},
+	{"BASEMAXKICK", COND_BASEDAMAGEMAXKICK},
+	{"BASEMAXSMITE", COND_BASEDAMAGEMAXSMITE},
 	{"BASEBLOCK", COND_BASEBLOCK},
 	{"ALLATTRIB", COND_ALLATTRIB},
 	{"MAXRES", COND_MAXRES},
-	{"WIDTH", COND_WIDTH},
-	{"HEIGHT", COND_HEIGHT},
-	{"AREA", COND_AREA},
 	{"UPSTR", COND_UPSTAT},
 	{"UPDEX", COND_UPSTAT},
 	{"UPLVL", COND_UPSTAT},
+	{"MAXSOCKETS", COND_MAXSOCKETS},
+	{"WIDTH", COND_WIDTH},
+	{"HEIGHT", COND_HEIGHT},
+	{"AREA", COND_AREA},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
 	//{"OS", COND_OS},
@@ -722,7 +769,7 @@ struct SkillReplace {
 };
 
 // case-sensitive searches for AddCondition
-const unordered_map<string, const SkillReplace> skills = {
+const unordered_map<string, SkillReplace> skills = {
 	{{"LIFE"}, { STAT_MAXHP, 0}},
 	{{"MANA"}, { STAT_MAXMANA, 0}},
 	{{"STR"}, { STAT_STRENGTH, 0}},
@@ -742,7 +789,10 @@ const unordered_map<string, const SkillReplace> skills = {
 	{{"MULTI"}, { ~0UL, 2}},
 };
 
+unordered_map<string, std::shared_ptr<Formula<FormulaContext>>> formulaMap;
+
 std::map<std::string, int>   UnknownItemCodes;
+vector<pair<string, string>> formulas;
 vector<pair<string, string>> aliases;
 vector<pair<string, string>> rules;
 vector<Rule*>                RuleList;
@@ -924,10 +974,38 @@ struct ReplacementSpec {
 	static string ReplaceAllResist(ReplaceContext& ctx, const ReplacementValue& val);
 	// enhance damage or enhance defense %ED%
 	static string ReplaceEnhancedD(ReplaceContext& ctx, const ReplacementValue& val);
+	// %CS%
+	static string ReplaceConditionalSpace(ReplaceContext& ctx, const ReplacementValue& val);
 	// %CL%
 	static string ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val);
 	// %NL%
 	static string ReplaceNewLine(ReplaceContext& ctx, const ReplacementValue& val);
+	// %REQDEX%
+	static string ReplaceReqDex(ReplaceContext& ctx, const ReplacementValue& val);
+	// %REQSTR%
+	static string ReplaceReqStr(ReplaceContext& ctx, const ReplacementValue& val);
+	// %REQLVL%
+	static string ReplaceReqLvl(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMINONEH%
+	static string ReplaceBaseMin1h(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMAXONEH%
+	static string ReplaceBaseMax1h(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMINTWOH%
+	static string ReplaceBaseMin2h(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMAXTWOH%
+	static string ReplaceBaseMax2h(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMINTHROW%
+	static string ReplaceBaseMinThrow(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMAXTHROW%
+	static string ReplaceBaseMaxThrow(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMINKICK%
+	static string ReplaceBaseMinKick(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMAXKICK%
+	static string ReplaceBaseMaxKick(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMINSMITE%
+	static string ReplaceBaseMinSmite(ReplaceContext& ctx, const ReplacementValue& val);
+	// %BASEMAXSMITE%
+	static string ReplaceBaseMaxSmite(ReplaceContext& ctx, const ReplacementValue& val);
 	// %BASEBLOCK%
 	static string ReplaceBaseBlock(ReplaceContext& ctx, const ReplacementValue& val);
 	// %ALLATTRIB%
@@ -940,6 +1018,8 @@ struct ReplacementSpec {
 	static string ReplaceUpStr(ReplaceContext& ctx, const ReplacementValue& val);
 	// %UPLVL%
 	static string ReplaceUpLvl(ReplaceContext& ctx, const ReplacementValue& val);
+	// %MAXSOCKETS%
+	static string ReplaceMaxSockets(ReplaceContext& ctx, const ReplacementValue& val);
 
 	// DYNAMIC keywords
 	// %STAT%
@@ -962,6 +1042,7 @@ struct ReplacementSpec {
 	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceHDTextDependentColor(const string& primary, const string& secondary);
 	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceBindString(const string& str);
 	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceNamedStat(int id);
+	static function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplaceBindFormula(shared_ptr<Formula<FormulaContext>> f);
 };
 
 unordered_map<string, ReplacementSpec> ReplacementMap = {
@@ -991,14 +1072,29 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "QTY", { 0, ReplacementSpec::ReplaceQuantity } },
 	{ "RES", { 0, ReplacementSpec::ReplaceAllResist } },
 	{ "ED", { 0, ReplacementSpec::ReplaceEnhancedD } },
+	{ "CS", { 0, ReplacementSpec::ReplaceConditionalSpace } },
 	{ "CL", { 0, ReplacementSpec::ReplaceConditionalLine } },
 	{ "NL", { 0, ReplacementSpec::ReplaceNewLine } },
+	{ "REQSTR", { 0, ReplacementSpec::ReplaceReqStr } },
+	{ "REQDEX", { 0, ReplacementSpec::ReplaceReqDex } },
+	{ "REQLVL", { 0, ReplacementSpec::ReplaceReqLvl } },
+	{ "BASEMINONEH", { 0, ReplacementSpec::ReplaceBaseMin1h } },
+	{ "BASEMAXONEH", { 0, ReplacementSpec::ReplaceBaseMax1h } },
+	{ "BASEMINTWOH", { 0, ReplacementSpec::ReplaceBaseMin2h } },
+	{ "BASEMAXTWOH", { 0, ReplacementSpec::ReplaceBaseMax2h } },
+	{ "BASEMINTHROW", { 0, ReplacementSpec::ReplaceBaseMinThrow } },
+	{ "BASEMAXTHROW", { 0, ReplacementSpec::ReplaceBaseMaxThrow } },
+	{ "BASEMINKICK", { 0, ReplacementSpec::ReplaceBaseMinKick } },
+	{ "BASEMAXKICK", { 0, ReplacementSpec::ReplaceBaseMaxKick } },
+	{ "BASEMINSMITE", { 0, ReplacementSpec::ReplaceBaseMinSmite } },
+	{ "BASEMAXSMITE", { 0, ReplacementSpec::ReplaceBaseMaxSmite } },
 	{ "BASEBLOCK", { 0, ReplacementSpec::ReplaceBaseBlock } },
 	{ "ALLATTRIB", { 0, ReplacementSpec::ReplaceAllAttributes } },
 	{ "MAXRES", { 0, ReplacementSpec::ReplaceMaxRes } },
 	{ "UPSTR", { 0, ReplacementSpec::ReplaceUpStr } },
 	{ "UPDEX", { 0, ReplacementSpec::ReplaceUpDex } },
 	{ "UPLVL", { 0, ReplacementSpec::ReplaceUpLvl } },
+	{ "MAXSOCKETS", { 0, ReplacementSpec::ReplaceMaxSockets } },
 	// named stats
 	{ "EDEF", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDDEFENSE) } },
 	{ "EDAM", { 0, ReplacementSpec::ReplaceNamedStat(STAT_ENHANCEDMAXIMUMDAMAGE) } },
@@ -1058,6 +1154,8 @@ unordered_map<string, ReplacementSpec> ReplacementMap = {
 	{ "DARK_GREEN", { 0, ReplacementSpec::ReplaceBindString("ÿc:") } },
 };
 
+unordered_map<string, ReplacementSpec> FormulaReplacementMap;
+
 regex ReplacementRegex("%([A-Z_]+)(?:(\\d{1,9})(?:,(\\d{1,9}))?)?%", regex::ECMAScript);
 vector<ReplacementValue> BuildReplacementActions(const string& action)
 {
@@ -1102,10 +1200,13 @@ ReplacementValue ReplacementSpec::MakeReplacementValue(const string& str)
 
 ReplacementValue ReplacementSpec::MakeReplacementValue(const smatch& match, bool& fail)
 {
-	const auto& spec = ReplacementMap.find(match[1]);
+	auto& spec = ReplacementMap.find(match[1]);
 	if (spec == ReplacementMap.end()) {
-		fail = true;
-		return ReplacementValue(match.str(), 0, 0, ReplacementSpec::ReplaceNone);
+		spec = FormulaReplacementMap.find(match[1]);
+		if (spec == FormulaReplacementMap.end()) {
+			fail = true;
+			return ReplacementValue(match.str(), 0, 0, ReplacementSpec::ReplaceNone);
+		}
 	}
 	const auto& replacer = spec->second;
 	const int count = (match[2].length() != 0) + (match[3].length() != 0);
@@ -1129,6 +1230,31 @@ function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSp
 {
 	return [str](ReplaceContext& ctx, const ReplacementValue& val) -> string {
 		return str;
+	};
+}
+
+function<string(ReplaceContext& ctx, const ReplacementValue& val)> ReplacementSpec::ReplaceBindFormula(shared_ptr<Formula<FormulaContext>> f)
+{
+	return [f](ReplaceContext& ctx, const ReplacementValue& val) -> string {
+		float out = 0.0f;
+		if (f->execute(ctx.info, out) != FormulaStatus::OK || !std::isfinite(out) || std::abs(out) > 2147483648.0f)
+		{
+			return "f_err";
+		}
+		char buffer[64];
+		int len = snprintf(buffer, sizeof(buffer), "%.2f", out);
+		if (len < 3) {
+			return "f_err";
+		}
+		// remove .00
+		if (buffer[len - 1] == '0' && buffer[len - 2] == '0') {
+			buffer[len - 3] = '\0';
+		}
+		// remove a single trailing 0
+		else if (buffer[len - 1] == '0') {
+			buffer[len - 1] = '\0';
+		}
+		return buffer;
 	};
 }
 
@@ -1249,6 +1375,100 @@ string ReplacementSpec::ReplaceEnhancedD(ReplaceContext& ctx, const ReplacementV
 	return NameVarEd(ctx.info);
 }
 
+string ReplacementSpec::ReplaceReqStr(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::STRENGTH, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceReqDex(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::DEXTERITY, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceReqLvl(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	auto req = ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::LEVEL, ctx.info);
+	char buffer[16];
+	snprintf(buffer, 16, "%d", req);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMin1h(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MIN1H, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMax1h(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAX1H, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMin2h(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MIN2H, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMax2h(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAX2H, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMinThrow(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINTHROW, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMaxThrow(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXTHROW, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMinKick(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINKICK, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMaxKick(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXKICK, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMinSmite(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINSMITE, ctx.info));
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceBaseMaxSmite(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "%d", BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXSMITE, ctx.info));
+	return buffer;
+}
+
 string ReplacementSpec::ReplaceBaseBlock(ReplaceContext& ctx, const ReplacementValue& val)
 {
 	char buffer[16];
@@ -1292,6 +1512,19 @@ string ReplacementSpec::ReplaceUpLvl(ReplaceContext& ctx, const ReplacementValue
 	char buffer[16];
 	snprintf(buffer, 16, "%d", req);
 	return buffer;
+}
+
+string ReplacementSpec::ReplaceMaxSockets(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	char buffer[16];
+	BYTE max = MaxSocketsCondition::GetValue(ctx.info);
+	snprintf(buffer, 16, "%d", max);
+	return buffer;
+}
+
+string ReplacementSpec::ReplaceConditionalSpace(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	return "\b";
 }
 
 string ReplacementSpec::ReplaceConditionalLine(ReplaceContext& ctx, const ReplacementValue& val)
@@ -1501,6 +1734,974 @@ bool IsRune(ItemAttributes* attrs)
 }
 
 BYTE RuneNumberFromItemCode(char* code) { return (BYTE)(((code[1] - '0') * 10) + code[2] - '0'); }
+
+// must be lowercase
+std::unordered_map<std::string, FormulaVarDefinition<FormulaContext>> formulaVarDefs = {
+	{ "stat", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto stat = ids[0];
+			return GetAdjustedUnitStat(uInfo, stat, 0);
+		}
+	} },
+	{ "multi", { 2, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto stat = ids[0];
+			auto layer = ids[1];
+			return GetAdjustedUnitStat(uInfo, stat, layer);
+		}
+	} },
+	{ "charstat", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto stat = ids[0];
+			return D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), stat, 0);
+		}
+	} },
+	{ "onehand", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (code_to_dwtxtfileno.find(uInfo->itemCode) != code_to_dwtxtfileno.end()) {
+				int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+				WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+
+				if (weapon_type == WeaponType::kAxe ||
+					weapon_type == WeaponType::kWand ||
+					weapon_type == WeaponType::kClub ||
+					weapon_type == WeaponType::kScepter ||
+					weapon_type == WeaponType::kMace ||
+					weapon_type == WeaponType::kHammer ||
+					weapon_type == WeaponType::kSword ||
+					weapon_type == WeaponType::kKnife ||
+					weapon_type == WeaponType::kThrowing ||
+					weapon_type == WeaponType::kJavelin ||
+					weapon_type == WeaponType::kThrowingPot ||
+					weapon_type == WeaponType::kClaw1 ||
+					weapon_type == WeaponType::kClaw2 ||
+					weapon_type == WeaponType::kOrb ||
+					weapon_type == WeaponType::kAmaJav
+					) {
+					return 1;
+				}
+			}
+			return 0;
+		}
+	} },
+	{ "twohand", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (code_to_dwtxtfileno.find(uInfo->itemCode) != code_to_dwtxtfileno.end()) {
+				int weapon_number = code_to_dwtxtfileno[uInfo->itemCode];
+				WeaponType weapon_type = Drawing::StatsDisplay::GetCurrentWeaponType(weapon_number);
+
+				if (weapon_type == WeaponType::kAxe2H ||
+					weapon_type == WeaponType::kHammer2H ||
+					weapon_type == WeaponType::kSword2H ||
+					weapon_type == WeaponType::kSpear ||
+					weapon_type == WeaponType::kPole ||
+					weapon_type == WeaponType::kStaff ||
+					weapon_type == WeaponType::kBow ||
+					weapon_type == WeaponType::kCrossbow ||
+					weapon_type == WeaponType::kAmaBow ||
+					weapon_type == WeaponType::kAmaSpear
+					) {
+					return 1;
+				}
+			}
+			return 0;
+		}
+	} },
+	{ "allsk", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_ALLSKILLS, 0);
+		}
+	} },
+	{ "alvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			BYTE qlvl = uInfo->attrs->qualityLevel;
+			return GetAffixLevel((BYTE)uInfo->item->pItemData->dwItemLevel, (BYTE)uInfo->attrs->qualityLevel, uInfo->attrs->magicLevel);
+		}
+	} },
+	{ "amazon", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 0;
+		}
+	} },
+	{ "ar", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_ATTACKRATING, 0);
+		}
+	} },
+	{ "armor", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_ALLARMOR) != 0;
+		}
+	} },
+	{ "arper", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_TOHITPERCENT, 0);
+		}
+	} },
+	{ "assassin", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 6;
+		}
+	} },
+	{ "automod", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto itemData = uInfo->item->pItemData;
+			if ((itemData->dwQuality == ITEM_QUALITY_MAGIC || itemData->dwQuality == ITEM_QUALITY_RARE) && !(itemData->dwFlags & ITEM_IDENTIFIED)) {
+				return false;
+			}
+			return itemData->wAutoPrefix - AUTOMOD_OFFSET;
+		}
+	} },
+	{ "axe", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_AXE) != 0;
+		}
+	} },
+	{ "bar", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_BARBARIAN_HELM) != 0;
+		}
+	} },
+	{ "barbarian", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 4;
+		}
+	} },
+	{ "belt", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_BELT) != 0;
+		}
+	} },
+	{ "boots", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_BOOTS) != 0;
+		}
+	} },
+	{ "bow", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_BOW) != 0;
+		}
+	} },
+	{ "buyprice", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetShopPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, TRANSACTIONTYPE_BUY);
+		}
+	} },
+	{ "charm", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->miscFlags & ITEM_GROUP_CHARM) != 0;
+		}
+	} },
+	{ "chest", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_BODY_ARMOR) != 0;
+		}
+	} },
+	{ "chsk", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto skill = ids[0];
+			if (skill < 0 || skill > SKILL_MAX) {
+				err = FormulaStatus::MATH_ERROR;
+				return 0;
+			}
+			DWORD     value = 0;
+			Stat      aStatList[256] = { NULL };
+			StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+			if (pStatList) {
+				DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
+				for (UINT i = 0; i < dwStats; i++) {
+					//if (aStatList[i].wStatIndex == STAT_CHARGED)
+					//	PrintText(1, "ChargedCondition::EvaluateInternal: Index=%hx, SubIndex=%hx, Value=%x", aStatList[i].wStatIndex, aStatList[i].wSubIndex, aStatList[i].dwStatValue);
+					if (aStatList[i].wStatIndex == STAT_CHARGED && (aStatList[i].wSubIndex >> 6) == skill) {
+						// 10 MSBs of subindex is the skill ID
+						unsigned int level = aStatList[i].wSubIndex & 0x3F;     // 6 LSBs are the skill level
+						value = (level > value) ? level : value; // use highest level
+					}
+				}
+			}
+			return value;
+		}
+	} },
+	{ "circ", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_CIRCLET) != 0;
+		}
+	} },
+	{ "cl", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto classId = ids[0];
+			switch (classId) {
+				case 1:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_DRUID_PELT) != 0;
+				}
+				case 2:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_BARBARIAN_HELM) != 0;
+				}
+				case 3:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_PALADIN_SHIELD) != 0;
+				}
+				case 4:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_NECROMANCER_SHIELD) != 0;
+				}
+				case 5:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_ASSASSIN_KATAR) != 0;
+				}
+				case 6:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_SORCERESS_ORB) != 0;
+				}
+				case 7:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_AMAZON_WEAPON) != 0;
+				}
+				default:
+				{
+					err = FormulaStatus::MATH_ERROR;
+					return 0;
+				}
+			}
+		}
+	} },
+	{ "class", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->baseFlags & ITEM_GROUP_CLASS) != 0;
+		}
+	} },
+	{ "clsk", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto classId = ids[0];
+			if (classId < 0 || classId >= CLASS_NA) {
+				err = FormulaStatus::MATH_ERROR;
+				return 0;
+			}
+			return GetAdjustedUnitStat(uInfo, STAT_CLASSSKILLS, classId);
+		}
+	} },
+	{ "club", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_CLUB) != 0;
+		}
+	} },
+	{ "clvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
+		}
+	} },
+	{ "craft", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_CRAFT;
+		}
+	} },
+	{ "craftalvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			int clvl = D2COMMON_GetUnitStat(D2CLIENT_GetPlayerUnit(), STAT_LEVEL, 0);
+			int craft_alvl = GetAffixLevel(
+				(int)(0.5 * clvl) + (int)(0.5 * uInfo->item->pItemData->dwItemLevel),
+				uInfo->attrs->qualityLevel,
+				uInfo->attrs->magicLevel
+			);
+			return craft_alvl;
+		}
+	} },
+	{ "cres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_COLDRESIST, 0);
+		}
+	} },
+	{ "cube", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (!uInfo->item || !uInfo->item->pItemData) {
+				return 0;
+			}
+			const auto pItemData = uInfo->item->pItemData;
+			return pItemData->ItemLocation == STORAGE_CUBE
+				&& pItemData->pOwnerInventory
+				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+		}
+	} },
+	{ "dagger", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_DAGGER) != 0;
+		}
+	} },
+	{ "def", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_DEFENSE, 0);
+		}
+	} },
+	{ "dex", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_DEXTERITY, 0);
+		}
+	} },
+	{ "diff", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetDifficulty();
+		}
+	} },
+	{ "din", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_PALADIN_SHIELD) != 0;
+		}
+	} },
+	{ "dru", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_DRUID_PELT) != 0;
+		}
+	} },
+	{ "druid", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 5;
+		}
+	} },
+	{ "dtm", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_DAMAGETOMANA, 0);
+		}
+	} },
+	{ "ed", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			WORD stat;
+			if (uInfo->attrs->armorFlags & ITEM_GROUP_ALLARMOR) { stat = STAT_ENHANCEDDEFENSE; }
+			else {
+				// Normal %ED will have the same value for STAT_ENHANCEDMAXIMUMDAMAGE and STAT_ENHANCEDMINIMUMDAMAGE
+				stat = STAT_ENHANCEDMAXIMUMDAMAGE;
+			}
+			DWORD     value = 0;
+			StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+			if (pStatList) {
+				value += D2COMMON_GetStatValueFromStatList(pStatList, stat, 0);
+			}
+			return value;
+		}
+	} },
+	{ "edam", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_ENHANCEDMAXIMUMDAMAGE, 0);
+		}
+	} },
+	{ "edef", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_ENHANCEDDEFENSE, 0);
+		}
+	} },
+	{ "elt", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->baseFlags & ITEM_GROUP_ELITE) != 0;
+		}
+	} },
+	{ "eq", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			const auto id = ids[0];
+			switch (id) {
+				case 1:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_HELM) != 0;
+				}
+				case 2:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_BODY_ARMOR) != 0;
+				}
+				case 3:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_SHIELD) != 0;
+				}
+				case 4:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_GLOVES) != 0;
+				}
+				case 5:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_BOOTS) != 0;
+				}
+				case 6:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_BELT) != 0;
+				}
+				case 7:
+				{
+					return (uInfo->attrs->armorFlags & ITEM_GROUP_CIRCLET) != 0;
+				}
+				default:
+				{
+					err = FormulaStatus::MATH_ERROR;
+					return 0;
+				}
+			}
+		}
+	} },
+	{ "equipped", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (!uInfo->item || !uInfo->item->pItemData) {
+				return 0;
+			}
+			const auto pItemData = uInfo->item->pItemData;
+			return pItemData->ItemLocation == STORAGE_NULL
+				&& pItemData->BodyLocation > 0
+				&& pItemData->pOwnerInventory
+				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+		}
+	} },
+	{ "eth", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) != 0;
+		}
+	} },
+	{ "exc", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->baseFlags & ITEM_GROUP_EXCEPTIONAL) != 0;
+		}
+	} },
+	{ "false", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return 0;
+		}
+	} },
+	{ "fbr", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_FASTERBLOCK, 0);
+		}
+	} },
+	{ "fcr", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_FASTERCAST, 0);
+		}
+	} },
+	{ "fhr", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_FASTERHITRECOVERY, 0);
+		}
+	} },
+	{ "filtlvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return Item::GetFilterLevel();
+		}
+	} },
+	{ "fools", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			unsigned int value = 0;
+			Stat         aStatList[256] = { NULL };
+			StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+			if (pStatList) {
+				DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
+				for (UINT i = 0; i < dwStats; i++) {
+					if (aStatList[i].wStatIndex == STAT_MAXDAMAGEPERLEVEL && aStatList[i].wSubIndex == 0) { value += 1; }
+					if (aStatList[i].wStatIndex == STAT_ATTACKRATINGPERLEVEL && aStatList[i].wSubIndex == 0) { value += 2; }
+				}
+			}
+			return value == 3;
+		}
+	} },
+	{ "fres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_FIRERESIST, 0);
+		}
+	} },
+	{ "frw", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_FASTERRUNWALK, 0);
+		}
+	} },
+	{ "gem", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (IsGem(uInfo->attrs)) {
+				return GetGemLevel(uInfo->attrs);
+			}
+			return 0;
+		}
+	} },
+	{ "gemlevel", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (IsGem(uInfo->attrs)) {
+				return GetGemLevel(uInfo->attrs);
+			}
+			return 0;
+		}
+	} },
+	{ "gemmed", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (uInfo->item->pInventory) {
+				return uInfo->item->pInventory->dwItemCount > 0;
+			}
+			return 0;
+		}
+	} },
+	{ "gemtype", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (IsGem(uInfo->attrs)) {
+				return GetGemType(uInfo->attrs);
+			}
+			return 0;
+		}
+	} },
+	{ "gfind", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_GOLDFIND, 0);
+		}
+	} },
+	{ "gloves", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_GLOVES) != 0;
+		}
+	} },
+	{ "gold", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (uInfo->itemCode[0] == 'g' && uInfo->itemCode[1] == 'l' && uInfo->itemCode[2] == 'd') {
+				return D2COMMON_GetUnitStat(uInfo->item, STAT_GOLD, 0);
+			}
+			return 0;
+		}
+	} },
+	{ "ground", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->dwMode == ITEM_MODE_ON_GROUND || uInfo->item->dwMode == ITEM_MODE_BEING_DROPPED;
+		}
+	} },
+	{ "hammer", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_HAMMER) != 0;
+		}
+	} },
+	{ "helm", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_HELM) != 0;
+		}
+	} },
+	{ "ias", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_IAS, 0);
+		}
+	} },
+	{ "id", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->item->pItemData->dwFlags & ITEM_IDENTIFIED) != 0;
+		}
+	} },
+	{ "ilvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwItemLevel;
+		}
+	} },
+	{ "inf", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_INFERIOR;
+		}
+	} },
+	{ "inventory", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (!uInfo->item || !uInfo->item->pItemData) {
+				return 0;
+			}
+			const auto pItemData = uInfo->item->pItemData;
+			return pItemData->ItemLocation == STORAGE_INVENTORY
+				&& uInfo->item->dwMode == ITEM_MODE_INV_STASH_CUBE_STORE
+				&& pItemData->pOwnerInventory
+				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+		}
+	} },
+	{ "jav", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_JAVELIN) != 0;
+		}
+	} },
+	{ "jewelry", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->miscFlags & ITEM_GROUP_JEWELRY) != 0;
+		}
+	} },
+	{ "life", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MAXHP, 0);
+		}
+	} },
+	{ "lres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_LIGHTNINGRESIST, 0);
+		}
+	} },
+	{ "lvlreq", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetRequiredLevel(uInfo->item);
+		}
+	} },
+	{ "mace", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_ALLMACE) != 0;
+		}
+	} },
+	{ "maek", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MANAAFTEREACHKILL, 0);
+		}
+	} },
+	{ "mag", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_MAGIC;
+		}
+	} },
+	{ "mana", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MAXMANA, 0);
+		}
+	} },
+	{ "mapid", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			UnitAny* player = D2CLIENT_GetPlayerUnit();
+			if (player) {
+				int map_id = D2COMMON_GetLevelIdFromRoom(D2COMMON_GetRoomFromUnit(player));
+				return map_id;
+			}
+			return 0;
+		}
+	} },
+	{ "maptier", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (maptiers.find(uInfo->attrs->category) != maptiers.end()) {
+				return maptiers.at(uInfo->attrs->category);
+			}
+			return -1;
+		}
+	} },
+	{ "maxdmg", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MAXIMUMDAMAGE, 0);
+		}
+	} },
+	{ "maxdur", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			DWORD     value = 0;
+			Stat      aStatList[256] = { NULL };
+			StatList* pStatList = D2COMMON_GetStatList(uInfo->item, NULL, 0x40);
+			if (pStatList) {
+				DWORD dwStats = D2COMMON_CopyStatList(pStatList, (Stat*)aStatList, 256);
+				for (UINT i = 0; i < dwStats; i++) { if (aStatList[i].wStatIndex == STAT_ENHANCEDMAXDURABILITY && aStatList[i].wSubIndex == 0) { value += aStatList[i].dwStatValue; } }
+			}
+			return value;
+		}
+	} },
+	{ "merc", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto pMerc = GetClientMercUnit();
+			auto pItemData = uInfo->item->pItemData;
+			return pMerc
+				&& pItemData->ItemLocation == STORAGE_NULL
+				&& pItemData->BodyLocation > 0
+				&& pItemData->pOwnerInventory
+				&& pItemData->pOwnerInventory->pOwner == pMerc;
+		}
+	} },
+	{ "mfind", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MAGICFIND, 0);
+		}
+	} },
+	{ "mindmg", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_MINIMUMDAMAGE, 0);
+		}
+	} },
+	{ "misc", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->miscFlags & ITEM_GROUP_ALLMISC) != 0;
+		}
+	} },
+	{ "nec", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_NECROMANCER_SHIELD) != 0;
+		}
+	} },
+	{ "necromancer", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 2;
+		}
+	} },
+	{ "nmag", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_INFERIOR
+				|| uInfo->item->pItemData->dwQuality == ITEM_QUALITY_NORMAL
+				|| uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR;
+		}
+	} },
+	{ "norm", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->baseFlags & ITEM_GROUP_NORMAL) != 0;
+		}
+	} },
+	{ "os", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto skill = ids[0];
+			if (skill < 0 || skill > SKILL_MAX) {
+				err = FormulaStatus::MATH_ERROR;
+				return 0;
+			}
+			return GetAdjustedUnitStat(uInfo, STAT_NONCLASSSKILL, skill);
+		}
+	} },
+	{ "paladin", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 3;
+		}
+	} },
+	{ "polearm", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_POLEARM) != 0;
+		}
+	} },
+	{ "pres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_POISONRESIST, 0);
+		}
+	} },
+	{ "price", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetShopPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, TRANSACTIONTYPE_SELL);
+		}
+	} },
+	{ "qlvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->attrs->qualityLevel;
+		}
+	} },
+	{ "qty", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_AMMOQUANTITY, 0);
+		}
+	} },
+	{ "quiver", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->miscFlags & ITEM_GROUP_QUIVER) != 0;
+		}
+	} },
+	{ "rare", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_RARE;
+		}
+	} },
+	{ "repair", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_REPAIRSDURABILITY, 0);
+		}
+	} },
+	{ "replife", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_REPLENISHLIFE, 0);
+		}
+	} },
+	{ "repquant", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_REPLENISHESQUANTITY, 0);
+		}
+	} },
+	{ "rerollalvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ComputeRerollAffixLevel(uInfo);
+		}
+	} },
+	{ "res", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			int fRes = D2COMMON_GetUnitStat(uInfo->item, STAT_FIRERESIST, 0);
+			int lRes = D2COMMON_GetUnitStat(uInfo->item, STAT_LIGHTNINGRESIST, 0);
+			int cRes = D2COMMON_GetUnitStat(uInfo->item, STAT_COLDRESIST, 0);
+			int pRes = D2COMMON_GetUnitStat(uInfo->item, STAT_POISONRESIST, 0);
+			if (fRes && lRes && cRes && pRes) {
+				return min(min(fRes, lRes), min(cRes, pRes));
+			}
+			return 0;
+		}
+	} },
+	{ "rune", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (IsRune(uInfo->attrs)) {
+				return RuneNumberFromItemCode(uInfo->itemCode);
+			}
+			return 0;
+		}
+	} },
+	{ "rw", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->item->pItemData->dwFlags & ITEM_RUNEWORD) != 0;
+		}
+	} },
+	{ "scepter", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_SCEPTER) != 0;
+		}
+	} },
+	{ "sellprice", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetShopPrice(D2CLIENT_GetPlayerUnit(), uInfo->item, TRANSACTIONTYPE_SELL);
+		}
+	} },
+	{ "set", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SET;
+		}
+	} },
+	{ "shield", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->armorFlags & ITEM_GROUP_SHIELD) != 0;
+		}
+	} },
+	{ "shop", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (uInfo->item->pItemData &&
+				uInfo->item->pItemData->pOwnerInventory &&
+				uInfo->item->pItemData->pOwnerInventory->pOwner) {
+				auto wNpcId = uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo;
+				if (find(begin(ShopNPCs), end(ShopNPCs), wNpcId) != end(ShopNPCs)) {
+					return 1;
+				}
+			}
+			return 0;
+		}
+	} },
+	{ "sin", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_ASSASSIN_KATAR) != 0;
+		}
+	} },
+	{ "sk", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto skill = ids[0];
+			if (skill < 0 || skill > SKILL_MAX) {
+				err = FormulaStatus::MATH_ERROR;
+				return 0;
+			}
+			return GetAdjustedUnitStat(uInfo, STAT_SINGLESKILL, skill);
+		}
+	} },
+	{ "sock", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_SOCKETS, 0);
+		}
+	} },
+	{ "sockets", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_SOCKETS, 0);
+		}
+	} },
+	{ "sor", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_SORCERESS_ORB) != 0;
+		}
+	} },
+	{ "sorceress", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return D2CLIENT_GetPlayerUnit()->dwTxtFileNo == 1;
+		}
+	} },
+	{ "spear", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_SPEAR) != 0;
+		}
+	} },
+	{ "staff", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_STAFF) != 0;
+		}
+	} },
+	{ "stash", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			if (!uInfo->item || !uInfo->item->pItemData) {
+				return 0;
+			}
+			const auto pItemData = uInfo->item->pItemData;
+			return pItemData->ItemLocation == STORAGE_STASH
+				&& pItemData->pOwnerInventory
+				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+		}
+	} },
+	{ "str", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return GetAdjustedUnitStat(uInfo, STAT_STRENGTH, 0);
+		}
+	} },
+	{ "sup", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_SUPERIOR;
+		}
+	} },
+	{ "sword", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_SWORD) != 0;
+		}
+	} },
+	{ "tabsk", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			auto skill = ids[0];
+			if (skill < 0 || skill > SKILL_MAX) {
+				err = FormulaStatus::MATH_ERROR;
+				return 0;
+			}
+			return GetAdjustedUnitStat(uInfo, STAT_SKILLTAB, skill);
+		}
+	} },
+	{ "throwing", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_THROWING) != 0;
+		}
+	} },
+	{ "tmace", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_TIPPED_MACE) != 0;
+		}
+	} },
+	{ "true", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return 1;
+		}
+	} },
+	{ "uni", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->item->pItemData->dwQuality == ITEM_QUALITY_UNIQUE;
+		}
+	} },
+	{ "wand", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_WAND) != 0;
+		}
+	} },
+	{ "weapon", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_ALLWEAPON) != 0;
+		}
+	} },
+	{ "wp", { 1, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			const auto id = ids[0];
+			switch (id) {
+				case 1:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_AXE) != 0;
+				}
+				case 2:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_ALLMACE) != 0;
+				}
+				case 3:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_SWORD) != 0;
+				}
+				case 4:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_DAGGER) != 0;
+				}
+				case 5:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_THROWING) != 0;
+				}
+				case 6:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_JAVELIN) != 0;
+				}
+				case 7:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_SPEAR) != 0;
+				}
+				case 8:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_POLEARM) != 0;
+				}
+				case 9:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_BOW) != 0;
+				}
+				case 10:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_CROSSBOW) != 0;
+				}
+				case 11:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_STAFF) != 0;
+				}
+				case 12:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_WAND) != 0;
+				}
+				case 13:
+				{
+					return (uInfo->attrs->weaponFlags & ITEM_GROUP_SCEPTER) != 0;
+				}
+				default:
+				{
+					err = FormulaStatus::MATH_ERROR;
+					return 0;
+				}
+			}
+		}
+	} },
+	{ "xbow", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_CROSSBOW) != 0;
+		}
+	} },
+	{ "zon", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return (uInfo->attrs->weaponFlags & ITEM_GROUP_AMAZON_WEAPON) != 0;
+		}
+	} },
+	{ "width", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->attrs->width;
+		}
+	} },
+	{ "height", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->attrs->height;
+		}
+	} },
+	{ "area", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return uInfo->attrs->width * uInfo->attrs->height;
+		}
+	} },
+	{ "maxsockets", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return MaxSocketsCondition::GetValue(uInfo);
+		}
+	} },
+	{ "uplvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return UpStatCondition::GetValue(UpStatCondition::UpStatType::LEVEL, uInfo);
+		}
+	} },
+	{ "upstr", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return UpStatCondition::GetValue(UpStatCondition::UpStatType::STRENGTH, uInfo);
+		}
+	} },
+	{ "updex", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return UpStatCondition::GetValue(UpStatCondition::UpStatType::DEXTERITY, uInfo);
+		}
+	} },
+	{ "maxres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return MaxResCondition::GetValue(uInfo);
+		}
+	} },
+	{ "allattrib", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return AllAttributesCondition::GetValue(uInfo);
+		}
+	} },
+	{ "baseblock", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseBlockCondition::GetValue(uInfo);
+		}
+	} },
+	{ "baseminoneh", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MIN1H, uInfo);
+		}
+	} },
+	{ "basemintwoh", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MIN2H, uInfo);
+		}
+	} },
+	{ "baseminsmite", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINSMITE, uInfo);
+		}
+	} },
+	{ "baseminkick", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINKICK, uInfo);
+		}
+	} },
+	{ "baseminthrow", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MINTHROW, uInfo);
+		}
+	} },
+	{ "basemaxoneh", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAX1H, uInfo);
+		}
+	} },
+	{ "basemaxtwoh", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAX2H, uInfo);
+		}
+	} },
+	{ "basemaxsmite", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXSMITE, uInfo);
+		}
+	} },
+	{ "basemaxkick", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXKICK, uInfo);
+		}
+	} },
+	{ "basemaxthrow", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return BaseWeaponDamageCondition::GetValue(BaseWeaponDamageCondition::DamageType::MAXTHROW, uInfo);
+		}
+	} },
+	{ "reqlvl", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::LEVEL, uInfo);
+		}
+	} },
+	{ "reqstr", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::STRENGTH, uInfo);
+		}
+	} },
+	{ "reqdex", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ReqStatCondition::GetValue(ReqStatCondition::ReqStatType::DEXTERITY, uInfo);
+		}
+	} },
+};
 
 // Find the item description. This code is called only when there's a cache miss
 string ItemDescLookupCache::make_cached_T(UnitItemInfo* uInfo)
@@ -1767,21 +2968,52 @@ string NameVarEd(UnitItemInfo* uInfo)
 	return ed;
 }
 
+bool IsWhitespaceEquivalent(char ch)
+{
+	return isspace(ch) || ch == '\b';
+}
+
 void TrimItemText(UnitItemInfo* uInfo,
 	string& name,
 	BOOL bLimit)
 {
-	// Collapse paired CLs
-	while (name.find("\r\r") != string::npos)
-		name.replace(name.find("\r\r"), 2, "\r");
-	// Delete leading/trailing CLs
-	if (name.find("\r") == 0)
-		name.erase(0, 1);
-	if (!name.empty() && name.rfind("\r") == name.size() - 1)
-		name.resize(name.size() - 1);
-	// Convert to new line
-	while (name.find("\r") != string::npos)
-		name.replace(name.find("\r"), 1, "\n");
+	int offset = 0;
+	for (int i = 0; i < name.length(); ++i) {
+		const char ch = name[i];
+		switch (ch) {
+			case '\r':
+			{
+				// only need a newline if
+				// 1) the previous character isn't a newline
+				// 2) there is non-newline next
+				if (offset == 0 || name[offset - 1] == '\n') {
+					break;
+				}
+				if (i + 1 < name.length() && name[i + 1] != '\n' && name[i + 1] != '\r') {
+					name[offset++] = '\n';
+				}
+				break;
+			}
+			case '\b':
+			{
+				// only need a space if
+				// 1) the previous character isn't whitespace
+				// 2) there is non-whitespace next
+				if (offset == 0 || IsWhitespaceEquivalent(name[offset - 1])) {
+					break;
+				}
+				if (i + 1 < name.length() && !IsWhitespaceEquivalent(name[i + 1])) {
+					name[offset++] = ' ';
+				}
+				break;
+			}
+			default:
+			{
+				name[offset++] = ch;
+			}
+		}
+	}
+	name.resize(offset);
 
 	int nColorCodesSize = 0;
 	int lengthLimit = 0;
@@ -1886,6 +3118,25 @@ unsigned int GetItemCodeIndex(char codeChar)
 	return codeChar - (codeChar < 90 ? 48 : 87);
 }
 
+bool FloatCompare(float Lvalue,
+	BYTE         operation,
+	int Rvalue,
+	int Bvalue = 0)
+{
+	switch (operation) {
+		case EQUAL:
+			return Lvalue == Rvalue;
+		case GREATER_THAN:
+			return Lvalue > Rvalue;
+		case LESS_THAN:
+			return Lvalue < Rvalue;
+		case BETWEEN:
+			return (Rvalue <= Lvalue && Lvalue <= Bvalue);
+		default:
+			return false;
+	}
+}
+
 bool IntegerCompare(int Lvalue,
 	BYTE         operation,
 	int Rvalue,
@@ -1906,6 +3157,95 @@ bool IntegerCompare(int Lvalue,
 	}
 }
 
+void RegisterFormula(const std::string& ref, std::unique_ptr<Formula<FormulaContext>>& ptr)
+{
+	formulaMap.insert_or_assign(ref, std::move(ptr));
+	FormulaReplacementMap.insert_or_assign(ref, ReplacementSpec{ 0, ReplacementSpec::ReplaceBindFormula(formulaMap.find(ref)->second) });
+}
+
+struct IslandReplacementHelper
+{
+	const string IslandIdentifier = "$f(";
+	const string IslandPrefix = "ISLAND_";
+	string IslandSuffix;
+
+	IslandReplacementHelper()
+	{
+		reset();
+	}
+
+	void reset()
+	{
+		IslandSuffix.clear();
+	}
+
+	string GetNextFormulaIslandRef()
+	{
+		for (char& c : IslandSuffix) {
+			if (c == 'Z') {
+				c = 'A';
+				continue;
+			}
+			++c;
+			return IslandPrefix + IslandSuffix;
+		}
+
+		IslandSuffix.push_back('A');
+		return IslandPrefix + IslandSuffix;
+	}
+
+	size_t MatchParentheses(string& text, size_t begin)
+	{
+		for (int i = begin, count = 0; i < text.length(); ++i) {
+			if (text[i] == '(') {
+				count += 1;
+			}
+			else if (text[i] == ')') {
+				count -= 1;
+				if (count == 0) {
+					return i;
+				}
+			}
+		}
+		return text.length();
+	}
+
+	void ReplaceFormulaIslands(string& text, string& pre, string& suf)
+	{
+		string result;
+		size_t offset = 0;
+		while (offset < text.length()) {
+			const auto start = text.find(IslandIdentifier, offset);
+			if (start == string::npos) {
+				if (offset == 0) {
+					return;
+				}
+				result.append(text, offset, string::npos);
+				break;
+			}
+			result.append(text, offset, start - offset);
+			size_t endOfIsland = MatchParentheses(text, start + IslandIdentifier.length() - 1);
+			if (endOfIsland < text.length()) {
+				std::unique_ptr<Formula<FormulaContext>> out;
+				size_t length = endOfIsland - start - IslandIdentifier.length();
+				if (Formula<FormulaContext>::Compile(text.substr(start + IslandIdentifier.length(), length), out, formulaVarDefs) == FormulaStatus::OK) {
+					const auto ref = GetNextFormulaIslandRef();
+					RegisterFormula(ref, out);
+					result.append(pre + ref + suf);
+				}
+				else {
+					result.append(text, start, endOfIsland - start + 1);
+				}
+				offset = endOfIsland + 1;
+				continue;
+			}
+			result.append(text, start, IslandIdentifier.length());
+			offset = start + IslandIdentifier.length();
+		}
+		text = move(result);
+	}
+} islandReplacementHelper;
+
 namespace ItemDisplay
 {
 	bool item_display_initialized = false;
@@ -1919,8 +3259,13 @@ namespace ItemDisplay
 		item_display_initialized = true;
 		rules.clear();
 		aliases.clear();
+		formulas.clear();
+		formulaMap.clear();
+		FormulaReplacementMap.clear();
+		islandReplacementHelper.reset();
 		ResetCaches();
 		BH::lootFilter->ReadMapList("Alias", aliases);
+		BH::lootFilter->ReadMapList("Formula", formulas);
 		BH::lootFilter->ReadMapList("ItemDisplay", rules);
 
 		// Limit aliases to single keywords
@@ -1932,6 +3277,25 @@ namespace ItemDisplay
 				aliases[i].first.erase(aliases[i].first.find(" "));
 		}
 
+		for (const auto& f : formulas)
+		{
+			const auto& key = f.first;
+			const auto& text = f.second;
+
+			auto formulaRef = "FORMULA" + key;
+			transform(formulaRef.begin(), formulaRef.end(), formulaRef.begin(), toupper);
+
+			std::unique_ptr<Formula<FormulaContext>> out;
+			if (Formula<FormulaContext>::Compile(text, out, formulaVarDefs) != FormulaStatus::OK)
+			{
+				continue;
+			}
+
+			RegisterFormula(formulaRef, out);
+		}
+
+		std::string percent = "%";
+		std::string empty = "";
 		for (unsigned int i = 0; i < rules.size(); i++)
 		{
 			for (auto alias : aliases)
@@ -1946,6 +3310,10 @@ namespace ItemDisplay
 				while (rules[i].second.find("%" + alias.first + "%") != string::npos)
 					rules[i].second.replace(rules[i].second.find("%" + alias.first + "%"), alias.first.length() + 2, alias.second);
 			}
+
+			// find inline formula islands
+			islandReplacementHelper.ReplaceFormulaIslands(rules[i].first, empty, empty);
+			islandReplacementHelper.ReplaceFormulaIslands(rules[i].second, percent, percent);
 
 			string         buf;
 			stringstream   ss(rules[i].first);
@@ -2463,6 +3831,10 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	{
 		condition = COND_MULTI;
 	}
+	else if (formulaMap.find(key) != formulaMap.end())
+	{
+		condition = COND_FORMULA;
+	}
 
 	switch (condition)
 	{
@@ -2904,6 +4276,78 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_ADD:
 		Condition::AddOperand(conditions, new AddCondition(key, operation, value));
 		break;
+	case COND_REQSTAT:
+	{
+		auto type = ReqStatCondition::ReqStatType::STRENGTH;
+		if (key == "REQDEX") {
+			type = ReqStatCondition::ReqStatType::DEXTERITY;
+		}
+		else if (key == "REQLVL") {
+			type = ReqStatCondition::ReqStatType::LEVEL;
+		}
+		Condition::AddOperand(conditions, new ReqStatCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMIN1H:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MIN1H;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMIN2H:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MIN2H;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMINSMITE:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MINSMITE;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMINKICK:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MINKICK;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMINTHROW:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MINTHROW;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMAX1H:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MAX1H;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMAX2H:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MAX2H;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMAXSMITE:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MAXSMITE;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMAXKICK:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MAXKICK;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
+	case COND_BASEDAMAGEMAXTHROW:
+	{
+		auto type = BaseWeaponDamageCondition::DamageType::MAXTHROW;
+		Condition::AddOperand(conditions, new BaseWeaponDamageCondition(type, operation, value, value2));
+		break;
+	}
 	case COND_BASEBLOCK:
 		Condition::AddOperand(conditions, new BaseBlockCondition(operation, value, value2));
 		break;
@@ -2925,8 +4369,14 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		Condition::AddOperand(conditions, new UpStatCondition(type, operation, value, value2));
 		break;
 	}
+	case COND_MAXSOCKETS:
+		Condition::AddOperand(conditions, new MaxSocketsCondition(operation, value, value2));
+		break;
 
 	case COND_NULL:
+		break;
+	case COND_FORMULA:
+		Condition::AddOperand(conditions, new FormulaCondition(key, operation, value, value2));
 		break;
 	default:
 		break;
@@ -3671,10 +5121,15 @@ void AddCondition::Init()
 		smatch match;
 		if (regex_search(code, match, statRegex)) {
 			if (skills.find(match[1]) == skills.end()) {
+				if (formulaMap.find(match[1]) == formulaMap.end()) {
+					continue;
+				}
+				fs.emplace_back(formulaMap.find(match[1])->second);
 				continue;
 			}
-			DWORD id = skills.find(match[1])->second.id;
-			DWORD params = skills.find(match[1])->second.params;
+			auto& found = skills.find(match[1]);
+			DWORD id = found->second.id;
+			DWORD params = found->second.params;
 			int paramCount = (match[2].length() != 0) + (match[3].length() != 0);
 			if (params != paramCount) {
 				continue;
@@ -3714,8 +5169,139 @@ bool AddCondition::EvaluateInternal(UnitItemInfo* uInfo,
 		}
 		value += tmpVal;
 	}
+	float fvalue = 0.0f;
+	for (const auto& f : fs)
+	{
+		float out;
+		if (f->execute(uInfo, out) == FormulaStatus::OK)
+		{
+			fvalue += out;
+		}
+	}
 
+	if (fs.size() > 0) {
+		return FloatCompare(value + fvalue, operation, targetStat);
+	}
 	return IntegerCompare(value, operation, targetStat);
+}
+
+int ReqStatCondition::GetValue(ReqStatType type, UnitItemInfo* info)
+{
+	auto txt = D2COMMON_GetItemText(info->item->dwTxtFileNo);
+	if (!txt) {
+		return 0;
+	}
+	if (type == ReqStatType::LEVEL) {
+		return D2COMMON_GetItemLevelRequirement(info->item, D2CLIENT_GetPlayerUnit());
+	}
+	int req = type == ReqStatType::STRENGTH ? txt->wreqstr : txt->wreqdex;
+	int ease = D2COMMON_GetUnitStat(info->item, STAT_REDUCEDREQUIREMENTS, 0);
+
+	int delta = req * ease / 100;
+	if (info->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+		delta -= 10;
+	}
+
+	return (std::max)(0, req + delta);
+}
+
+bool ReqStatCondition::EvaluateInternal(UnitItemInfo* info, Condition* arg1, Condition* arg2)
+{
+	return IntegerCompare(GetValue(type, info), operation, targetStat, targetStat2);
+}
+
+int BaseWeaponDamageCondition::GetValue(DamageType type, UnitItemInfo* uInfo)
+{
+	auto txt = D2COMMON_GetItemText(uInfo->item->dwTxtFileNo);
+	const auto etherealDamage = [](int damage) {
+		return (damage + damage / 2) * 5 / 6;
+	};
+	switch (type) {
+		case DamageType::MINSMITE:
+		{
+			if (!(uInfo->attrs->armorFlags & ITEM_GROUP_SHIELD)) {
+				return 0;
+			}
+			return txt->bmindam;
+		}
+		case DamageType::MINKICK:
+		{
+			if (!(uInfo->attrs->armorFlags & ITEM_GROUP_BOOTS)) {
+				return 0;
+			}
+			return txt->bmindam;
+		}
+		case DamageType::MIN1H:
+		{
+			if (uInfo->attrs->armorFlags & (ITEM_GROUP_SHIELD | ITEM_GROUP_BOOTS)) {
+				return 0;
+			}
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->bmindam);
+			}
+			return txt->bmindam;
+		}
+		case DamageType::MAXSMITE:
+		{
+			if (!(uInfo->attrs->armorFlags & ITEM_GROUP_SHIELD)) {
+				return 0;
+			}
+			return txt->bmaxdam;
+		}
+		case DamageType::MAXKICK:
+		{
+			if (!(uInfo->attrs->armorFlags & ITEM_GROUP_BOOTS)) {
+				return 0;
+			}
+			return txt->bmaxdam;
+		}
+		case DamageType::MAX1H:
+		{
+			if (uInfo->attrs->armorFlags & (ITEM_GROUP_SHIELD | ITEM_GROUP_BOOTS)) {
+				return 0;
+			}
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->bmaxdam);
+			}
+			return txt->bmaxdam;
+		}
+		case DamageType::MIN2H:
+		{
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->b2handmindam);
+			}
+			return txt->b2handmindam;
+		}
+		case DamageType::MAX2H:
+		{
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->b2handmaxdam);
+			}
+			return txt->b2handmaxdam;
+		}
+		case DamageType::MINTHROW:
+		{
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->bminmisdam);
+			}
+			return txt->bminmisdam;
+		}
+		case DamageType::MAXTHROW:
+		{
+			if (uInfo->item->pItemData->dwFlags & ITEM_ETHEREAL) {
+				return etherealDamage(txt->bmaxmisdam);
+			}
+			return txt->bmaxmisdam;
+		}
+	}
+	return 0;
+}
+
+bool BaseWeaponDamageCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	return IntegerCompare(GetValue(type, uInfo), operation, targetStat, targetStat2);
 }
 
 int BaseBlockCondition::GetValue(UnitItemInfo* uInfo)
@@ -3809,6 +5395,49 @@ int UpStatCondition::GetValue(UpStatType type, UnitItemInfo* info)
 bool UpStatCondition::EvaluateInternal(UnitItemInfo* info, Condition* arg1, Condition* arg2)
 {
 	return IntegerCompare(GetValue(type, info), operation, targetStat, targetStat2);
+}
+
+int MaxSocketsCondition::GetValue(UnitItemInfo* uInfo)
+{
+	BYTE res = D2COMMON_GetMaxSockets(uInfo->item);
+	auto txt = D2COMMON_GetItemText(uInfo->item->dwTxtFileNo);
+	return min(res, txt->binvheight * txt->binvwidth);
+}
+
+bool MaxSocketsCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	BYTE max = D2COMMON_GetMaxSockets(uInfo->item);
+	return IntegerCompare(max, operation, targetStat, targetStat2);
+}
+
+FormulaCondition::FormulaCondition(string& k,
+	BYTE         op,
+	unsigned int target,
+	unsigned int target2) : key(k),
+	operation(op),
+	targetStat(target),
+	targetStat2(target2)
+{
+	conditionType = CT_Operand;
+	f = formulaMap.find(key)->second.get();
+};
+
+bool FormulaCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	float out;
+	if (f->execute(uInfo, out) != FormulaStatus::OK)
+	{
+		return false;
+	}
+	if (operation == NONE)
+	{
+		return Formula<FormulaContext>::IsTrue(out);
+	}
+	return FloatCompare(out, operation, targetStat, targetStat2);
 }
 
 int GetStatFromList(UnitItemInfo* uInfo, int itemStat)

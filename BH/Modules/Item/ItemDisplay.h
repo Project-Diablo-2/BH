@@ -3,6 +3,7 @@
 #include "../../D2Ptrs.h"
 #include "../../Config.h"
 #include "../../BH.h"
+#include "../../Formula.h"
 #include <cstdlib>
 #include <regex>
 #include "../../RuleLookupCache.h"
@@ -18,7 +19,6 @@
 #define DEAD_COLOR        0xdead
 #define UNDEFINED_COLOR   0xbeef
 
-
 // Collection of item data from the internal UnitAny structure
 struct UnitItemInfo
 {
@@ -27,6 +27,7 @@ struct UnitItemInfo
 	ItemAttributes* attrs;
 };
 
+typedef UnitItemInfo FormulaContext;
 extern std::map<std::string, int> UnknownItemCodes;
 
 enum ConditionType
@@ -832,10 +833,79 @@ public:
 private:
 	BYTE           operation;
 	vector<string> codes;
+	vector<shared_ptr<Formula<FormulaContext>>> fs;
 	vector<tuple<DWORD, DWORD>>  stats;
 	unsigned int   targetStat;
 	string         key;
 	void           Init();
+	bool           EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
+class ReqStatCondition : public Condition
+{
+public:
+	enum class ReqStatType
+	{
+		STRENGTH,
+		DEXTERITY,
+		LEVEL,
+	};
+	ReqStatCondition(ReqStatType t, BYTE op, unsigned int target, unsigned int target2) :
+		type(t),
+		operation(op),
+		targetStat(target),
+		targetStat2(target2)
+	{
+		conditionType = CT_Operand;
+	}
+
+	static int GetValue(ReqStatType type, UnitItemInfo* info);
+private:
+	ReqStatType	 type;
+	BYTE         operation;
+	unsigned int targetStat;
+	unsigned int targetStat2;
+	bool EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
+class BaseWeaponDamageCondition : public Condition
+{
+public:
+	enum class DamageType
+	{
+		MIN1H,
+		MAX1H,
+		MIN2H,
+		MAX2H,
+		MINTHROW,
+		MAXTHROW,
+		MINKICK,
+		MAXKICK,
+		MINSMITE,
+		MAXSMITE,
+	};
+
+	BaseWeaponDamageCondition(DamageType t,
+		BYTE op,
+		unsigned int target,
+		unsigned int target2) : type(t),
+		operation(op),
+		targetStat(target),
+		targetStat2(target2)
+	{
+		conditionType = CT_Operand;
+	}
+
+	static int GetValue(DamageType type, UnitItemInfo* uInfo);
+private:
+	DamageType	   type;
+	BYTE           operation;
+	unsigned int   targetStat;
+	unsigned int   targetStat2;
 	bool           EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -863,10 +933,10 @@ private:
 		Condition* arg2);
 };
 
-class MaxResCondition : public Condition
+class AllAttributesCondition : public Condition
 {
 public:
-	MaxResCondition(BYTE op,
+	AllAttributesCondition(BYTE op,
 		unsigned int target,
 		unsigned int target2) : operation(op),
 		targetStat(target),
@@ -885,10 +955,10 @@ private:
 		Condition* arg2);
 };
 
-class AllAttributesCondition : public Condition
+class MaxResCondition : public Condition
 {
 public:
-	AllAttributesCondition(BYTE op,
+	MaxResCondition(BYTE op,
 		unsigned int target,
 		unsigned int target2) : operation(op),
 		targetStat(target),
@@ -933,6 +1003,45 @@ private:
 	unsigned int targetStat;
 	unsigned int targetStat2;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
+class MaxSocketsCondition : public Condition
+{
+public:
+	MaxSocketsCondition(BYTE op, unsigned int target, unsigned int target2):
+		operation(op),
+		targetStat(target),
+		targetStat2(target2)
+	{
+		conditionType = CT_Operand;
+	}
+
+	static int GetValue(UnitItemInfo* uInfo);
+private:
+	BYTE			operation;
+	unsigned int	targetStat;
+	unsigned int	targetStat2;
+	bool			EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
+class FormulaCondition : public Condition
+{
+public:
+	FormulaCondition(string& k,
+		BYTE         op,
+		unsigned int target,
+		unsigned int target2);
+private:
+	Formula<FormulaContext>* f;
+	BYTE           operation;
+	unsigned int   targetStat;
+	unsigned int   targetStat2;
+	string         key;
+	bool           EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
 };
