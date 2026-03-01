@@ -3165,9 +3165,9 @@ void RegisterFormula(const std::string& ref, std::unique_ptr<Formula<FormulaCont
 
 struct IslandReplacementHelper
 {
-	const std::string IslandIdentifier = "$f(";
-	const std::string IslandPrefix = "ISLAND_";
-	vector<char> IslandSuffix;
+	const string IslandIdentifier = "$f(";
+	const string IslandPrefix = "ISLAND_";
+	string IslandSuffix;
 
 	IslandReplacementHelper()
 	{
@@ -3176,72 +3176,75 @@ struct IslandReplacementHelper
 
 	void reset()
 	{
-		IslandSuffix = { 'A' - 1 };
+		IslandSuffix.clear();
 	}
 
 	string GetNextFormulaIslandRef()
 	{
-		for (size_t i = 0; i < IslandSuffix.size(); ++i) {
-			if (IslandSuffix[i] == 'Z') {
-				IslandSuffix[i] = 'A';
-				if (i + 1 >= IslandSuffix.size()) {
-					IslandSuffix.push_back('A');
-					break;
-				}
+		for (char& c : IslandSuffix) {
+			if (c == 'Z') {
+				c = 'A';
+				continue;
 			}
-			else {
-				IslandSuffix[i] += 1;
-				break;
-			}
+			++c;
+			return IslandPrefix + IslandSuffix;
 		}
 
-		string res = IslandPrefix;
-		for (size_t i = 0; i < IslandSuffix.size(); ++i) {
-			res += IslandSuffix[i];
-		}
-
-		return res;
+		IslandSuffix.push_back('A');
+		return IslandPrefix + IslandSuffix;
 	}
 
-	void ReplaceFormulaIslands(std::string& text, std::string& pre, std::string& suf)
+	size_t MatchParentheses(string& text, size_t begin)
 	{
+		for (int i = begin, count = 0; i < text.length(); ++i) {
+			if (text[i] == '(') {
+				count += 1;
+			}
+			else if (text[i] == ')') {
+				count -= 1;
+				if (count == 0) {
+					return i;
+				}
+			}
+		}
+		return text.length();
+	}
+
+	void ReplaceFormulaIslands(string& text, string& pre, string& suf)
+	{
+		string result;
 		size_t offset = 0;
 		while (offset < text.length()) {
 			const auto start = text.find(IslandIdentifier, offset);
 			if (start == string::npos) {
-				return;
-			}
-			size_t i = start + IslandIdentifier.length();
-			for (size_t count = 1; i < text.length(); ++i) {
-				if (text[i] == '(') {
-					count += 1;
+				if (offset == 0) {
+					return;
 				}
-				else if (text[i] == ')') {
-					count -= 1;
-					if (count == 0) {
-						break;
-					}
-				}
+				result.append(text, offset, string::npos);
+				break;
 			}
-			if (i < text.length()) {
+			result.append(text, offset, start - offset);
+			size_t endOfIsland = MatchParentheses(text, start + IslandIdentifier.length() - 1);
+			if (endOfIsland < text.length()) {
 				std::unique_ptr<Formula<FormulaContext>> out;
-				size_t len = i - (start + IslandIdentifier.length());
-				if (Formula<FormulaContext>::Compile(text.substr(start + IslandIdentifier.length(), len), out, formulaVarDefs) == FormulaStatus::OK) {
+				size_t length = endOfIsland - start - IslandIdentifier.length();
+				if (Formula<FormulaContext>::Compile(text.substr(start + IslandIdentifier.length(), length), out, formulaVarDefs) == FormulaStatus::OK) {
 					const auto ref = GetNextFormulaIslandRef();
 					RegisterFormula(ref, out);
-					const auto replacement = pre + ref + suf;
-					text.replace(start, len + IslandIdentifier.length() + 1, replacement);
-					len = replacement.length() - IslandIdentifier.length() - 1;
+					result.append(pre + ref + suf);
 				}
-				offset = start + len + IslandIdentifier.length() + 1;
+				else {
+					result.append(text, start, endOfIsland - start + 1);
+				}
+				offset = endOfIsland + 1;
 				continue;
 			}
-			// found start pattern but didn't match ')'
+			result.append(text, start, IslandIdentifier.length());
 			offset = start + IslandIdentifier.length();
 		}
+		text = move(result);
 	}
-};
-IslandReplacementHelper islandReplacementHelper;
+} islandReplacementHelper;
 
 namespace ItemDisplay
 {
