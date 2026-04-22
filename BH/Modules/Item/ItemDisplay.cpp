@@ -4,7 +4,6 @@
 #include "../../D2Helpers.h"
 #include "../../Common.h"
 #include <cctype>
-#include <cstddef>
 #include <vector>
 #include <string>
 #include <sstream>
