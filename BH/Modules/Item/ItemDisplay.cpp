@@ -5187,7 +5187,7 @@ bool BeltCondition::EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condi
 	if (inventory->dwStoresCount <= InventoryStoreType::INVENTORY_STORE_TYPE_BELT) {
 		return false;
 	}
-	InventoryStore store = inventory->pStores[InventoryStoreType::INVENTORY_STORE_TYPE_BELT];
+	InventoryStore& store = inventory->pStores[InventoryStoreType::INVENTORY_STORE_TYPE_BELT];
 	// Double check that this is indeed the correct `InventoryStore`.
 	// Internally belt is represented as a flat, 16 elements, array.
 	if (store.Width != kBeltWidth * kBeltHeight || store.Height != 1) {
