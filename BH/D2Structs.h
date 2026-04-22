@@ -292,11 +292,11 @@ struct PlayerData {
 	DWORD _0x244;
 	DWORD _0x248;
 	DWORD _0x24C;
-	BOOL _0x250;				// 
+	BOOL _0x250;				//
 	DWORD _0x254;			//
 	DWORD _0x258;	//
 	DWORD _0x25C;	//
-	BOOL _0x260;				// 
+	BOOL _0x260;				//
 	BYTE _0x264;			//
 	BOOL _0x265;
 	DWORD _0x269;
@@ -460,7 +460,7 @@ struct InventoryStore
 	BYTE Width;						//0x08
 	BYTE Height;					//0x09
 	BYTE unk[2];					//0x0A
-	DWORD pArray;					//0x0C UnitAny* [height][width]
+	UnitAny** pArray;					//0x0C UnitAny* [height][width]
 };
 
 struct Inventory {
@@ -581,7 +581,7 @@ struct ItemText {
 	BYTE _uncharted6[0x0d];			//0xDF
 	BYTE fQuest;					//0xEC
 	BYTE _uncharted7[0x12];			//0xED
-	BYTE reqlvl;					//0xFF 
+	BYTE reqlvl;					//0xFF
 	BYTE magiclvl;					//0x100
 };
 
@@ -746,10 +746,10 @@ struct UnitAny {
 
 struct BnetData {
 	DWORD dwId;					//0x00
-	DWORD dwId2;				//0x04	
+	DWORD dwId2;				//0x04
 	BYTE _12[13];				//0xC0
 	//DWORD dwId3;				//0x14
-	//WORD Unk3;					//0x18	
+	//WORD Unk3;					//0x18
 	BYTE _13[6];				//0xC0
 	char szGameName[22];		//0x1A
 	char szGameIP[16];			//0x30
