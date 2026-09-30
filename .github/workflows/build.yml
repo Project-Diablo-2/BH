@@ -1,0 +1,45 @@
+name: Build
+
+# Builds BH.dll (Release|Win32) with MSVC on every pull request and push to main,
+# so a change that breaks the build is caught before it is merged. The built DLL is
+# attached to each run as a downloadable artifact for testing.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  msvc:
+    name: MSVC Release|Win32
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Build
+        # The project's post-build step copies the output into $(DIABLO_DEBUG_FOLDER)
+        # (a developer's game folder); point it at a scratch directory in CI.
+        shell: pwsh
+        run: |
+          $env:DIABLO_DEBUG_FOLDER = Join-Path $env:RUNNER_TEMP 'diablo'
+          New-Item -ItemType Directory -Force -Path $env:DIABLO_DEBUG_FOLDER | Out-Null
+          msbuild BH.sln /m /p:Configuration=Release /p:Platform=Win32
+
+      - name: Upload BH.dll
+        uses: actions/upload-artifact@v4
+        with:
+          name: BH-${{ github.sha }}
+          path: |
+            **/Release/BH.dll
+            **/Release/BH.pdb
+          if-no-files-found: error
