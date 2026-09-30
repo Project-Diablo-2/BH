@@ -191,6 +191,25 @@ private:
 		Condition* arg2);
 };
 
+enum DiscoveryStateFlag
+{
+	DISCOVERYSTATE_ANYDISCOVERED = 0x1,	// any candidate variant group discovered (grail bit set)
+	DISCOVERYSTATE_ALLDISCOVERED = 0x2,	// every candidate variant group discovered
+	DISCOVERYSTATE_ANYOWNED = 0x4,		// any candidate variant group owned (stored in compendium)
+	DISCOVERYSTATE_ALLOWNED = 0x8,		// every candidate variant group owned
+};
+
+class DiscoveryStateCondition : public Condition
+{
+public:
+	DiscoveryStateCondition(unsigned int flag) : discoveryFlag(flag) { conditionType = CT_Operand; };
+private:
+	unsigned int discoveryFlag;
+	bool         EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
 class NonMagicalCondition : public Condition
 {
 public:

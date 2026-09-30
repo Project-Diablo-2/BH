@@ -268,6 +268,9 @@ void BH::CheckForPD2()
 	{
 		FARPROC proc = GetProcAddress(pd2Handle, "_D2Client_PlaySoundWithCustomVolumeOrPriority@20");
 		App.pd2.pd2PlaySoundImpl = proc ? (pd2PlaySoundImpl_t)proc : NULL;
+
+		proc = GetProcAddress(pd2Handle, "_D2Client_GetItemDiscoveryState@12");
+		App.pd2.pd2GetItemDiscoveryStateImpl = proc ? (pd2GetItemDiscoveryStateImpl_t)proc : NULL;
 	}
 }
 

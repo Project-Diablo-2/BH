@@ -562,6 +562,10 @@ enum FilterCondition
 	COND_UPSTAT,
 	COND_MAXSOCKETS,
 	COND_FORMULA,
+	COND_DISCOVERED,
+	COND_ALLDISCOVERED,
+	COND_OWNED,
+	COND_ALLOWNED,
 
 	COND_NULL
 };
@@ -751,6 +755,10 @@ std::map<std::wstring, FilterCondition> condition_map =
 	{L"WIDTH", COND_WIDTH},
 	{L"HEIGHT", COND_HEIGHT},
 	{L"AREA", COND_AREA},
+	{L"DISCOVERED", COND_DISCOVERED},
+	{L"ALLDISCOVERED", COND_ALLDISCOVERED},
+	{L"OWNED", COND_OWNED},
+	{L"ALLOWNED", COND_ALLOWNED},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
 	//{"OS", COND_OS},
@@ -3997,6 +4005,18 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_ID:
 		Condition::AddOperand(conditions, new FlagsCondition(ITEM_IDENTIFIED));
 		break;
+	case COND_DISCOVERED:
+		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ANYDISCOVERED));
+		break;
+	case COND_ALLDISCOVERED:
+		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ALLDISCOVERED));
+		break;
+	case COND_OWNED:
+		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ANYOWNED));
+		break;
+	case COND_ALLOWNED:
+		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ALLOWNED));
+		break;
 	case COND_ILVL:
 		Condition::AddOperand(conditions, new ItemLevelCondition(operation, value, value2));
 		break;
@@ -4533,6 +4553,26 @@ bool QualityCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2) {
 	return (uInfo->item->pItemData->dwQuality == quality);
+}
+
+bool DiscoveryStateCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2) {
+	if (!uInfo->item || !uInfo->item->pItemData)
+	{
+		return false;
+	}
+	// Backed by the ProjectDiablo.dll discovery export (resolved in
+	// BH::CheckForPD2); the conditions evaluate to false when
+	// ProjectDiablo.dll is absent.
+	if (!App.pd2.pd2GetItemDiscoveryStateImpl) { return false; }
+	ItemData* pItemData = uInfo->item->pItemData;
+	// Unidentified unique/set drops have no file index client-side; pass the
+	// unset sentinel so the dll covers "all the variants it could be" via
+	// the base item's code.
+	DWORD dwFileIndex = (pItemData->dwFlags & ITEM_IDENTIFIED) ? pItemData->dwFileIndex : 0xFFFFFFFF;
+	DWORD dwState = App.pd2.pd2GetItemDiscoveryStateImpl(dwFileIndex, pItemData->dwQuality, uInfo->item->dwTxtFileNo);
+	return (dwState & discoveryFlag) > 0;
 }
 
 bool NonMagicalCondition::EvaluateInternal(UnitItemInfo* uInfo,
