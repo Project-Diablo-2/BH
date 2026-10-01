@@ -84,7 +84,13 @@
     <ClCompile Include="Modules\Item\ItemDisplay.cpp">
       <Filter>Modules\Item</Filter>
     </ClCompile>
+    <ClCompile Include="Modules\Item\ItemBeams.cpp">
+      <Filter>Modules\Item</Filter>
+    </ClCompile>
     <ClCompile Include="Modules\MapNotify\MapNotify.cpp">
+      <Filter>Modules\MapNotify</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\MapNotify\MarkerShapes.cpp">
       <Filter>Modules\MapNotify</Filter>
     </ClCompile>
     <ClCompile Include="Modules\Party\Party.cpp">
@@ -192,7 +198,13 @@
     <ClInclude Include="Modules\Item\ItemDisplay.h">
       <Filter>Modules\Item</Filter>
     </ClInclude>
+    <ClInclude Include="Modules\Item\ItemBeams.h">
+      <Filter>Modules\Item</Filter>
+    </ClInclude>
     <ClInclude Include="Modules\MapNotify\MapNotify.h">
+      <Filter>Modules\MapNotify</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\MapNotify\MarkerShapes.h">
       <Filter>Modules\MapNotify</Filter>
     </ClInclude>
     <ClInclude Include="Modules\Party\Party.h">
