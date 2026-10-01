@@ -237,6 +237,11 @@ void Config::SaveConfig()
 	jsonGame["always_show_items"] = App.game.alwaysShowItems.value;
 	App.jsonConfig["game"] = jsonGame;
 
+	// Chat item links
+	json jsonItemLinks;
+	jsonItemLinks["enabled"] = App.itemLinks.enabled.value;
+	App.jsonConfig["item_links"] = jsonItemLinks;
+
 	// Party settings
 	json jsonParty;
 	jsonParty["auto_party"]["enabled"] = App.party.autoParty.toggle.isEnabled;
@@ -390,6 +395,9 @@ void Config::LoadConfig()
 	// Game settings
 	App.game.experienceMeter.value = GetBool("/game"_json_pointer, "experience_meter", App.game.experienceMeter);
 	App.game.alwaysShowItems.value = GetBool("/game"_json_pointer, "always_show_items", App.game.alwaysShowItems);
+
+	// Chat item links
+	App.itemLinks.enabled.value = GetBool("/item_links"_json_pointer, "enabled", App.itemLinks.enabled);
 
 	// Party settings
 	App.party.autoParty.toggle = GetToggle("/party"_json_pointer, "auto_party", App.party.autoParty);

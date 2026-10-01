@@ -106,6 +106,7 @@ void BH::Initialize()
 	new StashExport();
 	new MapNotify();
 	new ChatColor();
+	new ChatItemLinks();
 
 	moduleManager->LoadModules();
 

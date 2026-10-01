@@ -186,6 +186,11 @@ struct BHApp
 
 	struct
 	{
+		SettingsBool enabled = { true, true }; // chat item links (Modules/ItemLinks)
+	} itemLinks;
+
+	struct
+	{
 		pd2PlaySoundImpl_t pd2PlaySoundImpl = NULL;
 	} pd2;
 
