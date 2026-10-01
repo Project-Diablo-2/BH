@@ -13,3 +13,4 @@
 #include "Modules\ChatColor\ChatColor.h"
 #include "Modules\ItemLinks\ItemLinks.h"
 #include "Modules/GameSettings/GameSettings.h"
+#include "Modules/Chat/ChatOverhaul.h"

@@ -269,6 +269,22 @@ void Config::SaveConfig()
 	jsonStash["mustache_format"] = App.stash.mustacheFormat.values;
 	App.jsonConfig["stash_export"] = jsonStash;
 
+	// Chat
+	json jsonChat;
+	jsonChat["enabled"] = App.chat.enabled.value;
+	jsonChat["timestamps"] = App.chat.timestamps.value;
+	jsonChat["mention_highlight"] = App.chat.mentionHighlight.value;
+	jsonChat["mention_sound"] = App.chat.mentionSound.value;
+	jsonChat["mention_keywords"] = App.chat.mentionKeywords.values;
+	jsonChat["history_lines"] = App.chat.historyLines.value;
+	jsonChat["visible_rows"] = App.chat.visibleRows.value;
+	jsonChat["width"] = App.chat.width.value;
+	jsonChat["fade_seconds"] = App.chat.fadeSeconds.value;
+	jsonChat["fade_rows"] = App.chat.fadeRows.value;
+	jsonChat["always_open"] = App.chat.alwaysOpen.value;
+	jsonChat["reply_hotkey"] = GetKeyCode(App.chat.replyHotkey.hotkey).name;
+	App.jsonConfig["chat"] = jsonChat;
+
 	// BH UI window
 	json jsonBHUI;
 	jsonBHUI["is_minimized"] = App.bhui.isMinimized.value;
@@ -415,6 +431,20 @@ void Config::LoadConfig()
 	App.stash.mustacheDefault.value = GetString("/stash_export"_json_pointer, "mustache_default", App.stash.mustacheDefault);
 	App.stash.mustacheOptions.values = GetArray("/stash_export"_json_pointer, "mustache_options", App.stash.mustacheOptions);
 	App.stash.mustacheFormat.values = GetAssoc("/stash_export"_json_pointer, "mustache_format", App.stash.mustacheFormat);
+
+	// Chat
+	App.chat.enabled.value = GetBool("/chat"_json_pointer, "enabled", App.chat.enabled);
+	App.chat.timestamps.value = GetBool("/chat"_json_pointer, "timestamps", App.chat.timestamps);
+	App.chat.mentionHighlight.value = GetBool("/chat"_json_pointer, "mention_highlight", App.chat.mentionHighlight);
+	App.chat.mentionSound.value = GetInt("/chat"_json_pointer, "mention_sound", App.chat.mentionSound);
+	App.chat.mentionKeywords.values = GetArray("/chat"_json_pointer, "mention_keywords", App.chat.mentionKeywords);
+	App.chat.historyLines.value = GetInt("/chat"_json_pointer, "history_lines", App.chat.historyLines);
+	App.chat.visibleRows.value = GetInt("/chat"_json_pointer, "visible_rows", App.chat.visibleRows);
+	App.chat.width.value = GetInt("/chat"_json_pointer, "width", App.chat.width);
+	App.chat.fadeSeconds.value = GetInt("/chat"_json_pointer, "fade_seconds", App.chat.fadeSeconds);
+	App.chat.fadeRows.value = GetInt("/chat"_json_pointer, "fade_rows", App.chat.fadeRows);
+	App.chat.alwaysOpen.value = GetBool("/chat"_json_pointer, "always_open", App.chat.alwaysOpen);
+	App.chat.replyHotkey.hotkey = GetKey("/chat"_json_pointer, "reply_hotkey", App.chat.replyHotkey);
 
 	App.bhui.isMinimized.value = GetBool("/bh_ui"_json_pointer, "is_minimized", App.bhui.isMinimized);
 	App.bhui.openedX.value = GetInt("/bh_ui"_json_pointer, "opened_x", App.bhui.openedX);

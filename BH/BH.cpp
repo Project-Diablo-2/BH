@@ -107,6 +107,7 @@ void BH::Initialize()
 	new MapNotify();
 	new ChatColor();
 	new ChatItemLinks();
+	new ChatOverhaul();
 
 	moduleManager->LoadModules();
 

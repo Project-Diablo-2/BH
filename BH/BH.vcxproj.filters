@@ -77,6 +77,11 @@
     </ClCompile>
     <ClCompile Include="Modules\ItemLinks\ItemLinkGame.cpp">
       <Filter>Modules\ItemLinks</Filter>
+    <ClCompile Include="Modules\Chat\ChatModel.cpp">
+      <Filter>Modules\Chat</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Chat\ChatOverhaul.cpp">
+      <Filter>Modules\Chat</Filter>
     </ClCompile>
     <ClCompile Include="Modules\Gamefilter\Gamefilter.cpp">
       <Filter>Modules\Gamefilter</Filter>
@@ -194,6 +199,11 @@
     </ClInclude>
     <ClInclude Include="Modules\ItemLinks\ChatLinkApi.h">
       <Filter>Modules\ItemLinks</Filter>
+    <ClInclude Include="Modules\Chat\ChatModel.h">
+      <Filter>Modules\Chat</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Chat\ChatOverhaul.h">
+      <Filter>Modules\Chat</Filter>
     </ClInclude>
     <ClInclude Include="Modules\Gamefilter\Gamefilter.h">
       <Filter>Modules\Gamefilter</Filter>
@@ -281,6 +291,9 @@
     </Filter>
     <Filter Include="Modules\ItemLinks">
       <UniqueIdentifier>{6d2a8f41-3b7e-4c19-9e5a-0f4b2c7d8e13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\Chat">
+      <UniqueIdentifier>{6b1f0f62-3c1e-4d7e-9a57-2f0c4e8a91d3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Modules\Gamefilter">
       <UniqueIdentifier>{b2342ae5-3b17-4a7e-bd84-a5173ecce46d}</UniqueIdentifier>
