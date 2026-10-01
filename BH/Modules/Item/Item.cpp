@@ -51,6 +51,7 @@
 #include "../../D2Stubs.h"
 #include "ItemDisplay.h"
 #include "GroundLabels.h"
+#include "ItemBeams.h"
 #include "../../lrucache.hpp"
 #include "../GameSettings/GameSettings.h"
 
@@ -160,6 +161,9 @@ void Item::OnLoad() {
 	itemNamePatch->Install();
 	const char* why = "";
 	groundLabelsOff = GroundLabels::Install(&why) ? nullptr : why;
+	// Beams go under the labels: draw them just before the first ground label of each frame (MapNotify's
+	// OnDraw still draws them on frames without labels; ItemBeams::Draw runs once per frame).
+	GroundLabels::SetPreLabelCallback(&ItemBeams::Draw);
 
 	DrawSettings();
 }
