@@ -115,6 +115,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="CommonTests.cpp" />
+    <ClCompile Include="ConfigTests.cpp" />
+    <ClCompile Include="JSONObjectTests.cpp" />
+    <ClCompile Include="MustacheTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
