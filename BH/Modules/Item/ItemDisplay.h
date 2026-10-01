@@ -1090,6 +1090,9 @@ struct ColorReplace
 	int    value;
 };
 
+// Automap marker shape (%ICON-<shape>%).
+enum IconShape { ICON_SQUARE = 0, ICON_CIRCLE, ICON_DIAMOND, ICON_STAR, ICON_TRIANGLE, ICON_CROSS };
+
 struct Action
 {
 	bool   stopProcessing;
@@ -1103,6 +1106,16 @@ struct Action
 	int    notifyColor;
 	int pingLevel;
 	int soundID; // Must range from 0 to MAX_SOUND_ID.
+
+	// Ground item visuals. The defaults keep today's look.
+	int bgColor = UNDEFINED_COLOR;    // %BG-XX%: label background palette index
+	int bgOpacity = -1;               // %OPACITY-25|50|75|100%; -1 = default (50, today's box)
+	int frameColor = UNDEFINED_COLOR; // %FRAME-XX%: 1 px border around the label box
+	int labelFont = -1;               // %SIZE-S|M|L% -> D2 font 13 / 2 / 3; -1 = default (13)
+	int beamColor = UNDEFINED_COLOR;  // %BEAM-XX%: permanent beam
+	int flashColor = UNDEFINED_COLOR; // %FLASH-XX%: beam on drop only
+	int iconShape = ICON_SQUARE;      // %ICON-SQUARE|CIRCLE|DIAMOND|STAR|TRIANGLE|CROSS%
+	bool iconShapeSet = false;        // the rule has an %ICON-*% token (ICON_SQUARE is also the default)
 
 	Action() :
 		colorOnMap(UNDEFINED_COLOR),
@@ -1118,6 +1131,25 @@ struct Action
 		description(L"")
 	{
 	}
+
+	// True when the rule has any ground item visual token.
+	bool HasGroundStyle() const
+	{
+		return bgColor != UNDEFINED_COLOR || bgOpacity != -1 || frameColor != UNDEFINED_COLOR || labelFont != -1 ||
+			beamColor != UNDEFINED_COLOR || flashColor != UNDEFINED_COLOR || iconShapeSet;
+	}
+};
+
+// The resolved visuals of a ground item; same encoding and defaults as the Action fields.
+struct GroundStyle
+{
+	int bgColor = UNDEFINED_COLOR;
+	int bgOpacity = -1;
+	int frameColor = UNDEFINED_COLOR;
+	int labelFont = -1;
+	int beamColor = UNDEFINED_COLOR;
+	int flashColor = UNDEFINED_COLOR;
+	int iconShape = ICON_SQUARE;
 };
 
 struct ConditionEvalNode {
@@ -1204,6 +1236,24 @@ public:
 	}
 };
 
+// A ground item's resolved style, and whether any matching rule set a visual token.
+struct GroundStyleLookup
+{
+	bool        styled = false;
+	GroundStyle style;
+};
+
+class GroundStyleLookupCache : public RuleLookupCache<GroundStyleLookup>
+{
+	GroundStyleLookup make_cached_T(UnitItemInfo* uInfo) override;
+
+public:
+	GroundStyleLookupCache(const std::vector<Rule*>& RuleList) :
+		RuleLookupCache<GroundStyleLookup>(RuleList)
+	{
+	}
+};
+
 extern vector<Rule*>                RuleList;
 extern vector<Rule*>                MapRuleList;
 extern vector<Rule*>                IgnoreRuleList;
@@ -1212,6 +1262,7 @@ extern vector<pair<wstring, wstring>> aliases;
 extern ItemDescLookupCache          item_desc_cache;
 extern ItemNameLookupCache          item_name_cache;
 extern MapActionLookupCache         map_action_cache;
+extern GroundStyleLookupCache       ground_style_cache;
 
 namespace ItemDisplay
 {
@@ -1226,6 +1277,15 @@ int ParseSoundID(Action* act, const wstring& reg_string);
 wstring ParseDescription(Action* act);
 int    ParseMapColor(Action* act,
 	const wstring& reg_string);
+int ParsePaletteColor(Action* act, const wstring& key_string);
+int ParseOpacity(Action* act);
+int ParseLabelFont(Action* act);
+bool ParseIconShape(Action* act, int* shape);
+// Resolved style of a ground item over all matching rules (%CONTINUE% semantics: a later matching
+// rule overrides each field it sets, unset fields keep earlier values). Cached like the item names.
+// Returns false when no matching rule sets a visual token (out is then the default style, which
+// draws exactly as today); also false for items whose code BH does not know.
+bool GetGroundStyle(UnitAny* item, GroundStyle* out);
 void HandleUnknownItemCode(char* code,
 	char* tag);
 BYTE        GetOperation(wstring* op);

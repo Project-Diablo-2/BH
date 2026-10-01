@@ -164,6 +164,7 @@ void ResetCaches() {
 	item_desc_cache.ResetCache();
 	item_name_cache.ResetCache();
 	map_action_cache.ResetCache();
+	ground_style_cache.ResetCache();
 }
 
 bool IsInitialized() {
@@ -869,24 +870,6 @@ void Item::OnLeftClick(bool up, int x, int y, bool* block) {
 		return;
 	if (D2CLIENT_GetUIState(0x01) && viewingUnit != NULL && x >= 400)
 		*block = true;
-}
-
-int CreateUnitItemInfo(UnitItemInfo* uInfo, UnitAny* item) {
-	char* code = D2COMMON_GetItemText(item->dwTxtFileNo)->szCode;
-	// If the item code is less than 4 characters, it will have space characters instead of null character
-	uInfo->itemCode[0] = code[0];
-	uInfo->itemCode[1] = code[1] != ' ' ? code[1] : 0;
-	uInfo->itemCode[2] = code[2] != ' ' ? code[2] : 0;
-	uInfo->itemCode[3] = code[3] != ' ' ? code[3] : 0;
-	uInfo->itemCode[4] = 0;
-	uInfo->item = item;
-	if (ItemAttributeMap.find(std::string(uInfo->itemCode)) != ItemAttributeMap.end()) {
-		uInfo->attrs = ItemAttributeMap[std::string(uInfo->itemCode)];
-		return 0;
-	}
-	else {
-		return -1;
-	}
 }
 
 void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)

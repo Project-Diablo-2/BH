@@ -2821,10 +2821,39 @@ string MapActionLookupCache::to_str(const vector<Action>& actions)
 	return name;
 }
 
+GroundStyleLookup GroundStyleLookupCache::make_cached_T(UnitItemInfo* uInfo)
+{
+	GroundStyleLookup result;
+	GroundStyle& s = result.style;
+	for (vector<Rule*>::const_iterator it = RuleList.begin(); it != RuleList.end(); it++)
+	{
+		if (!(*it)->Evaluate(uInfo)) { continue; }
+		const Action& a = (*it)->action;
+		if (a.HasGroundStyle())
+		{
+			result.styled = true;
+			if (a.bgColor != UNDEFINED_COLOR) { s.bgColor = a.bgColor; }
+			if (a.bgOpacity != -1) { s.bgOpacity = a.bgOpacity; }
+			if (a.frameColor != UNDEFINED_COLOR) { s.frameColor = a.frameColor; }
+			if (a.labelFont != -1) { s.labelFont = a.labelFont; }
+			if (a.beamColor != UNDEFINED_COLOR) { s.beamColor = a.beamColor; }
+			if (a.flashColor != UNDEFINED_COLOR) { s.flashColor = a.flashColor; }
+			if (a.iconShapeSet) { s.iconShape = a.iconShape; }
+		}
+		if (a.stopProcessing) { break; }
+	}
+	return result;
+}
+
 // least recently used cache for storing a limited number of item names
 ItemDescLookupCache  item_desc_cache(RuleList);
 ItemNameLookupCache  item_name_cache(RuleList);
 MapActionLookupCache map_action_cache(MapRuleList);
+GroundStyleLookupCache ground_style_cache(RuleList);
+
+// True when the loaded filter has a rule with a ground item visual token; without one every item
+// keeps the default style and GetGroundStyle skips the rule lookup.
+static bool filter_has_ground_styles = false;
 
 void GetItemName(UnitItemInfo* uInfo,
 	wstring& name)
@@ -2834,6 +2863,35 @@ void GetItemName(UnitItemInfo* uInfo,
 		return;
 	}
 	name.assign(new_name);
+}
+
+bool GetGroundStyle(UnitAny* item, GroundStyle* out)
+{
+	*out = GroundStyle();
+	if (!filter_has_ground_styles) { return false; }
+	UnitItemInfo uInfo;
+	if (CreateUnitItemInfo(&uInfo, item)) { return false; }
+	GroundStyleLookup lookup = ground_style_cache.Get(&uInfo);
+	*out = lookup.style;
+	return lookup.styled;
+}
+
+int CreateUnitItemInfo(UnitItemInfo* uInfo, UnitAny* item) {
+	char* code = D2COMMON_GetItemText(item->dwTxtFileNo)->szCode;
+	// If the item code is less than 4 characters, it will have space characters instead of null character
+	uInfo->itemCode[0] = code[0];
+	uInfo->itemCode[1] = code[1] != ' ' ? code[1] : 0;
+	uInfo->itemCode[2] = code[2] != ' ' ? code[2] : 0;
+	uInfo->itemCode[3] = code[3] != ' ' ? code[3] : 0;
+	uInfo->itemCode[4] = 0;
+	uInfo->item = item;
+	if (ItemAttributeMap.find(std::string(uInfo->itemCode)) != ItemAttributeMap.end()) {
+		uInfo->attrs = ItemAttributeMap[std::string(uInfo->itemCode)];
+		return 0;
+	}
+	else {
+		return -1;
+	}
 }
 
 wstring NameVarSockets(UnitItemInfo* uInfo)
@@ -3308,6 +3366,7 @@ namespace ItemDisplay
 		FormulaReplacementMap.clear();
 		islandReplacementHelper.reset();
 		ResetCaches();
+		filter_has_ground_styles = false;
 
 		{
 			vector<pair<string, string>> rawAliases;
@@ -3383,6 +3442,7 @@ namespace ItemDisplay
 			Rule* r = new Rule(RawConditions, &(rules[i].second));
 
 			RuleList.push_back(r);
+			if (r->action.HasGroundStyle()) { filter_has_ground_styles = true; }
 			if (r->action.colorOnMap != UNDEFINED_COLOR ||
 				r->action.borderColor != UNDEFINED_COLOR ||
 				r->action.dotColor != UNDEFINED_COLOR ||
@@ -3440,6 +3500,7 @@ namespace ItemDisplay
 		RuleList.clear();
 		MapRuleList.clear();
 		IgnoreRuleList.clear();
+		filter_has_ground_styles = false;
 	}
 }
 
@@ -3587,6 +3648,13 @@ void BuildAction(wstring* str,
 	act->pxColor = ParseMapColor(act, L"PX");
 	act->lineColor = ParseMapColor(act, L"LINE");
 	act->notifyColor = ParseMapColor(act, L"NOTIFY");
+	act->bgColor = ParsePaletteColor(act, L"BG");
+	act->bgOpacity = ParseOpacity(act);
+	act->frameColor = ParsePaletteColor(act, L"FRAME");
+	act->labelFont = ParseLabelFont(act);
+	act->beamColor = ParsePaletteColor(act, L"BEAM");
+	act->flashColor = ParsePaletteColor(act, L"FLASH");
+	act->iconShapeSet = ParseIconShape(act, &act->iconShape);
 	act->pingLevel = ParsePingLevel(act, L"TIER");
 	act->description = ParseDescription(act);
 	act->soundID = ParseSoundID(act, L"SOUNDID");
@@ -3695,6 +3763,67 @@ int ParseMapColor(Action* act,
 			L"");
 	}
 	return color;
+}
+
+// Finds the first %KEY-VALUE% in the action's name whose VALUE matches value_pattern
+// (case-insensitive), removes it from the name and returns VALUE. A token whose value does not
+// match stays in the name and is shown as typed, like other unknown keywords.
+static bool TakeKeyword(Action* act, const wstring& key_string, const wchar_t* value_pattern, wstring* value)
+{
+	std::wregex pattern(L"%" + key_string + L"-(" + value_pattern + L")%",
+		std::regex_constants::ECMAScript | std::regex_constants::icase);
+	std::wsmatch the_match;
+	if (!std::regex_search(act->name, the_match, pattern)) { return false; }
+	*value = the_match[1].str();
+	act->name.replace(the_match.prefix().length(), the_match[0].length(), L"");
+	return true;
+}
+
+// %KEY-XX%: a palette index of 1-2 hex digits (the label colours are 8-bit palette entries).
+int ParsePaletteColor(Action* act, const wstring& key_string)
+{
+	wstring value;
+	if (!TakeKeyword(act, key_string, L"[a-f0-9]{1,2}", &value)) { return UNDEFINED_COLOR; }
+	return stoi(value, nullptr, 16);
+}
+
+// %OPACITY-25|50|75|100%: label background opacity in percent, -1 when absent.
+int ParseOpacity(Action* act)
+{
+	wstring value;
+	if (!TakeKeyword(act, L"OPACITY", L"25|50|75|100", &value)) { return -1; }
+	return stoi(value);
+}
+
+// %SIZE-S|M|L%: the D2 font of the label (13: 12 px, today's; 2: 18 px; 3: 24 px), -1 when absent.
+int ParseLabelFont(Action* act)
+{
+	wstring value;
+	if (!TakeKeyword(act, L"SIZE", L"S|M|L", &value)) { return -1; }
+	switch (towupper(value[0]))
+	{
+	case L'M': return 2;
+	case L'L': return 3;
+	default: return 13;
+	}
+}
+
+// %ICON-<shape>%: the automap marker shape. Returns false (and leaves *shape) when absent.
+bool ParseIconShape(Action* act, int* shape)
+{
+	static const wchar_t* const names[] = { L"SQUARE", L"CIRCLE", L"DIAMOND", L"STAR", L"TRIANGLE", L"CROSS" };  // by IconShape
+	wstring value;
+	if (!TakeKeyword(act, L"ICON", L"SQUARE|CIRCLE|DIAMOND|STAR|TRIANGLE|CROSS", &value)) { return false; }
+	transform(value.begin(), value.end(), value.begin(), towupper);
+	for (int i = 0; i < sizeof(names) / sizeof(names[0]); i++)
+	{
+		if (value == names[i])
+		{
+			*shape = i;
+			break;
+		}
+	}
+	return true;
 }
 
 const wstring Condition::tokenDelims = L"<=>~";
