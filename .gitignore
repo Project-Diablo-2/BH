@@ -39,3 +39,8 @@ Release/*
 /BH.VC.db
 /.vs
 out/
+
+# Unit test build output
+tests/bin/
+tests/obj/
+tests/junit.xml
