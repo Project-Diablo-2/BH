@@ -279,6 +279,8 @@ bool RewriteLine(const wchar_t* in, int lineColor, std::wstring& out) {
 
 typedef void(__stdcall* PrintGameString_t)(wchar_t* msg, int color);
 PrintGameString_t origPrintGameString; // trampoline: the relocated first instructions + jmp back
+ItemLinks::ChatLineObserver lineObserver = NULL; // ChatLinkApi SetLineObserver
+bool printHooked = false;
 
 // Every chat/system line the client stores goes through PrintGameString (the game's chat
 // formatter, PD2's own chat code and BH's messages all call it), so its entry is hooked.
@@ -288,10 +290,14 @@ void __stdcall PrintGameStringHook(wchar_t* msg, int color) {
 		if (RewriteLine(msg, color, out) && out.size() < kLineBufChars) {
 			static wchar_t buf[kLineBufChars];
 			wcsncpy_s(buf, out.c_str(), _TRUNCATE);
+			if (lineObserver)
+				lineObserver(buf, color);
 			origPrintGameString(buf, color);
 			return;
 		}
 	}
+	if (msg && lineObserver)
+		lineObserver(msg, color);
 	origPrintGameString(msg, color);
 }
 
@@ -302,6 +308,8 @@ const BYTE kPrintPrologue[] = { 0x83, 0xEC, 0x14, 0x53, 0x55, 0x56, 0x57, 0x33, 
 BYTE* printTrampoline = NULL;
 
 bool HookPrintGameString() {
+	if (printHooked)
+		return true;
 	BYTE* fn = (BYTE*)Patch::GetDllOffset(D2CLIENT, PRINT_GAME_STRING);
 	if (!fn || memcmp(fn, kPrintPrologue, sizeof kPrintPrologue) != 0)
 		return false;
@@ -316,13 +324,15 @@ bool HookPrintGameString() {
 	}
 	BYTE jmp[5] = { 0xE9 };
 	*(int*)(jmp + 1) = (int)PrintGameStringHook - (int)(fn + 5);
-	return Patch::WriteBytes((int)fn, 5, jmp);
+	printHooked = Patch::WriteBytes((int)fn, 5, jmp);
+	return printHooked;
 }
 
 void UnhookPrintGameString() {
 	BYTE* fn = (BYTE*)Patch::GetDllOffset(D2CLIENT, PRINT_GAME_STRING);
 	if (fn && fn[0] == 0xE9 && printTrampoline)
 		Patch::WriteBytes((int)fn, 5, (BYTE*)kPrintPrologue);
+	printHooked = false;
 }
 
 void AddHit(int x0, int x1, int y, int h) {
@@ -412,7 +422,8 @@ bool InstallHooks() {
 void RemoveHooks() {
 	for (Patch* p : patches)
 		p->Remove();
-	UnhookPrintGameString();
+	if (!lineObserver)
+		UnhookPrintGameString();
 	installed = false;
 }
 
@@ -554,6 +565,15 @@ bool OnClick(int link, int x, int yTop, int yBottom) {
 	return Enabled() && OpenLink(link, x, yTop, yBottom);
 }
 
+bool SetLineObserver(ChatLineObserver cb) {
+	lineObserver = cb;
+	if (cb)
+		return HookPrintGameString();
+	if (!installed)
+		UnhookPrintGameString();
+	return true;
+}
+
 } // namespace ItemLinks
 
 // ---- module ----------------------------------------------------------------------------------------
@@ -635,6 +655,8 @@ void ChatItemLinks::OnLeftClick(bool up, int x, int y, bool* block) {
 			return;
 		}
 	}
+	if (*block)
+		return; // another chat UI consumed the click (e.g. opened a link through OnClick)
 	ClosePopupAndUnref(); // a click anywhere else closes it and goes on to the game
 }
 

@@ -31,4 +31,12 @@ void Release(int link);
 // the game. Returns true when the click was consumed.
 bool OnClick(int link, int x, int yTop, int yBottom);
 
+// A chat UI that keeps its own copy of every line: `cb` sees every line the game prints through
+// PrintGameString (links or not) as the game will store it, i.e. after the link rewrite (pass that
+// text to FormatMessage). Game thread. nullptr clears it. While an observer is set the
+// PrintGameString hook stays installed even when item links are disabled. Returns false when the
+// hook can't be installed (unexpected code at the function entry).
+typedef void(__stdcall* ChatLineObserver)(const wchar_t* text, int color);
+bool SetLineObserver(ChatLineObserver cb);
+
 } // namespace ItemLinks
