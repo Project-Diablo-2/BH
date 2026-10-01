@@ -117,6 +117,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="CommonTests.cpp" />
     <ClCompile Include="ConfigTests.cpp" />
+    <ClCompile Include="FormulaTests.cpp" />
     <ClCompile Include="JSONObjectTests.cpp" />
     <ClCompile Include="MustacheTests.cpp" />
   </ItemGroup>
