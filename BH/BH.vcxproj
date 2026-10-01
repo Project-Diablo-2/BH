@@ -191,6 +191,7 @@ powershell.exe -NoProfile -File "$(ProjectDir)..\..\scripts\CopyDataFolder.ps1"<
     <ClCompile Include="Modules\Gamefilter\Gamefilter.cpp" />
     <ClCompile Include="Modules\Gamefilter\ParsedFilterString.cpp" />
     <ClCompile Include="Modules\GameSettings\GameSettings.cpp" />
+    <ClCompile Include="Modules\Item\GroundLabels.cpp" />
     <ClCompile Include="Modules\Item\Item.cpp" />
     <ClCompile Include="Modules\Item\ItemDisplay.cpp" />
     <ClCompile Include="Modules\MapNotify\MapNotify.cpp" />
@@ -243,6 +244,7 @@ powershell.exe -NoProfile -File "$(ProjectDir)..\..\scripts\CopyDataFolder.ps1"<
     <ClInclude Include="Modules\Gamefilter\Gamefilter.h" />
     <ClInclude Include="Modules\Gamefilter\ParsedFilterString.h" />
     <ClInclude Include="Modules\GameSettings\GameSettings.h" />
+    <ClInclude Include="Modules\Item\GroundLabels.h" />
     <ClInclude Include="Modules\Item\Item.h" />
     <ClInclude Include="Modules\Item\ItemDisplay.h" />
     <ClInclude Include="Modules\MapNotify\MapNotify.h" />

@@ -50,6 +50,7 @@
 #include "../../BH.h"
 #include "../../D2Stubs.h"
 #include "ItemDisplay.h"
+#include "GroundLabels.h"
 #include "../../lrucache.hpp"
 #include "../GameSettings/GameSettings.h"
 
@@ -61,6 +62,7 @@ RunesTxt* GetRunewordTxtById(int rwId);
 void FixDecimalString(wchar_t* s, int n);
 
 bool initialized = false;
+const char* groundLabelsOff = nullptr; // why the loot filter label styles are off, if they are
 unsigned int STAT_MAX;
 unsigned int SKILL_MAX;
 unsigned int PREFIX_OFFSET;
@@ -156,6 +158,8 @@ void Item::OnLoad() {
 	//itemPropertyStringPatch->Install();
 
 	itemNamePatch->Install();
+	const char* why = "";
+	groundLabelsOff = GroundLabels::Install(&why) ? nullptr : why;
 
 	DrawSettings();
 }
@@ -633,6 +637,12 @@ void Item::OnGameJoin() {
 		GetAffixOffsets();
 		initialized = true;
 	}
+
+	static bool groundLabelsNoted = false;
+	if (groundLabelsOff && !groundLabelsNoted) {
+		groundLabelsNoted = true;
+		PrintText(TextColor::Orange, "BH: loot filter label styles are off (%s)", groundLabelsOff);
+	}
 }
 
 void Item::LoadConfig() {
@@ -800,6 +810,7 @@ void Item::OnUnload() {
 	oldGroundIntercept->Remove();
 	dropToGroundIntercept->Remove();
 	putInContainerIntercept->Remove();
+	GroundLabels::Uninstall();
 	ItemDisplay::UninitializeItemRules();
 }
 
