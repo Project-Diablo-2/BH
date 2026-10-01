@@ -121,6 +121,8 @@
     <ClCompile Include="ItemConditionTests.cpp" />
     <ClCompile Include="ItemStatConditionTests.cpp" />
     <ClCompile Include="JSONObjectTests.cpp" />
+    <ClCompile Include="LootFilterActionTests.cpp" />
+    <ClCompile Include="LootFilterRulesTests.cpp" />
     <ClCompile Include="MustacheTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
