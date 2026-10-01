@@ -115,15 +115,27 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="AsyncDrawBufferTests.cpp" />
+    <ClCompile Include="BnetTests.cpp" />
+    <ClCompile Include="ChatColorTests.cpp" />
+    <ClCompile Include="CheckhookTests.cpp" />
+    <ClCompile Include="CombohookTests.cpp" />
     <ClCompile Include="CommonTests.cpp" />
     <ClCompile Include="ConfigTests.cpp" />
+    <ClCompile Include="D2HelpersTests.cpp" />
     <ClCompile Include="FormulaTests.cpp" />
+    <ClCompile Include="GameFilterTests.cpp" />
     <ClCompile Include="ItemConditionTests.cpp" />
     <ClCompile Include="ItemStatConditionTests.cpp" />
     <ClCompile Include="JSONObjectTests.cpp" />
+    <ClCompile Include="KeyhookTests.cpp" />
     <ClCompile Include="LootFilterActionTests.cpp" />
     <ClCompile Include="LootFilterRulesTests.cpp" />
+    <ClCompile Include="MapNotifyTests.cpp" />
     <ClCompile Include="MustacheTests.cpp" />
+    <ClCompile Include="PartyTests.cpp" />
+    <ClCompile Include="ScreenInfoTests.cpp" />
+    <ClCompile Include="StatsDisplayTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
