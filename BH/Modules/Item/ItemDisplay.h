@@ -1111,7 +1111,7 @@ struct Action
 	int bgColor = UNDEFINED_COLOR;    // %BG-XX%: label background palette index
 	int bgOpacity = -1;               // %OPACITY-25|50|75|100%; -1 = default (50, today's box)
 	int frameColor = UNDEFINED_COLOR; // %FRAME-XX%: 1 px border around the label box
-	int labelFont = -1;               // %SIZE-S|M|L% -> D2 font 13 / 2 / 3; -1 = default (13)
+	int labelFont = -1;               // %SIZE-S|M|L% -> D2 font 1 / 2 / 3; -1 = default (1, today's labels)
 	int beamColor = UNDEFINED_COLOR;  // %BEAM-XX%: permanent beam
 	int flashColor = UNDEFINED_COLOR; // %FLASH-XX%: beam on drop only
 	int iconShape = ICON_SQUARE;      // %ICON-SQUARE|CIRCLE|DIAMOND|STAR|TRIANGLE|CROSS%

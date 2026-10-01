@@ -3795,7 +3795,7 @@ int ParseOpacity(Action* act)
 	return stoi(value);
 }
 
-// %SIZE-S|M|L%: the D2 font of the label (13: 12 px, today's; 2: 18 px; 3: 24 px), -1 when absent.
+// %SIZE-S|M|L%: the D2 font of the label (1: 11 px, today's ground labels; 2: 18 px; 3: 24 px), -1 when absent.
 int ParseLabelFont(Action* act)
 {
 	wstring value;
@@ -3804,7 +3804,7 @@ int ParseLabelFont(Action* act)
 	{
 	case L'M': return 2;
 	case L'L': return 3;
-	default: return 13;
+	default: return 1;
 	}
 }
 
