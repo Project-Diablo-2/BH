@@ -9,7 +9,7 @@ namespace ItemBeams {
 
 const DWORD kFlashMs = 2000;   // a %FLASH% beam fades out over this long after the drop
 const int kMaxBeams = 16;      // at most this many beams (the ones nearest the player)
-const int kBeamHeight = 150;   // pixels above the beam's foot, at full intensity
+const int kBeamHeight = 190;   // pixels above the beam's foot, at full intensity
 const int kMaxIntensity = 255;
 
 // D2GFX_DrawRectangle draw modes the beam uses.
@@ -24,12 +24,16 @@ int FlashIntensity(DWORD ageMs);
 // 4/6 black; measured in game). A narrow needle of 1 px columns in three stacked translucent layers of
 // the beam colour (outer glow, inner glow, core) plus a faint white centre line: each column is cut to
 // its own height (linear taper, so the beam narrows to a point) and ends in a dithered tail (every
-// other row), so neither the sides nor the top show bands. Two short sparks rise slowly through the
-// core.
+// other row), so neither the sides nor the top show bands. At the foot a small light pool (rows -3 ..
+// +2, flickering gently) and a white flare. Two short sparks rise slowly through the core.
 const int kWhite = 0xFF;          // palette index of the white parts (white in every act palette)
 const DWORD kRisePxPerSec = 45;   // speed of the sparks rising in the core
 const int kSparkLength = 10;
 const int kDitherRows = 8;        // rows of the dithered end of each column
+
+// Gentle flicker of the light pool at time nowMs (-64 .. 64, smooth: two slow sines, out of phase per
+// item via seed).
+int Flicker(DWORD nowMs, DWORD seed);
 
 // y (pixels above the beam's foot, negative) of the bottom of rising spark k (0 or 1) of a beam of
 // the given height at time nowMs: moves up at kRisePxPerSec, wraps around at the top.
@@ -37,7 +41,7 @@ int SparkY(DWORD nowMs, DWORD seed, int k, int height);
 
 // One rectangle of a beam, in pixels relative to the beam's foot (y grows downwards): x0 <= x < x1,
 // y0 <= y < y1, drawn with D2GFX_DrawRectangle draw mode `mode` in the beam's colour, or in kWhite
-// when `white`. Nothing is below the foot (y1 <= 0).
+// when `white`. Only the light pool and flare reach below the foot, by at most 2 rows (y1 <= 3).
 struct BeamRect {
 	int x0;
 	int y0;
@@ -46,26 +50,21 @@ struct BeamRect {
 	int mode;
 	bool white;
 };
-const int kMaxBeamRects = 160;
+const int kMaxBeamRects = 192;
 
 // The rectangles of one beam at the given intensity at time nowMs (seed: per item, so beams do not
 // move in step), back to front; writes at most maxRects, returns the count (0 when intensity is 0).
 int BeamRects(int intensity, DWORD nowMs, DWORD seed, BeamRect* out, int maxRects);
 
-// Where a beam starts: behind its item's ground label, so the label covers the foot and no beam
-// shows below the label. The engine places a label box (font 1, 16 rows) with its bottom 6 px above
-// the item's ground point (D2Client 0x5912D: y = ground - 8, box bottom = y + 2), centred on the
-// item, then may move it up or sideways to avoid other labels. The foot is the vertical middle of the
-// box the label is drawn in this frame when that box spans the beam's x, else of where a label would
-// sit (kFootAboveGround above the ground point), so the beam does not move when labels appear.
+// Where a beam starts (its foot, the screen y of row 0): behind where the engine draws an unstacked
+// ground label for the item, so a shown label covers the foot and its light pool. One fixed point
+// whether labels are shown or not, so the beam never moves when Alt is pressed. The engine places an
+// unstacked label box (font 1, 16 rows) from 22 to 6 px above the item's ground point (D2Client
+// 0x5912D: y = ground - 8, D2Win #10013 box bottom = y + 2; measured: ground 276, box 254 .. 270): its
+// middle is 14 px above the ground point. A label the engine stacks elsewhere does not cover its
+// beam's foot.
 const int kFootAboveGround = 14;
-struct LabelBox {
-	long left;    // left <= x < right, top <= y < bottom
-	long top;
-	long right;
-	long bottom;
-};
-long BeamFootY(long groundX, long groundY, const LabelBox* label);
+long BeamFootY(long groundY);
 
 // Which items get a %FLASH%: one that dropped while the player watched (the client marks fresh
 // drops ITEM_NEW), not one that was already lying there when its room came into view. The flash
@@ -131,8 +130,8 @@ ScreenPoint GroundToScreen(long absX, long absY, long mouseOffsetX, long mouseOf
 bool ClipToSpan(const ScreenSpan& span, long* x0, long* x1);
 
 // Draws the beams of the visible ground items. Runs at most once per frame (until EndFrame): first
-// from the hook before the ground labels (so the labels are drawn over the beams and each label
-// covers its beam's foot), else from BH's draw hook (MapNotify::OnDraw) on frames without labels.
+// from the hook before the ground labels (so the labels are drawn over the beams and an unstacked
+// label covers its beam's foot), else from BH's draw hook (MapNotify::OnDraw) on frames without labels.
 // Beams never cover UI: they are clipped to VisibleSpan and not drawn at all while a full-screen UI
 // hides the world (game menu, hotkey config, help, NPC dialog, skill picker, gold dialog).
 void Draw();

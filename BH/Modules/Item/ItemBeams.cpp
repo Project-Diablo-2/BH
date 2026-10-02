@@ -4,7 +4,6 @@
 
 #include "../../Constants.h"
 #include "../../D2Ptrs.h"
-#include "GroundLabels.h"
 #include "ItemDisplay.h"
 
 namespace ItemBeams {
@@ -14,6 +13,23 @@ int FlashIntensity(DWORD ageMs) {
 		return 0;
 	// Rounded up: the flash is visible until the full kFlashMs has passed.
 	return (int)(((kFlashMs - ageMs) * kMaxIntensity + kFlashMs - 1) / kFlashMs);
+}
+
+namespace {
+
+// sin(2*pi*t/period) * 64 from a 32-entry table (integer, deterministic for the tests).
+int Wave64(DWORD t, DWORD period) {
+	static const signed char kSin[32] = { 0, 12, 24, 36, 45, 53, 59, 63, 64, 63, 59, 53, 45, 36, 24, 12,
+		0, -12, -24, -36, -45, -53, -59, -63, -64, -63, -59, -53, -45, -36, -24, -12 };
+	const DWORD phase = (t % period) * 32 * 16 / period;  // 1/16 steps between table entries
+	const int i = (int)(phase / 16), f = (int)(phase % 16);
+	return (kSin[i] * (16 - f) + kSin[(i + 1) % 32] * f) / 16;
+}
+
+}  // namespace
+
+int Flicker(DWORD nowMs, DWORD seed) {
+	return (Wave64(nowMs + seed * 397, 1300) * 5 + Wave64(nowMs + seed * 211, 870) * 3) / 8;
 }
 
 int SparkY(DWORD nowMs, DWORD seed, int k, int height) {
@@ -54,11 +70,25 @@ int BeamRects(int intensity, DWORD nowMs, DWORD seed, BeamRect* out, int maxRect
 				add(dx, y, dx + 1, y + 1, mode, white);
 		}
 	};
+	// Light pool at the foot (rows -3 .. 2, an ellipse a little wider than the needle), flickering by
+	// +-1 px.
+	const int flick = Flicker(nowMs, seed);
+	const int pool = outer + 3 + flick / 48;
+	static const int kPoolRow[6] = { 55, 85, 100, 100, 85, 55 };  // % of the half width per row
+	for (int r = 0; r < 6; r++) {
+		const int hw = pool * kPoolRow[r] / 100;
+		add(-hw, r - 3, hw + 1, r - 2, kModeTrans25, false);
+	}
 	layer(outer, height, kModeTrans25, false);
 	layer(inner, height, kModeTrans25, false);
 	layer(1, height, strong ? kModeTrans50 : kModeTrans25, false);
-	if (strong)
+	if (strong) {
 		layer(0, height * 70 / 100, kModeTrans25, true);  // faint white centre line
+		// White flare at the foot.
+		const int flare = 1 + (flick > 0 ? 1 : 0);
+		add(-flare, -1, flare + 1, 1, kModeTrans25, true);
+		add(0, -3, 1, 3, kModeTrans25, true);
+	}
 	// Rising sparks in the core.
 	for (int k = 0; k < 2; k++) {
 		const int y = SparkY(nowMs, seed, k, height);
@@ -68,9 +98,7 @@ int BeamRects(int intensity, DWORD nowMs, DWORD seed, BeamRect* out, int maxRect
 	return n;
 }
 
-long BeamFootY(long groundX, long groundY, const LabelBox* label) {
-	if (label && label->left <= groundX && groundX < label->right && label->top < label->bottom)
-		return (label->top + label->bottom) / 2;
+long BeamFootY(long groundY) {
 	return groundY - kFootAboveGround;
 }
 
@@ -196,16 +224,7 @@ bool Collect() {
 			D2COMMON_MapToAbsScreen(&x, &y);
 			const ScreenPoint p = GroundToScreen(x, y, *p_D2CLIENT_MouseOffsetX, *p_D2CLIENT_MouseOffsetY,
 				*p_D2CLIENT_ViewShiftX);
-			// The foot: behind the item's label (the box it is drawn in this frame, while the labels are
-			// being drawn), else where its label would sit.
-			GroundLabels::Box drawn;
-			LabelBox box;
-			const LabelBox* label = nullptr;
-			if (GroundLabels::LabelBoxOf(unit, &drawn)) {
-				box = LabelBox{ drawn.left, drawn.top, drawn.right, drawn.bottom };
-				label = &box;
-			}
-			const long footY = BeamFootY(p.x, p.y, label);
+			const long footY = BeamFootY(p.y);
 			// Off screen or behind a panel: not a candidate, so the cap keeps the visible beams.
 			if (span.x0 >= span.x1 || p.x < span.x0 - 16 || p.x >= span.x1 + 16 || footY < 0 ||
 				footY - kBeamHeight > screenH)

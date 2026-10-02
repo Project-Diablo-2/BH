@@ -224,13 +224,6 @@ void DrawLabelHd(const wchar_t* text, int x, int y, DWORD bgColor, DWORD drawMod
 bool passPending = true; // a label pass has measured labels that are not drawn yet
 LabelEntry* lastDrawn = nullptr;
 
-// The entries measured in the current label pass (each slot once; an item the engine could not place
-// leaves its slot to the next item), for LabelBoxOf while the pre-label callback runs.
-const int kMaxMeasured = 64;
-LabelEntry* measured[kMaxMeasured];
-int measuredCount = 0;
-bool inPreLabelCallback = false;
-
 DWORD __fastcall DrawFramedTextHook(const wchar_t* text, int x, int y, DWORD bgColor, DWORD drawMode, DWORD textColor) {
 	Image* image = nullptr;
 	LabelEntry* e = EntryAt(text, &image);
@@ -242,11 +235,8 @@ DWORD __fastcall DrawFramedTextHook(const wchar_t* text, int x, int y, DWORD bgC
 	image->known = e;
 	if (passPending || !lastDrawn || e <= lastDrawn) {
 		passPending = false;
-		if (preLabelCallback) {
-			inPreLabelCallback = true;
+		if (preLabelCallback)
 			preLabelCallback();
-			inPreLabelCallback = false;
-		}
 	}
 	lastDrawn = e;
 
@@ -289,14 +279,7 @@ DWORD __fastcall GetTextSizeHook(const wchar_t* text, DWORD* width, DWORD* heigh
 		delta / (int)sizeof(LabelEntry) > 64 || !IsItem(e))
 		return origGetTextSize(text, width, height);
 
-	if (!passPending)
-		measuredCount = 0;  // a new label pass
 	passPending = true;
-	int slot = 0;
-	while (slot < measuredCount && measured[slot] != e)
-		slot++;
-	if (slot == measuredCount && measuredCount < kMaxMeasured)
-		measured[measuredCount++] = e;
 	GroundStyle style;
 	if (!StyleOf(e->unit, &style))
 		return origGetTextSize(text, width, height);
@@ -474,19 +457,6 @@ void Uninstall() {
 
 void SetPreLabelCallback(void (*callback)()) {
 	preLabelCallback = callback;
-}
-
-bool LabelBoxOf(const UnitAny* item, Box* box) {
-	if (!inPreLabelCallback || !item)
-		return false;
-	for (int i = 0; i < measuredCount; ++i) {
-		const LabelEntry* e = measured[i];
-		if (e->unit == item) {
-			*box = Box{ e->x1, e->y1 - 2, e->x2, e->y2 + 2 };
-			return true;
-		}
-	}
-	return false;
 }
 
 }  // namespace GroundLabels
