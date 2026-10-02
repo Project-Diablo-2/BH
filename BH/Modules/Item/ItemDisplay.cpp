@@ -562,9 +562,9 @@ enum FilterCondition
 	COND_UPSTAT,
 	COND_MAXSOCKETS,
 	COND_FORMULA,
-	COND_DISCOVERED,
+	COND_ANYDISCOVERED,
 	COND_ALLDISCOVERED,
-	COND_OWNED,
+	COND_ANYOWNED,
 	COND_ALLOWNED,
 
 	COND_NULL
@@ -755,9 +755,9 @@ std::map<std::wstring, FilterCondition> condition_map =
 	{L"WIDTH", COND_WIDTH},
 	{L"HEIGHT", COND_HEIGHT},
 	{L"AREA", COND_AREA},
-	{L"DISCOVERED", COND_DISCOVERED},
+	{L"ANYDISCOVERED", COND_ANYDISCOVERED},
 	{L"ALLDISCOVERED", COND_ALLDISCOVERED},
-	{L"OWNED", COND_OWNED},
+	{L"ANYOWNED", COND_ANYOWNED},
 	{L"ALLOWNED", COND_ALLOWNED},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
@@ -4005,13 +4005,13 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_ID:
 		Condition::AddOperand(conditions, new FlagsCondition(ITEM_IDENTIFIED));
 		break;
-	case COND_DISCOVERED:
+	case COND_ANYDISCOVERED:
 		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ANYDISCOVERED));
 		break;
 	case COND_ALLDISCOVERED:
 		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ALLDISCOVERED));
 		break;
-	case COND_OWNED:
+	case COND_ANYOWNED:
 		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ANYOWNED));
 		break;
 	case COND_ALLOWNED:

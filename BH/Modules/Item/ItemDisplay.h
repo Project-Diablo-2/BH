@@ -197,9 +197,7 @@ enum DiscoveryStateFlag
 	DISCOVERYSTATE_ALLDISCOVERED = 0x2,	// every candidate variant group discovered
 	DISCOVERYSTATE_ANYOWNED = 0x4,		// any candidate variant group owned (stored in compendium)
 	DISCOVERYSTATE_ALLOWNED = 0x8,		// every candidate variant group owned
-};
-
-class DiscoveryStateCondition : public Condition
+};class DiscoveryStateCondition : public Condition
 {
 public:
 	DiscoveryStateCondition(unsigned int flag) : discoveryFlag(flag) { conditionType = CT_Operand; };
