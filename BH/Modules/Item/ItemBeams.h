@@ -56,14 +56,14 @@ const int kMaxBeamRects = 192;
 // move in step), back to front; writes at most maxRects, returns the count (0 when intensity is 0).
 int BeamRects(int intensity, DWORD nowMs, DWORD seed, BeamRect* out, int maxRects);
 
-// Where a beam starts (its foot, the screen y of row 0): behind where the engine draws an unstacked
-// ground label for the item, so a shown label covers the foot and its light pool. One fixed point
-// whether labels are shown or not, so the beam never moves when Alt is pressed. The engine places an
-// unstacked label box (font 1, 16 rows) from 22 to 6 px above the item's ground point (D2Client
-// 0x5912D: y = ground - 8, D2Win #10013 box bottom = y + 2; measured: ground 276, box 254 .. 270): its
-// middle is 14 px above the ground point. A label the engine stacks elsewhere does not cover its
-// beam's foot.
-const int kFootAboveGround = 14;
+// Where a beam starts (its foot, the screen y of row 0): just below where the engine draws an
+// unstacked ground label for the item, so a shown label covers the beam above its foot while the foot
+// and its light pool still show under the label. One fixed point whether labels are shown or not, so
+// the beam never moves when Alt is pressed. The engine places an unstacked label box (font 1, 16 rows)
+// from 22 to 6 px above the item's ground point (D2Client 0x5912D: y = ground - 8, D2Win #10013 box
+// bottom = y + 2; measured: ground 276, box 254 .. 270); the foot is 4 px above the ground point, 2 px
+// under the box. A label the engine stacks elsewhere covers a different part of its beam.
+const int kFootAboveGround = 4;
 long BeamFootY(long groundY);
 
 // Which items get a %FLASH%: one that dropped while the player watched (the client marks fresh
