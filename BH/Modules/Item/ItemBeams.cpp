@@ -145,8 +145,9 @@ ScreenSpan VisibleSpan(DWORD covered, long screenWidth) {
 	}
 }
 
-ScreenPoint GroundToScreen(long absX, long absY, long mouseOffsetX, long mouseOffsetY, long viewShiftX) {
-	return ScreenPoint{ absX - mouseOffsetX + viewShiftX, absY - mouseOffsetY };
+ScreenPoint GroundToScreen(long absX, long absY, long mouseOffsetX, long mouseOffsetY, long viewShiftX,
+	long motionX, long motionY) {
+	return ScreenPoint{ absX - mouseOffsetX + viewShiftX - motionX, absY - mouseOffsetY - motionY };
 }
 
 bool ClipToSpan(const ScreenSpan& span, long* x0, long* x1) {
@@ -174,6 +175,33 @@ bool WorldHiddenByUI() {
 		D2CLIENT_GetUIState(UI_MINISKILL) || *p_D2CLIENT_GoldDialog;
 }
 
+// D2GL's motion prediction offset this frame (its exports; D2GL, as glide3x.dll or in its DirectDraw
+// build ddraw.dll, loads before BH). {0, 0} when D2GL is absent, not rendering, or predicting nothing.
+typedef int(__cdecl* D2GLInt_t)();
+struct D2GLMotion {
+	bool resolved = false;
+	D2GLInt_t isReady = nullptr;
+	D2GLInt_t offsetX = nullptr;
+	D2GLInt_t offsetY = nullptr;
+} d2gl;
+
+ScreenPoint MotionOffset() {
+	if (!d2gl.resolved) {
+		d2gl.resolved = true;
+		HMODULE h = GetModuleHandleA("glide3x.dll");
+		if (!h)
+			h = GetModuleHandleA("ddraw.dll");
+		if (h) {
+			d2gl.isReady = (D2GLInt_t)GetProcAddress(h, "d2glIsReady");
+			d2gl.offsetX = (D2GLInt_t)GetProcAddress(h, "d2glGetGlobalXOffset");
+			d2gl.offsetY = (D2GLInt_t)GetProcAddress(h, "d2glGetGlobalYOffset");
+		}
+	}
+	if (!d2gl.isReady || !d2gl.offsetX || !d2gl.offsetY || !d2gl.isReady())
+		return ScreenPoint{ 0, 0 };
+	return ScreenPoint{ d2gl.offsetX(), d2gl.offsetY() };
+}
+
 // This frame's beams (once per frame): the 16 nearest beam items in the visible part of the screen.
 // False when there is no game to draw.
 bool Collect() {
@@ -191,6 +219,7 @@ bool Collect() {
 	const ScreenSpan span = WorldHiddenByUI() ? ScreenSpan{ 0, 0 } :
 		VisibleSpan(*p_D2CLIENT_ScreenCovered, (long)*p_D2CLIENT_ScreenSizeX);
 	frameSpan = span;
+	const ScreenPoint motion = MotionOffset();
 
 	candidates.clear();
 	for (Room1* room1 = player->pAct->pRoom1; room1; room1 = room1->pRoomNext) {
@@ -223,7 +252,7 @@ bool Collect() {
 			const long dy = y - playerY;
 			D2COMMON_MapToAbsScreen(&x, &y);
 			const ScreenPoint p = GroundToScreen(x, y, *p_D2CLIENT_MouseOffsetX, *p_D2CLIENT_MouseOffsetY,
-				*p_D2CLIENT_ViewShiftX);
+				*p_D2CLIENT_ViewShiftX, motion.x, motion.y);
 			const long footY = BeamFootY(p.y);
 			// Off screen or behind a panel: not a candidate, so the cap keeps the visible beams.
 			if (span.x0 >= span.x1 || p.x < span.x0 - 16 || p.x >= span.x1 + 16 || footY < 0 ||
