@@ -762,6 +762,12 @@ enum PetType
 #define NODEPAGE_BELTSLOTS	2
 #define NODEPAGE_EQUIP		3
 
+enum InventoryStoreType {
+	INVENTORY_STORE_TYPE_BODY = 0,
+	INVENTORY_STORE_TYPE_BELT,
+	INVENTORY_STORE_TYPE_INVENTORY,
+};
+
 ///////////////////////////////////////////////////
 // Item Actions
 ///////////////////////////////////////////////////

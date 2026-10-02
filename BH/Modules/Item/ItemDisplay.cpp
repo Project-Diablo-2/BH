@@ -562,6 +562,10 @@ enum FilterCondition
 	COND_UPSTAT,
 	COND_MAXSOCKETS,
 	COND_FORMULA,
+	COND_BELT_1,
+	COND_BELT_2,
+	COND_BELT_3,
+	COND_BELT_4,
 
 	COND_NULL
 };
@@ -751,6 +755,10 @@ std::map<std::wstring, FilterCondition> condition_map =
 	{L"WIDTH", COND_WIDTH},
 	{L"HEIGHT", COND_HEIGHT},
 	{L"AREA", COND_AREA},
+	{L"BELTCOLUMN1", COND_BELT_1},
+	{L"BELTCOLUMN2", COND_BELT_2},
+	{L"BELTCOLUMN3", COND_BELT_3},
+	{L"BELTCOLUMN4", COND_BELT_4},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
 	//{"OS", COND_OS},
@@ -4327,6 +4335,18 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_AREA:
 		Condition::AddOperand(conditions, new ItemSizeCondition(operation, value, value2, ItemSizeCondition::Dimension::kArea));
 		break;
+	case COND_BELT_1:
+		Condition::AddOperand(conditions, new BeltCondition(operation, value, value2, 0));
+		break;
+	case COND_BELT_2:
+		Condition::AddOperand(conditions, new BeltCondition(operation, value, value2, 1));
+		break;
+	case COND_BELT_3:
+		Condition::AddOperand(conditions, new BeltCondition(operation, value, value2, 2));
+		break;
+	case COND_BELT_4:
+		Condition::AddOperand(conditions, new BeltCondition(operation, value, value2, 3));
+		break;
 	case COND_ITEMCODE:
 		Condition::AddOperand(conditions, new ItemCodeCondition(WideToAnsi(key.substr(0, 4)).c_str()));
 		break;
@@ -5159,6 +5179,39 @@ bool ItemSizeCondition::EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, C
 	}
 
 	return IntegerCompare(value, op_, targetStat_, targetStat2_);
+}
+
+bool BeltCondition::EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2)
+{
+	const int kBeltWidth = 4;
+	const int kBeltHeight = 4;
+
+	Inventory* inventory = D2CLIENT_GetPlayerUnit()->pInventory;
+	if (inventory == nullptr) {
+		return false;
+	}
+	if (column_ >= kBeltWidth) {
+		return false;
+	}
+	if (inventory->dwStoresCount <= InventoryStoreType::INVENTORY_STORE_TYPE_BELT) {
+		return false;
+	}
+	InventoryStore& store = inventory->pStores[InventoryStoreType::INVENTORY_STORE_TYPE_BELT];
+	// Double check that this is indeed the correct `InventoryStore`.
+	// Internally belt is represented as a flat, 16 elements, array.
+	if (store.Width != kBeltWidth * kBeltHeight || store.Height != 1) {
+		return false;
+	}
+
+	int itemsInColumnCount = 0;
+	for (int row = 0; row < kBeltHeight; ++row) {
+		auto slot = row * kBeltWidth + column_;
+		if (store.pArray[slot] != nullptr) {
+			itemsInColumnCount += 1;
+		}
+	}
+
+	return IntegerCompare(itemsInColumnCount, op_, targetStat_, targetStat2_);
 }
 
 bool ResistAllCondition::EvaluateInternal(UnitItemInfo* uInfo,

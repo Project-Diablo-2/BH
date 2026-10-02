@@ -799,6 +799,27 @@ private:
 	bool EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2);
 };
 
+class BeltCondition: public Condition
+{
+public:
+	BeltCondition(BYTE op,
+		unsigned int targetStat,
+		unsigned int targetStat2,
+		unsigned int column)
+		: op_(op),
+		targetStat_(targetStat),
+		targetStat2_(targetStat2),
+		column_(column){
+		conditionType = CT_Operand;
+	};
+private:
+	BYTE op_;
+	unsigned int targetStat_;
+	unsigned int targetStat2_;
+	unsigned int column_;
+	bool EvaluateInternal(UnitItemInfo* uInfo, Condition* arg1, Condition* arg2);
+};
+
 class ResistAllCondition : public Condition
 {
 public:
