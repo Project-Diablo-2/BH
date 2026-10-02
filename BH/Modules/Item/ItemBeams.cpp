@@ -4,8 +4,7 @@
 
 #include "../../Constants.h"
 #include "../../D2Ptrs.h"
-#include "../../D2Version.h"
-#include "../../Patch.h"
+#include "GroundLabels.h"
 #include "ItemDisplay.h"
 
 namespace ItemBeams {
@@ -15,23 +14,6 @@ int FlashIntensity(DWORD ageMs) {
 		return 0;
 	// Rounded up: the flash is visible until the full kFlashMs has passed.
 	return (int)(((kFlashMs - ageMs) * kMaxIntensity + kFlashMs - 1) / kFlashMs);
-}
-
-namespace {
-
-// sin(2*pi*t/period) * 64 from a 64-entry quarter-free table (integer, deterministic for the tests).
-int Wave64(DWORD t, DWORD period) {
-	static const signed char kSin[32] = { 0, 12, 24, 36, 45, 53, 59, 63, 64, 63, 59, 53, 45, 36, 24, 12,
-		0, -12, -24, -36, -45, -53, -59, -63, -64, -63, -59, -53, -45, -36, -24, -12 };
-	const DWORD phase = (t % period) * 32 * 16 / period;  // 1/16 steps between table entries
-	const int i = (int)(phase / 16), f = (int)(phase % 16);
-	return (kSin[i] * (16 - f) + kSin[(i + 1) % 32] * f) / 16;
-}
-
-}  // namespace
-
-int Flicker(DWORD nowMs, DWORD seed) {
-	return (Wave64(nowMs + seed * 397, 1300) * 5 + Wave64(nowMs + seed * 211, 870) * 3) / 8;
 }
 
 int SparkY(DWORD nowMs, DWORD seed, int k, int height) {
@@ -50,71 +32,46 @@ int BeamRects(int intensity, DWORD nowMs, DWORD seed, BeamRect* out, int maxRect
 	// A fading beam also gets shorter (full height at full intensity, ~40% just before it vanishes)
 	// and narrower.
 	const int height = kBeamHeight * (96 + intensity * 159 / kMaxIntensity) / 255;
-	const int outer = 4 + 4 * intensity / kMaxIntensity;  // half widths
-	const int inner = 2 + 3 * intensity / kMaxIntensity;
+	const int outer = 2 + 4 * intensity / kMaxIntensity;  // half widths: 13 px at full intensity
+	const int inner = 1 + 2 * intensity / kMaxIntensity;
 
 	int n = 0;
 	auto add = [&](int x0, int y0, int x1, int y1, int mode, bool white) {
 		if (n < maxRects && x0 < x1 && y0 < y1)
 			out[n++] = BeamRect{ x0, y0, x1, y1, mode, white };
 	};
-	// A layer of 1 px columns: column dx reaches h(dx) = top * (1 - 0.4 * (dx / (halfWidth + 1))^2)
-	// above the ground (the sides end a little lower than the middle), its last kDitherRows rows
-	// drawn every other row.
+	// A layer of 1 px columns: column dx reaches h(dx) = top * (1 - |dx| / (halfWidth + 1)) above the
+	// foot (a needle), its last kDitherRows rows drawn every other row.
 	auto layer = [&](int halfWidth, int top, int mode, bool white) {
 		const int w1 = halfWidth + 1;
 		for (int dx = -halfWidth; dx <= halfWidth; dx++) {
-			const int h = top * (5 * w1 * w1 - 2 * dx * dx) / (5 * w1 * w1);
+			const int h = top * (w1 - (dx < 0 ? -dx : dx)) / w1;
 			if (h <= 0)
 				continue;
 			const int solidTop = h > kDitherRows ? -h + kDitherRows : -h;
 			add(dx, solidTop, dx + 1, 0, mode, white);
-			// Alternate columns start the dither on alternate rows: a checker, not stripes.
 			for (int y = -h + ((dx & 1) ? 1 : 0); y < solidTop; y += 2)
 				add(dx, y, dx + 1, y + 1, mode, white);
 		}
 	};
-	// Light pool and flare on the ground (rows -3 .. 2, an ellipse), flickering a little.
-	const int flick = Flicker(nowMs, seed);
-	const int pool = outer + 5 + flick / 32;  // +-2 px
-	static const int kPoolRow[6] = { 55, 85, 100, 100, 85, 55 };  // % of the half width per row
-	for (int r = 0; r < 6; r++) {
-		const int hw = pool * kPoolRow[r] / 100;
-		add(-hw, r - 3, hw + 1, r - 2, kModeTrans25, false);
-	}
-	layer(outer, height * 85 / 100, kModeTrans25, false);
-	layer(inner, height * 95 / 100, kModeTrans25, false);
+	layer(outer, height, kModeTrans25, false);
+	layer(inner, height, kModeTrans25, false);
 	layer(1, height, strong ? kModeTrans50 : kModeTrans25, false);
-	if (strong) {
-		// White-hot centre line and flare.
-		layer(0, height * 70 / 100, kModeTrans25, true);
-		const int flare = 2 + (flick > 0 ? 1 : 0);
-		add(-flare, -2, flare + 1, 1, kModeTrans25, true);
-		add(-1, -3, 2, 2, kModeTrans25, true);
-	}
+	if (strong)
+		layer(0, height * 70 / 100, kModeTrans25, true);  // faint white centre line
 	// Rising sparks in the core.
 	for (int k = 0; k < 2; k++) {
 		const int y = SparkY(nowMs, seed, k, height);
 		const int top = (std::max)(y - kSparkLength, -height);
-		add(-1, top, 2, y, kModeTrans25, true);
+		add(0, top, 1, y, kModeTrans25, true);
 	}
 	return n;
 }
 
-int SplitRects(const BeamRect* in, int n, int splitY, bool lower, BeamRect* out, int maxOut) {
-	int m = 0;
-	for (int i = 0; i < n && m < maxOut; i++) {
-		BeamRect r = in[i];
-		if (lower) {
-			if (r.y0 < splitY)
-				r.y0 = splitY;
-		} else if (r.y1 > splitY) {
-			r.y1 = splitY;
-		}
-		if (r.y0 < r.y1)
-			out[m++] = r;
-	}
-	return m;
+long BeamFootY(long groundX, long groundY, const LabelBox* label) {
+	if (label && label->left <= groundX && groundX < label->right && label->top < label->bottom)
+		return (label->top + label->bottom) / 2;
+	return groundY - kFootAboveGround;
 }
 
 bool FlashTracker::Observe(DWORD unitId, bool newDrop, DWORD nowMs, DWORD* startMs) {
@@ -176,8 +133,6 @@ namespace {
 
 FlashTracker flashes;
 std::vector<Candidate> candidates;
-bool collectedThisFrame = false;
-bool worldPassThisFrame = false;
 bool drawnThisFrame = false;
 DWORD frameNow = 0;
 ScreenSpan frameSpan = { 0, 0 };
@@ -194,13 +149,10 @@ bool WorldHiddenByUI() {
 // This frame's beams (once per frame): the 16 nearest beam items in the visible part of the screen.
 // False when there is no game to draw.
 bool Collect() {
-	if (collectedThisFrame)
-		return true;
 	UnitAny* player = D2CLIENT_GetPlayerUnit();
 	if (!player || !player->pAct || !player->pPath || !player->pPath->pRoom1 ||
 		player->pPath->pRoom1->pRoom2->pLevel->dwLevelNo == 0)
 		return false;
-	collectedThisFrame = true;
 
 	const DWORD now = GetTickCount();
 	frameNow = now;
@@ -244,11 +196,21 @@ bool Collect() {
 			D2COMMON_MapToAbsScreen(&x, &y);
 			const ScreenPoint p = GroundToScreen(x, y, *p_D2CLIENT_MouseOffsetX, *p_D2CLIENT_MouseOffsetY,
 				*p_D2CLIENT_ViewShiftX);
+			// The foot: behind the item's label (the box it is drawn in this frame, while the labels are
+			// being drawn), else where its label would sit.
+			GroundLabels::Box drawn;
+			LabelBox box;
+			const LabelBox* label = nullptr;
+			if (GroundLabels::LabelBoxOf(unit, &drawn)) {
+				box = LabelBox{ drawn.left, drawn.top, drawn.right, drawn.bottom };
+				label = &box;
+			}
+			const long footY = BeamFootY(p.x, p.y, label);
 			// Off screen or behind a panel: not a candidate, so the cap keeps the visible beams.
-			if (span.x0 >= span.x1 || p.x < span.x0 - 16 || p.x >= span.x1 + 16 || p.y < 0 ||
-				p.y - kBeamHeight > screenH)
+			if (span.x0 >= span.x1 || p.x < span.x0 - 16 || p.x >= span.x1 + 16 || footY < 0 ||
+				footY - kBeamHeight > screenH)
 				continue;
-			candidates.push_back(Candidate{ dx * dx + dy * dy, p.x, p.y, color, intensity, unit->dwUnitId });
+			candidates.push_back(Candidate{ dx * dx + dy * dy, p.x, footY, color, intensity, unit->dwUnitId });
 		}
 	}
 	SelectNearest(candidates, kMaxBeams);
@@ -260,18 +222,10 @@ bool Collect() {
 	return true;
 }
 
-enum class Part { Whole, Foot, Rest };
-
-void DrawBeams(Part part) {
-	BeamRect rects[kMaxBeamRects];
-	BeamRect cut[kMaxBeamRects];
+void DrawBeams() {
+	BeamRect r[kMaxBeamRects];
 	for (const Candidate& c : candidates) {
-		int n = BeamRects(c.intensity, frameNow, c.seed, rects, kMaxBeamRects);
-		const BeamRect* r = rects;
-		if (part != Part::Whole) {
-			n = SplitRects(rects, n, -kBaseHeight, part == Part::Foot, cut, kMaxBeamRects);
-			r = cut;
-		}
+		const int n = BeamRects(c.intensity, frameNow, c.seed, r, kMaxBeamRects);
 		for (int i = 0; i < n; i++) {
 			long x0 = c.screenX + r[i].x0;
 			long x1 = c.screenX + r[i].x1;
@@ -282,100 +236,18 @@ void DrawBeams(Part part) {
 	}
 }
 
-// World pass hook. The world draw (D2Client 0x8B110) draws the floor with 0x14050 (call at 0x8B235,
-// stdcall, one stack argument) and the ground items, walls and units after it; checked in game by
-// skipping the calls one at a time (no 0x14050: black floor, items and units still drawn; no 0x9EE90:
-// walls and units gone; no 0x9F270: shadows gone) and by drawing the beams' feet right after
-// 0x14050: the floor stays under them and the items over them. The call is redirected to
-// WorldPassStub, which makes it with the same argument and then draws the feet.
-const DWORD kWorldPassSite = 0x8B235;
-BYTE* worldPassSite = nullptr;
-ULONGLONG worldPassOriginal = 0;
-DWORD worldPassTarget = 0;
-
-void __stdcall WorldPass() {
-	DrawWorldPass();
-}
-
-void __declspec(naked) WorldPassStub() {
-	__asm {
-		push dword ptr [esp + 4]
-		call dword ptr [worldPassTarget]
-		pushad
-		pushfd
-		call WorldPass
-		popfd
-		popad
-		ret 4
-	}
-}
-
-bool SwapCode(BYTE* at, ULONGLONG from, ULONGLONG to) {
-	DWORD old;
-	if (!VirtualProtect(at, 8, PAGE_EXECUTE_READWRITE, &old))
-		return false;
-	const bool ok = (ULONGLONG)InterlockedCompareExchange64((volatile LONGLONG*)at, (LONGLONG)to, (LONGLONG)from) == from;
-	VirtualProtect(at, 8, old, &old);
-	FlushInstructionCache(GetCurrentProcess(), at, 8);
-	return ok;
-}
-
 }  // namespace
-
-void DrawWorldPass() {
-	if (!Collect())
-		return;
-	worldPassThisFrame = true;
-	DrawBeams(Part::Foot);
-}
 
 void Draw() {
 	if (drawnThisFrame)
 		return;
 	drawnThisFrame = true;
-	if (!Collect())
-		return;
-	DrawBeams(worldPassThisFrame ? Part::Rest : Part::Whole);
-}
-
-bool InstallWorldPass(const char** why) {
-	if (worldPassSite)
-		return true;
-	if (D2Version::GetGameVersionID() != VERSION_113c) {
-		*why = "not 1.13c";
-		return false;
-	}
-	BYTE* site = (BYTE*)Patch::GetDllOffset(D2CLIENT, kWorldPassSite);
-	const ULONGLONG before = *(volatile ULONGLONG*)site;
-	if (site[0] != 0xE8) {
-		*why = "D2Client world draw differs";
-		return false;
-	}
-	// Keep whatever the call targets now (another module may have redirected it): the stub calls it.
-	worldPassTarget = (DWORD)(site + 5) + *(int*)(site + 1);
-	ULONGLONG after = before;
-	*(int*)((BYTE*)&after + 1) = (int)((DWORD)&WorldPassStub - (DWORD)(site + 5));
-	if (!SwapCode(site, before, after)) {
-		*why = "could not patch the world draw";
-		return false;
-	}
-	worldPassSite = site;
-	worldPassOriginal = before;
-	return true;
-}
-
-void UninstallWorldPass() {
-	if (!worldPassSite)
-		return;
-	ULONGLONG now = *(volatile ULONGLONG*)worldPassSite;
-	SwapCode(worldPassSite, now, worldPassOriginal);
-	worldPassSite = nullptr;
+	if (Collect())
+		DrawBeams();
 }
 
 void EndFrame() {
 	drawnThisFrame = false;
-	worldPassThisFrame = false;
-	collectedThisFrame = false;
 }
 
 void Reset() {

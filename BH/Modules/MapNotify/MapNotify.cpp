@@ -29,13 +29,8 @@ void MapNotify::LoadConfig() {
 void MapNotify::ReadConfig() {
 }
 
-// Why the beams' feet are not drawn under the items (world draw hook not installed), if they are not.
-const char* beamWorldPassOff = nullptr;
-
 void MapNotify::OnLoad() {
 	ReadConfig();
-	const char* why = "";
-	beamWorldPassOff = ItemBeams::InstallWorldPass(&why) ? nullptr : why;
 }
 
 void MapNotify::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
@@ -50,7 +45,6 @@ void MapNotify::OnKey(bool up, BYTE key, LPARAM lParam, bool* block) {
 }
 
 void MapNotify::OnUnload() {
-	ItemBeams::UninstallWorldPass();
 }
 
 void MapNotify::OnLoop() {
@@ -201,11 +195,6 @@ void MapNotify::OnAutomapDraw() {
 
 void MapNotify::OnGameJoin() {
 	ItemBeams::Reset();
-	static bool beamWorldPassNoted = false;
-	if (beamWorldPassOff && !beamWorldPassNoted) {
-		beamWorldPassNoted = true;
-		PrintText(TextColor::Orange, "BH: loot filter beams draw over ground items (%s)", beamWorldPassOff);
-	}
 }
 
 void Squelch(DWORD Id, BYTE button) {

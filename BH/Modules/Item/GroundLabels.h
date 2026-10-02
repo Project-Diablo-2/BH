@@ -1,6 +1,8 @@
 #pragma once
 #include <Windows.h>
 
+struct UnitAny;
+
 // Loot filter label styles on ground items (%BG%, %OPACITY%, %FRAME%, %SIZE%).
 //
 // The engine collects the visible ground item labels into an array and then draws each one with
@@ -21,6 +23,18 @@ void Uninstall();
 // draws (item beams) ends up below the labels. The label pass only runs while ground items are
 // shown (Alt / "always show items"). nullptr clears it.
 void SetPreLabelCallback(void (*callback)());
+
+// The box an item's ground label is drawn in this frame (left <= x < right, top <= y < bottom, screen
+// pixels): the engine's entry box widened to what D2Win #10013 draws (top - 2 .. bottom + 2). Only
+// answers inside the pre-label callback, where the frame's labels are measured and placed but not
+// drawn yet; false for an item without a label (or outside the callback).
+struct Box {
+	long left;
+	long top;
+	long right;
+	long bottom;
+};
+bool LabelBoxOf(const UnitAny* item, Box* box);
 
 // Entry hook of a function: `jmp hook` over its first whole instructions, which move to a
 // trampoline (followed by a jmp back). An entry another module already detoured (`jmp rel32` plus
