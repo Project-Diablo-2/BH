@@ -13,6 +13,7 @@
 //   box = (x - (w+8)/2, y - h + 4) .. (x1 + w + 8, y); the engine moves it until it overlaps no
 //   earlier box (up by its height, then sideways) and keeps it if it found a place
 //   entry->bgColor/drawMode/textColor = black/TRANS50/quality colour, or hover blue/NORMAL/white
+//   (the label under the mouse, or the item the player walks to)
 // and then for every kept entry:
 //   D2Win #10013 DrawFramedText(entry->text, entry->x1, entry->y2, bgColor, drawMode, textColor)
 //                                                                      <- draw hook (box, frame, font)
@@ -131,6 +132,25 @@ DWORD ModeForOpacity(int opacity) {
 	}
 }
 
+}  // namespace
+
+LabelLook LookOf(const GroundStyle& style, DWORD bgColor, DWORD drawMode) {
+	LabelLook look;
+	bool hovered = drawMode == DRAWMODE_NORMAL;
+	if (hovered) { // the label's own look starts from the engine's unhovered box
+		bgColor = 0;
+		drawMode = DRAWMODE_TRANS50;
+	}
+	look.bgColor = style.bgColor != UNDEFINED_COLOR ? (DWORD)style.bgColor : bgColor;
+	look.drawMode = style.bgOpacity >= 0 ? ModeForOpacity(style.bgOpacity) : drawMode;
+	look.frameColor = style.frameColor;
+	look.ringColor = hovered ? HOVER_RING_COLOR : UNDEFINED_COLOR;
+	look.ringInset = style.frameColor != UNDEFINED_COLOR ? 1 : 0;
+	return look;
+}
+
+namespace {
+
 // Font switch around an engine call; labelFont -1 keeps the engine's font.
 struct FontScope {
 	bool set;
@@ -191,18 +211,27 @@ void DrawFrame(int left, int top, int right, int bottom, DWORD color) {
 	D2GFX_DrawRectangle(right - 1, top + 1, right, bottom - 1, color, DRAWMODE_NORMAL);
 }
 
+// The frame on the box's edge, then the hover ring inside it.
+void DrawEdges(int left, int top, int right, int bottom, const LabelLook& look) {
+	if (look.frameColor != UNDEFINED_COLOR)
+		DrawFrame(left, top, right, bottom, (DWORD)look.frameColor);
+	if (look.ringColor != UNDEFINED_COLOR) {
+		int i = look.ringInset;
+		DrawFrame(left + i, top + i, right - i, bottom - i, (DWORD)look.ringColor);
+	}
+}
+
 // A restyled label under D2GL's hd_text, laid out like #10013 with the current font: the box with
 // #10014 (a coloured box goes to the game frame, a black one to D2GL's text layer, so under a
-// frame it leaves the edge rows to the frame), then the frame, then the text centred with #10150.
-void DrawLabelHd(const wchar_t* text, int x, int y, DWORD bgColor, DWORD drawMode, DWORD textColor, int frameColor,
-	bool bare) {
+// frame or ring it leaves their rows free), then frame and ring, then the text centred with #10150.
+void DrawLabelHd(const wchar_t* text, int x, int y, const LabelLook& look, DWORD textColor, bool bare) {
 	int left, top, right, bottom;
 	FramedTextBox(text, x, y, bare, &left, &top, &right, &bottom);
-	bool framed = frameColor != UNDEFINED_COLOR;
-	int inset = framed && bgColor == 0 ? 1 : 0;
-	D2GFX_DrawRectangle(left + inset, top + inset, right - inset, bottom - inset, bgColor, drawMode);
-	if (framed)
-		DrawFrame(left, top, right, bottom, (DWORD)frameColor);
+	int inset = 0;
+	if (look.bgColor == 0)
+		inset = look.ringColor != UNDEFINED_COLOR ? look.ringInset + 1 : look.frameColor != UNDEFINED_COLOR ? 1 : 0;
+	D2GFX_DrawRectangle(left + inset, top + inset, right - inset, bottom - inset, look.bgColor, look.drawMode);
+	DrawEdges(left, top, right, bottom, look);
 
 	// #10150 puts the first line's baseline at y and every further line one line higher. Text
 	// block height: the bare measurement, or for font 1 the font height and 18 rows a further line.
@@ -244,26 +273,21 @@ DWORD __fastcall DrawFramedTextHook(const wchar_t* text, int x, int y, DWORD bgC
 	if (!StyleOf(e->unit, &style))
 		return origDrawFramedText(text, x, y, bgColor, drawMode, textColor);
 
-	// The engine marks the hovered label with an opaque highlight box: keep that feedback.
-	bool hovered = drawMode == DRAWMODE_NORMAL;
-	if (!hovered) {
-		if (style.bgColor != UNDEFINED_COLOR)
-			bgColor = (DWORD)style.bgColor;
-		if (style.bgOpacity >= 0)
-			drawMode = ModeForOpacity(style.bgOpacity);
-	}
+	// The engine marks the label under the mouse with its opaque blue box; a restyled one keeps its
+	// own look and gets a ring.
+	LabelLook look = LookOf(style, bgColor, drawMode);
 	if (HdText()) {
 		int labelFont = HdLabelFont(style);
 		FontScope font(labelFont);
-		DrawLabelHd(text, x, y, bgColor, drawMode, textColor, style.frameColor, labelFont != 1);
+		DrawLabelHd(text, x, y, look, textColor, labelFont != 1);
 		return 0;
 	}
 	FontScope font(style.labelFont);
-	DWORD ret = origDrawFramedText(text, x, y, bgColor, drawMode, textColor);
-	if (style.frameColor != UNDEFINED_COLOR) {
+	DWORD ret = origDrawFramedText(text, x, y, look.bgColor, look.drawMode, textColor);
+	if (look.frameColor != UNDEFINED_COLOR || look.ringColor != UNDEFINED_COLOR) {
 		int left, top, right, bottom;
 		FramedTextBox(text, x, y, false, &left, &top, &right, &bottom);
-		DrawFrame(left, top, right, bottom, (DWORD)style.frameColor);
+		DrawEdges(left, top, right, bottom, look);
 	}
 	return ret;
 }

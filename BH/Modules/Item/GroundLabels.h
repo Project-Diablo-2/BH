@@ -1,6 +1,8 @@
 #pragma once
 #include <Windows.h>
 
+struct GroundStyle;
+
 // Loot filter label styles on ground items (%BG%, %OPACITY%, %FRAME%, %SIZE%).
 //
 // The engine collects the visible ground item labels into an array and then draws each one with
@@ -21,6 +23,22 @@ void Uninstall();
 // draws (item beams) ends up below the labels. The label pass only runs while ground items are
 // shown (Alt / "always show items"). nullptr clears it.
 void SetPreLabelCallback(void (*callback)());
+
+// Palette index of the hover ring: white in every act's palette.
+const int HOVER_RING_COLOR = 0xFF;
+
+// How a restyled label is drawn. The engine passes its look for the label: black, TRANS50 (draw
+// mode 1), or for the label under the mouse (and the item the player walks to) its opaque blue
+// box (draw mode 5 NORMAL). A restyled label keeps its own look (background colour and opacity,
+// frame) when hovered and gets a 1 px white ring inside its frame (on the box's edge without one).
+struct LabelLook {
+	DWORD bgColor;   // palette index
+	DWORD drawMode;  // D2Gfx draw mode of the box
+	int frameColor;  // UNDEFINED_COLOR: no frame
+	int ringColor;   // UNDEFINED_COLOR: no ring (not hovered)
+	int ringInset;   // px between the box's edge and the ring
+};
+LabelLook LookOf(const GroundStyle& style, DWORD bgColor, DWORD drawMode);
 
 // Entry hook of a function: `jmp hook` over its first whole instructions, which move to a
 // trampoline (followed by a jmp back). An entry another module already detoured (`jmp rel32` plus
