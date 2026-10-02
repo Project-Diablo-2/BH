@@ -3,15 +3,16 @@
 
 struct GroundStyle;
 
-// Loot filter label styles on ground items (%BG%, %OPACITY%, %FRAME%, %SIZE%).
+// Loot filter label styles on ground items (%BG%, %OPACITY%, %FRAME%, %SIZE%, and for the hovered
+// label %HOVERBG%, %HOVEROPACITY%, %HOVERFRAME%, %HOVERTEXT%).
 //
 // The engine collects the visible ground item labels into an array and then draws each one with
 // D2Win #10013 (box + text); it measures each label with D2Win #10177 first and stacks the boxes
 // itself. Vanilla does this in D2Client 0x58FB0, PD2 in its own rewrite of that function inside
 // ProjectDiablo.dll; both keep the same entry layout and call the same two D2Win functions. Their
 // entries are hooked: a call whose text is a label entry's name gets the item's GroundStyle (font
-// for the measurement, colour/opacity/frame/font for the draw). Every other call, and every label
-// whose item has no style, goes to the original function with the original arguments.
+// for the measurement, colour/opacity/frame/font/text colour for the draw). Every other call, and
+// every label whose item has no style, goes to the original function with the original arguments.
 namespace GroundLabels {
 
 // Hooks D2Win #10013 and #10177 (1.13c only). On failure the hooks stay off and *why names the
@@ -24,21 +25,33 @@ void Uninstall();
 // shown (Alt / "always show items"). nullptr clears it.
 void SetPreLabelCallback(void (*callback)());
 
-// Palette index of the hover ring: white in every act's palette.
-const int HOVER_RING_COLOR = 0xFF;
+// The default hover effect of a restyled label without hover keywords: this palette index (white
+// in every act's palette) at draw mode 0 (TRANS25) over the label box, inside its frame.
+const int HOVER_OVERLAY_COLOR = 0xFF;
 
 // How a restyled label is drawn. The engine passes its look for the label: black, TRANS50 (draw
 // mode 1), or for the label under the mouse (and the item the player walks to) its opaque blue
-// box (draw mode 5 NORMAL). A restyled label keeps its own look (background colour and opacity,
-// frame) when hovered and gets a 1 px white ring inside its frame (on the box's edge without one).
+// box (draw mode 5 NORMAL). Not hovered, a label takes %BG% / %OPACITY% / %FRAME% over the
+// engine's look; a style with none of them (and no %SIZE%) leaves it to the engine's own call.
+// Hovered, it takes %HOVERBG% / %HOVEROPACITY% / %HOVERFRAME% where set, else its unhovered look
+// (the engine's plain black TRANS50 box, not its blue one, where the style sets nothing), and
+// %HOVERTEXT% turns its whole text into that colour. A hovered label whose style sets no hover
+// keyword gets the default effect instead: lighter by the white overlay.
 struct LabelLook {
+	bool engine;     // draw with the engine's own call and arguments (the rest is unused)
 	DWORD bgColor;   // palette index
 	DWORD drawMode;  // D2Gfx draw mode of the box
 	int frameColor;  // UNDEFINED_COLOR: no frame
-	int ringColor;   // UNDEFINED_COLOR: no ring (not hovered)
-	int ringInset;   // px between the box's edge and the ring
+	bool lighten;    // the default hover effect
+	int textColor;   // HoverTextColor of the whole text, -1: the text's own colours
 };
 LabelLook LookOf(const GroundStyle& style, DWORD bgColor, DWORD drawMode);
+
+// The label text `text` with every colour code set to `code` (the character after "\xFF" "c")
+// and that code put in front of every non-empty line that does not start with one, so the whole
+// text takes the colour. Colour codes take no width, so the text measures as before. False (and
+// `out` unspecified) when the result does not fit in `outLen` characters with its terminator.
+bool RecolorText(const wchar_t* text, wchar_t code, wchar_t* out, int outLen);
 
 // Entry hook of a function: `jmp hook` over its first whole instructions, which move to a
 // trampoline (followed by a jmp back). An entry another module already detoured (`jmp rel32` plus

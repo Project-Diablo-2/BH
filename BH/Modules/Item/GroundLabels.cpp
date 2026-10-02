@@ -116,11 +116,22 @@ bool IsItem(const LabelEntry* e) {
 	return e->unit && e->unit->dwType == UNIT_ITEM;
 }
 
+// The style changes the label when not hovered (%BG% %OPACITY% %FRAME% %SIZE%).
+bool HasBaseLook(const GroundStyle& style) {
+	return style.bgColor != UNDEFINED_COLOR || style.bgOpacity >= 0 || style.frameColor != UNDEFINED_COLOR ||
+		style.labelFont >= 0;
+}
+
+// The style sets a hover keyword.
+bool HasHoverLook(const GroundStyle& style) {
+	return style.hoverBgColor != UNDEFINED_COLOR || style.hoverBgOpacity >= 0 ||
+		style.hoverFrameColor != UNDEFINED_COLOR || style.hoverTextColor >= 0;
+}
+
 // The item's style, when it changes the label (a rule may style only the beam or the map marker).
 bool StyleOf(UnitAny* item, GroundStyle* style) {
 	return App.lootfilter.enableFilter.value && GetGroundStyle(item, style) &&
-		(style->bgColor != UNDEFINED_COLOR || style->bgOpacity >= 0 || style->frameColor != UNDEFINED_COLOR ||
-			style->labelFont >= 0);
+		(HasBaseLook(*style) || HasHoverLook(*style));
 }
 
 DWORD ModeForOpacity(int opacity) {
@@ -137,6 +148,7 @@ DWORD ModeForOpacity(int opacity) {
 LabelLook LookOf(const GroundStyle& style, DWORD bgColor, DWORD drawMode) {
 	LabelLook look;
 	bool hovered = drawMode == DRAWMODE_NORMAL;
+	look.engine = !hovered && !HasBaseLook(style);
 	if (hovered) { // the label's own look starts from the engine's unhovered box
 		bgColor = 0;
 		drawMode = DRAWMODE_TRANS50;
@@ -144,9 +156,50 @@ LabelLook LookOf(const GroundStyle& style, DWORD bgColor, DWORD drawMode) {
 	look.bgColor = style.bgColor != UNDEFINED_COLOR ? (DWORD)style.bgColor : bgColor;
 	look.drawMode = style.bgOpacity >= 0 ? ModeForOpacity(style.bgOpacity) : drawMode;
 	look.frameColor = style.frameColor;
-	look.ringColor = hovered ? HOVER_RING_COLOR : UNDEFINED_COLOR;
-	look.ringInset = style.frameColor != UNDEFINED_COLOR ? 1 : 0;
+	look.lighten = false;
+	look.textColor = -1;
+	if (hovered) {
+		if (style.hoverBgColor != UNDEFINED_COLOR)
+			look.bgColor = (DWORD)style.hoverBgColor;
+		if (style.hoverBgOpacity >= 0)
+			look.drawMode = ModeForOpacity(style.hoverBgOpacity);
+		if (style.hoverFrameColor != UNDEFINED_COLOR)
+			look.frameColor = style.hoverFrameColor;
+		look.textColor = style.hoverTextColor;
+		look.lighten = !HasHoverLook(style);
+	}
 	return look;
+}
+
+bool RecolorText(const wchar_t* text, wchar_t code, wchar_t* out, int outLen) {
+	int n = 0;
+	bool lineStart = true;
+	for (const wchar_t* p = text;; ++p) {
+		if (lineStart && *p && *p != L'\n' && !(p[0] == 0xFF && p[1] == L'c')) {
+			if (n + 3 >= outLen)
+				return false;
+			out[n++] = 0xFF;
+			out[n++] = L'c';
+			out[n++] = code;
+		}
+		if (n >= outLen)
+			return false;
+		if (!*p) {
+			out[n] = 0;
+			return true;
+		}
+		lineStart = *p == L'\n';
+		if (p[0] == 0xFF && p[1] == L'c' && p[2]) {
+			if (n + 3 >= outLen)
+				return false;
+			out[n++] = 0xFF;
+			out[n++] = L'c';
+			out[n++] = code;
+			p += 2;
+			continue;
+		}
+		out[n++] = *p;
+	}
 }
 
 namespace {
@@ -211,27 +264,39 @@ void DrawFrame(int left, int top, int right, int bottom, DWORD color) {
 	D2GFX_DrawRectangle(right - 1, top + 1, right, bottom - 1, color, DRAWMODE_NORMAL);
 }
 
-// The frame on the box's edge, then the hover ring inside it.
-void DrawEdges(int left, int top, int right, int bottom, const LabelLook& look) {
-	if (look.frameColor != UNDEFINED_COLOR)
-		DrawFrame(left, top, right, bottom, (DWORD)look.frameColor);
-	if (look.ringColor != UNDEFINED_COLOR) {
-		int i = look.ringInset;
-		DrawFrame(left + i, top + i, right - i, bottom - i, (DWORD)look.ringColor);
+// The default hover effect: the white overlay over the box, inside its frame.
+void DrawOverlay(int left, int top, int right, int bottom, const LabelLook& look) {
+	int i = look.frameColor != UNDEFINED_COLOR ? 1 : 0;
+	D2GFX_DrawRectangle(left + i, top + i, right - i, bottom - i, HOVER_OVERLAY_COLOR, DRAWMODE_TRANS25);
+}
+
+// Under hd_text a black box is drawn in D2GL's text layer, over the game frame the white overlay
+// goes to, so the overlay only shows through it as far as the box lets the scene through (not at
+// all through an opaque one). The hovered black box therefore also takes the D2GL alpha nearest
+// three quarters of its own (0xFF 0xDD 0xCC 0x99 0x66 for modes 5 3 2 1 0).
+DWORD LighterHdMode(DWORD drawMode) {
+	switch (drawMode) {
+	case DRAWMODE_NORMAL: return DRAWMODE_TRANS75;
+	case 3:
+	case DRAWMODE_TRANS75: return DRAWMODE_TRANS50;
+	default: return DRAWMODE_TRANS25;
 	}
 }
 
 // A restyled label under D2GL's hd_text, laid out like #10013 with the current font: the box with
 // #10014 (a coloured box goes to the game frame, a black one to D2GL's text layer, so under a
-// frame or ring it leaves their rows free), then frame and ring, then the text centred with #10150.
+// frame it leaves the frame's rows free), the hover overlay, the frame, then the text centred with
+// #10150.
 void DrawLabelHd(const wchar_t* text, int x, int y, const LabelLook& look, DWORD textColor, bool bare) {
 	int left, top, right, bottom;
 	FramedTextBox(text, x, y, bare, &left, &top, &right, &bottom);
-	int inset = 0;
-	if (look.bgColor == 0)
-		inset = look.ringColor != UNDEFINED_COLOR ? look.ringInset + 1 : look.frameColor != UNDEFINED_COLOR ? 1 : 0;
-	D2GFX_DrawRectangle(left + inset, top + inset, right - inset, bottom - inset, look.bgColor, look.drawMode);
-	DrawEdges(left, top, right, bottom, look);
+	int inset = look.bgColor == 0 && look.frameColor != UNDEFINED_COLOR ? 1 : 0;
+	DWORD drawMode = look.lighten && look.bgColor == 0 ? LighterHdMode(look.drawMode) : look.drawMode;
+	D2GFX_DrawRectangle(left + inset, top + inset, right - inset, bottom - inset, look.bgColor, drawMode);
+	if (look.lighten)
+		DrawOverlay(left, top, right, bottom, look);
+	if (look.frameColor != UNDEFINED_COLOR)
+		DrawFrame(left, top, right, bottom, (DWORD)look.frameColor);
 
 	// #10150 puts the first line's baseline at y and every further line one line higher. Text
 	// block height: the bare measurement, or for font 1 the font height and 18 rows a further line.
@@ -272,22 +337,31 @@ DWORD __fastcall DrawFramedTextHook(const wchar_t* text, int x, int y, DWORD bgC
 	GroundStyle style;
 	if (!StyleOf(e->unit, &style))
 		return origDrawFramedText(text, x, y, bgColor, drawMode, textColor);
-
-	// The engine marks the label under the mouse with its opaque blue box; a restyled one keeps its
-	// own look and gets a ring.
 	LabelLook look = LookOf(style, bgColor, drawMode);
+	if (look.engine)
+		return origDrawFramedText(text, x, y, bgColor, drawMode, textColor);
+
+	// %HOVERTEXT%: the whole text in one colour, from a copy (the entry keeps the engine's name).
+	wchar_t recolored[sizeof(e->text) / sizeof(wchar_t) * 4];
+	const wchar_t* shown = text;
+	if (look.textColor >= 0 && RecolorText(text, HoverTextCode(look.textColor), recolored, _countof(recolored)))
+		shown = recolored;
+
 	if (HdText()) {
 		int labelFont = HdLabelFont(style);
 		FontScope font(labelFont);
-		DrawLabelHd(text, x, y, look, textColor, labelFont != 1);
+		DrawLabelHd(shown, x, y, look, textColor, labelFont != 1);
 		return 0;
 	}
 	FontScope font(style.labelFont);
-	DWORD ret = origDrawFramedText(text, x, y, look.bgColor, look.drawMode, textColor);
-	if (look.frameColor != UNDEFINED_COLOR || look.ringColor != UNDEFINED_COLOR) {
+	DWORD ret = origDrawFramedText(shown, x, y, look.bgColor, look.drawMode, textColor);
+	if (look.frameColor != UNDEFINED_COLOR || look.lighten) {
 		int left, top, right, bottom;
 		FramedTextBox(text, x, y, false, &left, &top, &right, &bottom);
-		DrawEdges(left, top, right, bottom, look);
+		if (look.lighten)
+			DrawOverlay(left, top, right, bottom, look);
+		if (look.frameColor != UNDEFINED_COLOR)
+			DrawFrame(left, top, right, bottom, (DWORD)look.frameColor);
 	}
 	return ret;
 }
@@ -305,7 +379,8 @@ DWORD __fastcall GetTextSizeHook(const wchar_t* text, DWORD* width, DWORD* heigh
 
 	passPending = true;
 	GroundStyle style;
-	if (!StyleOf(e->unit, &style))
+	// A style with hover keywords only measures like the engine's label, hovered or not.
+	if (!StyleOf(e->unit, &style) || !HasBaseLook(style))
 		return origGetTextSize(text, width, height);
 	DWORD ret;
 	if (HdText()) {
@@ -317,7 +392,8 @@ DWORD __fastcall GetTextSizeHook(const wchar_t* text, DWORD* width, DWORD* heigh
 		ret = origGetTextSize(text, width, height);
 	}
 	// The engine's stacked boxes overlap by one row (the box drawn later covers the top row of the
-	// one below it). One more reserved row keeps a framed label's top edge visible.
+	// one below it). One more reserved row keeps a framed label's top edge visible. %HOVERFRAME%
+	// reserves none: the label measures the same hovered or not.
 	if (style.frameColor != UNDEFINED_COLOR)
 		ret = ++*height;
 	return ret;

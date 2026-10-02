@@ -2839,6 +2839,10 @@ GroundStyleLookup GroundStyleLookupCache::make_cached_T(UnitItemInfo* uInfo)
 			if (a.beamColor != UNDEFINED_COLOR) { s.beamColor = a.beamColor; }
 			if (a.flashColor != UNDEFINED_COLOR) { s.flashColor = a.flashColor; }
 			if (a.iconShapeSet) { s.iconShape = a.iconShape; }
+			if (a.hoverBgColor != UNDEFINED_COLOR) { s.hoverBgColor = a.hoverBgColor; }
+			if (a.hoverBgOpacity != -1) { s.hoverBgOpacity = a.hoverBgOpacity; }
+			if (a.hoverFrameColor != UNDEFINED_COLOR) { s.hoverFrameColor = a.hoverFrameColor; }
+			if (a.hoverTextColor != -1) { s.hoverTextColor = a.hoverTextColor; }
 		}
 		if (a.stopProcessing) { break; }
 	}
@@ -3649,12 +3653,16 @@ void BuildAction(wstring* str,
 	act->lineColor = ParseMapColor(act, L"LINE");
 	act->notifyColor = ParseMapColor(act, L"NOTIFY");
 	act->bgColor = ParsePaletteColor(act, L"BG");
-	act->bgOpacity = ParseOpacity(act);
+	act->bgOpacity = ParseOpacity(act, L"OPACITY");
 	act->frameColor = ParsePaletteColor(act, L"FRAME");
 	act->labelFont = ParseLabelFont(act);
 	act->beamColor = ParsePaletteColor(act, L"BEAM");
 	act->flashColor = ParsePaletteColor(act, L"FLASH");
 	act->iconShapeSet = ParseIconShape(act, &act->iconShape);
+	act->hoverBgColor = ParsePaletteColor(act, L"HOVERBG");
+	act->hoverBgOpacity = ParseOpacity(act, L"HOVEROPACITY");
+	act->hoverFrameColor = ParsePaletteColor(act, L"HOVERFRAME");
+	act->hoverTextColor = ParseHoverTextColor(act);
 	act->pingLevel = ParsePingLevel(act, L"TIER");
 	act->description = ParseDescription(act);
 	act->soundID = ParseSoundID(act, L"SOUNDID");
@@ -3787,11 +3795,11 @@ int ParsePaletteColor(Action* act, const wstring& key_string)
 	return stoi(value, nullptr, 16);
 }
 
-// %OPACITY-25|50|75|100%: label background opacity in percent, -1 when absent.
-int ParseOpacity(Action* act)
+// %KEY-25|50|75|100% (%OPACITY%, %HOVEROPACITY%): label background opacity in percent, -1 when absent.
+int ParseOpacity(Action* act, const wstring& key_string)
 {
 	wstring value;
-	if (!TakeKeyword(act, L"OPACITY", L"25|50|75|100", &value)) { return -1; }
+	if (!TakeKeyword(act, key_string, L"25|50|75|100", &value)) { return -1; }
 	return stoi(value);
 }
 
@@ -3824,6 +3832,38 @@ bool ParseIconShape(Action* act, int* shape)
 		}
 	}
 	return true;
+}
+
+// BH's colour words by HoverTextColor, with the code each one writes (as in ReplacementMap; the
+// glide code applies under the glide renderer, render mode 4).
+static const struct { const wchar_t* name; wchar_t code; wchar_t glideCode; } hoverTextColors[HOVER_TEXT_COUNT] = {
+	{ L"WHITE", L'0', L'0' }, { L"RED", L'1', L'1' }, { L"GREEN", L'2', L'2' }, { L"BLUE", L'3', L'3' },
+	{ L"GOLD", L'4', L'4' }, { L"GRAY", L'5', L'5' }, { L"BLACK", L'6', L'\x02' }, { L"TAN", L'7', L'7' },
+	{ L"ORANGE", L'8', L'8' }, { L"YELLOW", L'9', L'9' }, { L"PURPLE", L';', L';' }, { L"DARK_GREEN", L':', L':' },
+	{ L"CORAL", L'1', L'\x06' }, { L"SAGE", L'2', L'\x07' }, { L"TEAL", L'3', L'\x09' }, { L"LIGHT_GRAY", L'5', L'\x0C' },
+};
+
+// %HOVERTEXT-<colour>%: a HoverTextColor, -1 when absent.
+int ParseHoverTextColor(Action* act)
+{
+	wstring value;
+	if (!TakeKeyword(act, L"HOVERTEXT",
+		L"WHITE|RED|GREEN|BLUE|GOLD|GRAY|BLACK|TAN|ORANGE|YELLOW|PURPLE|DARK_GREEN|CORAL|SAGE|TEAL|LIGHT_GRAY", &value))
+	{
+		return -1;
+	}
+	transform(value.begin(), value.end(), value.begin(), towupper);
+	for (int i = 0; i < HOVER_TEXT_COUNT; i++)
+	{
+		if (value == hoverTextColors[i].name) { return i; }
+	}
+	return -1;
+}
+
+wchar_t HoverTextCode(int hoverTextColor)
+{
+	if (hoverTextColor < 0 || hoverTextColor >= HOVER_TEXT_COUNT) { return L'0'; }
+	return *p_D2GFX_RenderMode != 4 ? hoverTextColors[hoverTextColor].code : hoverTextColors[hoverTextColor].glideCode;
 }
 
 const wstring Condition::tokenDelims = L"<=>~";

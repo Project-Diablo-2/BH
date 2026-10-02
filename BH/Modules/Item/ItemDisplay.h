@@ -1093,6 +1093,13 @@ struct ColorReplace
 // Automap marker shape (%ICON-<shape>%).
 enum IconShape { ICON_SQUARE = 0, ICON_CIRCLE, ICON_DIAMOND, ICON_STAR, ICON_TRIANGLE, ICON_CROSS };
 
+// Text colour of a hovered ground label (%HOVERTEXT-<colour>%): BH's colour words, in this order.
+enum HoverTextColor {
+	HOVER_TEXT_WHITE = 0, HOVER_TEXT_RED, HOVER_TEXT_GREEN, HOVER_TEXT_BLUE, HOVER_TEXT_GOLD, HOVER_TEXT_GRAY,
+	HOVER_TEXT_BLACK, HOVER_TEXT_TAN, HOVER_TEXT_ORANGE, HOVER_TEXT_YELLOW, HOVER_TEXT_PURPLE, HOVER_TEXT_DARK_GREEN,
+	HOVER_TEXT_CORAL, HOVER_TEXT_SAGE, HOVER_TEXT_TEAL, HOVER_TEXT_LIGHT_GRAY, HOVER_TEXT_COUNT
+};
+
 struct Action
 {
 	bool   stopProcessing;
@@ -1116,6 +1123,11 @@ struct Action
 	int flashColor = UNDEFINED_COLOR; // %FLASH-XX%: beam on drop only
 	int iconShape = ICON_SQUARE;      // %ICON-SQUARE|CIRCLE|DIAMOND|STAR|TRIANGLE|CROSS%
 	bool iconShapeSet = false;        // the rule has an %ICON-*% token (ICON_SQUARE is also the default)
+	// The look of the label while hovered; each unset field falls back to the one above.
+	int hoverBgColor = UNDEFINED_COLOR;    // %HOVERBG-XX%
+	int hoverBgOpacity = -1;               // %HOVEROPACITY-25|50|75|100%
+	int hoverFrameColor = UNDEFINED_COLOR; // %HOVERFRAME-XX%
+	int hoverTextColor = -1;               // %HOVERTEXT-<colour>%: a HoverTextColor, the whole text in it
 
 	Action() :
 		colorOnMap(UNDEFINED_COLOR),
@@ -1136,7 +1148,9 @@ struct Action
 	bool HasGroundStyle() const
 	{
 		return bgColor != UNDEFINED_COLOR || bgOpacity != -1 || frameColor != UNDEFINED_COLOR || labelFont != -1 ||
-			beamColor != UNDEFINED_COLOR || flashColor != UNDEFINED_COLOR || iconShapeSet;
+			beamColor != UNDEFINED_COLOR || flashColor != UNDEFINED_COLOR || iconShapeSet ||
+			hoverBgColor != UNDEFINED_COLOR || hoverBgOpacity != -1 || hoverFrameColor != UNDEFINED_COLOR ||
+			hoverTextColor != -1;
 	}
 };
 
@@ -1150,6 +1164,10 @@ struct GroundStyle
 	int beamColor = UNDEFINED_COLOR;
 	int flashColor = UNDEFINED_COLOR;
 	int iconShape = ICON_SQUARE;
+	int hoverBgColor = UNDEFINED_COLOR;
+	int hoverBgOpacity = -1;
+	int hoverFrameColor = UNDEFINED_COLOR;
+	int hoverTextColor = -1;
 };
 
 struct ConditionEvalNode {
@@ -1278,9 +1296,13 @@ wstring ParseDescription(Action* act);
 int    ParseMapColor(Action* act,
 	const wstring& reg_string);
 int ParsePaletteColor(Action* act, const wstring& key_string);
-int ParseOpacity(Action* act);
+int ParseOpacity(Action* act, const wstring& key_string);
 int ParseLabelFont(Action* act);
 bool ParseIconShape(Action* act, int* shape);
+int ParseHoverTextColor(Action* act);
+// The character after "\xFF" "c" that selects a HoverTextColor, as BH's colour word of that name
+// writes it (BLACK, CORAL, SAGE, TEAL and LIGHT_GRAY depend on the renderer).
+wchar_t HoverTextCode(int hoverTextColor);
 // Resolved style of a ground item over all matching rules (%CONTINUE% semantics: a later matching
 // rule overrides each field it sets, unset fields keep earlier values). Cached like the item names.
 // Returns false when no matching rule sets a visual token (out is then the default style, which
