@@ -20,6 +20,19 @@
 // x + w + 8, bottom, bgColor, drawMode) with bottom = y2 + 2 (both clamped to the screen) and the
 // text inside. So a larger font set around both calls makes the engine size, stack and hit-test
 // the box for that font.
+//
+// PD2's D2GL renderer (glide3x.dll, `-3dfx`: Project-Diablo-2/d2gl, a fork of bayaraa/d2gl 1.3.3)
+// with "hd_text" on draws text at window resolution in a layer over the upscaled game frame and
+// replaces three calls a label could use (d2gl/src/modules/hd_text.cpp):
+//   D2Win #10013 -> drawRectangledText: its own box in that layer whatever the colour argument
+//     (black 0xCC for mode 0, 0x99 for mode 1, its bordered popup box for mode 2, blue for mode 5)
+//     and the text in its label font;
+//   D2Gfx #10014 -> drawSolidRect: black (colour 0) becomes a box in that layer with D2GL's alpha
+//     per mode (0x66 0x99 0xCC 0xDD 0xFF for modes 0 1 2 3 5); any other colour falls through to
+//     the game frame (palette colour and draw mode as without D2GL), under everything in the layer;
+//   D2Win #10150 DrawText -> the text alone in that layer.
+// So under hd_text a restyled label does not call #10013: box and frame are drawn with #10014,
+// the text with #10150.
 
 namespace GroundLabels {
 namespace {
@@ -46,6 +59,22 @@ typedef void(__stdcall* GetScreenSize_t)(int* width, int* height);
 DrawFramedText_t origDrawFramedText = nullptr; // trampolines
 GetTextSize_t origGetTextSize = nullptr;
 GetScreenSize_t pGetScreenSize = nullptr; // D2Gfx #10080
+
+typedef DWORD(__fastcall* GetTextWidth_t)(const wchar_t* text);
+typedef WORD(__fastcall* GetFontHeight_t)();
+typedef int(__cdecl* D2GLIsReady_t)();
+typedef BOOL(__stdcall* D2GLConfigQuery_t)(D2GLConfigId configId);
+GetTextWidth_t pGetTextWidth = nullptr;     // D2Win #10028
+GetFontHeight_t pGetFontHeight = nullptr;   // D2Win #10083
+D2GLIsReady_t pD2GLIsReady = nullptr;       // D2GL's exports
+D2GLConfigQuery_t pD2GLConfigQuery = nullptr;
+
+// D2GL renders this frame and draws its text itself (the option can change in game). PD2 loads
+// glide3x.dll under -ddraw too, where it hooks nothing and is never ready but still reports
+// hd_text on.
+bool HdText() {
+	return pD2GLConfigQuery && pD2GLIsReady() && pD2GLConfigQuery(D2GL_CONFIG_HD_TEXT);
+}
 
 void (*preLabelCallback)() = nullptr;
 
@@ -86,8 +115,11 @@ bool IsItem(const LabelEntry* e) {
 	return e->unit && e->unit->dwType == UNIT_ITEM;
 }
 
+// The item's style, when it changes the label (a rule may style only the beam or the map marker).
 bool StyleOf(UnitAny* item, GroundStyle* style) {
-	return App.lootfilter.enableFilter.value && GetGroundStyle(item, style);
+	return App.lootfilter.enableFilter.value && GetGroundStyle(item, style) &&
+		(style->bgColor != UNDEFINED_COLOR || style->bgOpacity >= 0 || style->frameColor != UNDEFINED_COLOR ||
+			style->labelFont >= 0);
 }
 
 DWORD ModeForOpacity(int opacity) {
@@ -113,10 +145,28 @@ struct FontScope {
 	}
 };
 
+// Under hd_text a restyled label is always drawn with an explicit font: its %SIZE%, else the
+// engine's label font 1.
+int HdLabelFont(const GroundStyle& style) {
+	return style.labelFont >= 0 ? style.labelFont : 1;
+}
+
+// The label size #10177 reports with the current font. D2GL's hd_text gives font 1 its label
+// margins (width + 10, 18 rows a line + 2) and every other font the bare text block, which gets
+// the same width margin and 2 rows above and below here.
+DWORD MeasureLabel(const wchar_t* text, DWORD* width, DWORD* height, bool hdBare) {
+	DWORD ret = origGetTextSize(text, width, height);
+	if (hdBare) {
+		*width += 10;
+		ret = *height += 4;
+	}
+	return ret;
+}
+
 // The rectangle D2Win #10013 fills for (text, x, y) with the current font.
-void FramedTextBox(const wchar_t* text, int x, int y, int* left, int* top, int* right, int* bottom) {
+void FramedTextBox(const wchar_t* text, int x, int y, bool hdBare, int* left, int* top, int* right, int* bottom) {
 	DWORD w = 0, h = 0;
-	origGetTextSize(text, &w, &h);
+	MeasureLabel(text, &w, &h, hdBare);
 	int width = (int)w + 8;
 	int screenW = 0, screenH = 0;
 	pGetScreenSize(&screenW, &screenH);
@@ -139,6 +189,36 @@ void DrawFrame(int left, int top, int right, int bottom, DWORD color) {
 	D2GFX_DrawRectangle(left, bottom - 1, right, bottom, color, DRAWMODE_NORMAL);
 	D2GFX_DrawRectangle(left, top + 1, left + 1, bottom - 1, color, DRAWMODE_NORMAL);
 	D2GFX_DrawRectangle(right - 1, top + 1, right, bottom - 1, color, DRAWMODE_NORMAL);
+}
+
+// A restyled label under D2GL's hd_text, laid out like #10013 with the current font: the box with
+// #10014 (a coloured box goes to the game frame, a black one to D2GL's text layer, so under a
+// frame it leaves the edge rows to the frame), then the frame, then the text centred with #10150.
+void DrawLabelHd(const wchar_t* text, int x, int y, DWORD bgColor, DWORD drawMode, DWORD textColor, int frameColor,
+	bool bare) {
+	int left, top, right, bottom;
+	FramedTextBox(text, x, y, bare, &left, &top, &right, &bottom);
+	bool framed = frameColor != UNDEFINED_COLOR;
+	int inset = framed && bgColor == 0 ? 1 : 0;
+	D2GFX_DrawRectangle(left + inset, top + inset, right - inset, bottom - inset, bgColor, drawMode);
+	if (framed)
+		DrawFrame(left, top, right, bottom, (DWORD)frameColor);
+
+	// #10150 puts the first line's baseline at y and every further line one line higher. Text
+	// block height: the bare measurement, or for font 1 the font height and 18 rows a further line.
+	int lines = 1;
+	for (const wchar_t* p = text; *p; ++p)
+		if (*p == L'\n' && p[1])
+			++lines;
+	int block = (int)pGetFontHeight() + (lines - 1) * 18;
+	if (bare) {
+		DWORD w = 0, h = 0;
+		origGetTextSize(text, &w, &h);
+		block = (int)h;
+	}
+	int textX = left + (right - left - (int)pGetTextWidth(text)) / 2;
+	int textY = bottom - (bottom - top - block) / 2;
+	D2WIN_DrawText(text, textX, textY, textColor, 0);
 }
 
 bool passPending = true; // a label pass has measured labels that are not drawn yet
@@ -172,11 +252,17 @@ DWORD __fastcall DrawFramedTextHook(const wchar_t* text, int x, int y, DWORD bgC
 		if (style.bgOpacity >= 0)
 			drawMode = ModeForOpacity(style.bgOpacity);
 	}
+	if (HdText()) {
+		int labelFont = HdLabelFont(style);
+		FontScope font(labelFont);
+		DrawLabelHd(text, x, y, bgColor, drawMode, textColor, style.frameColor, labelFont != 1);
+		return 0;
+	}
 	FontScope font(style.labelFont);
 	DWORD ret = origDrawFramedText(text, x, y, bgColor, drawMode, textColor);
 	if (style.frameColor != UNDEFINED_COLOR) {
 		int left, top, right, bottom;
-		FramedTextBox(text, x, y, &left, &top, &right, &bottom);
+		FramedTextBox(text, x, y, false, &left, &top, &right, &bottom);
 		DrawFrame(left, top, right, bottom, (DWORD)style.frameColor);
 	}
 	return ret;
@@ -198,7 +284,11 @@ DWORD __fastcall GetTextSizeHook(const wchar_t* text, DWORD* width, DWORD* heigh
 	if (!StyleOf(e->unit, &style))
 		return origGetTextSize(text, width, height);
 	DWORD ret;
-	{
+	if (HdText()) {
+		int labelFont = HdLabelFont(style);
+		FontScope font(labelFont);
+		ret = MeasureLabel(text, width, height, labelFont != 1);
+	} else {
 		FontScope font(style.labelFont);
 		ret = origGetTextSize(text, width, height);
 	}
@@ -318,6 +408,17 @@ bool Install(const char** why) {
 		*why = "D2Gfx #10080 missing";
 		return false;
 	}
+	// D2GL (glide3x.dll, or ddraw.dll in its DirectDraw build; looked up as BH::CheckForD2GL does)
+	// loads and hooks before BH.
+	HMODULE d2gl = GetModuleHandleA("glide3x.dll");
+	if (!d2gl)
+		d2gl = GetModuleHandleA("ddraw.dll");
+	pD2GLIsReady = d2gl ? (D2GLIsReady_t)GetProcAddress(d2gl, "d2glIsReady") : nullptr;
+	pD2GLConfigQuery = d2gl ? (D2GLConfigQuery_t)GetProcAddress(d2gl, "_d2glConfigQueryImpl@4") : nullptr;
+	pGetTextWidth = (GetTextWidth_t)Patch::GetDllOffset(D2WIN, -10028);
+	pGetFontHeight = (GetFontHeight_t)Patch::GetDllOffset(D2WIN, -10083);
+	if (!pD2GLIsReady || !pGetTextWidth || !pGetFontHeight)
+		pD2GLConfigQuery = nullptr; // no hd_text path: D2GL draws the labels its way
 	if (!trampolines)
 		trampolines = (BYTE*)VirtualAlloc(NULL, 64, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	if (!trampolines) {
