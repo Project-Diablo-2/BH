@@ -74,9 +74,25 @@ struct Candidate {
 // Keeps the `cap` candidates nearest the player (ties: any of them); order is unspecified.
 void SelectNearest(std::vector<Candidate>& candidates, size_t cap);
 
+// The screen columns x0 <= x < x1 where the game world is visible, by the engine's own rule for ground
+// labels (D2Client 0x58FB0 / GameDraw 0xC3D56): side panels cover half the screen each. `covered` is
+// D2Client's ScreenCovered (0 none, 1 right panel open, 2 left panel open, 3 both); `screenWidth`
+// the game's screen width (D2Client ScreenSizeX, e.g. 800 or 1068). Empty (x0 == x1) when both sides
+// are covered.
+struct ScreenSpan {
+	long x0;
+	long x1;
+};
+ScreenSpan VisibleSpan(DWORD covered, long screenWidth);
+
+// Clips the horizontal extent x0 <= x < x1 of a rectangle to the span; false when nothing is left.
+bool ClipToSpan(const ScreenSpan& span, long* x0, long* x1);
+
 // Draws the beams of the visible ground items. Runs at most once per frame: the first call draws,
 // later calls do nothing until EndFrame. Called from BH's draw hook (MapNotify::OnDraw); a hook that
-// runs before the ground labels may call it first so the labels end up over the beams.
+// runs before the ground labels may call it first so the labels end up over the beams. Beams never
+// cover UI: they are clipped to VisibleSpan and not drawn at all while a full-screen UI hides the
+// world (game menu, hotkey config, help, NPC dialog, skill picker, gold dialog).
 void Draw();
 // End of BH's frame: the next Draw draws again.
 void EndFrame();

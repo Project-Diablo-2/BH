@@ -94,12 +94,38 @@ void SelectNearest(std::vector<Candidate>& candidates, size_t cap) {
 	candidates.resize(cap);
 }
 
+ScreenSpan VisibleSpan(DWORD covered, long screenWidth) {
+	const long half = screenWidth / 2;
+	switch (covered) {
+	case 0: return ScreenSpan{ 0, screenWidth };
+	case 1: return ScreenSpan{ 0, half };            // right panel open
+	case 2: return ScreenSpan{ half, screenWidth };  // left panel open
+	default: return ScreenSpan{ 0, 0 };              // both
+	}
+}
+
+bool ClipToSpan(const ScreenSpan& span, long* x0, long* x1) {
+	if (*x0 < span.x0)
+		*x0 = span.x0;
+	if (*x1 > span.x1)
+		*x1 = span.x1;
+	return *x0 < *x1;
+}
+
 namespace {
 
 FlashTracker flashes;
 std::vector<Candidate> candidates;
 bool drawnThisFrame = false;
 DWORD lastPrune = 0;
+
+// UIs that hide the game world, or that BH already hides the ground labels for (Item.cpp
+// PermShowItemsPatch1); the engine draws no ground labels with the NPC dialog open either.
+bool WorldHiddenByUI() {
+	return D2CLIENT_GetUIState(UI_ESCMENU_MAIN) || D2CLIENT_GetUIState(UI_HOTKEY_CONFIG) ||
+		D2CLIENT_GetUIState(UI_HELP_MENU) || D2CLIENT_GetUIState(UI_NPCMENU) ||
+		D2CLIENT_GetUIState(UI_MINISKILL) || *p_D2CLIENT_GoldDialog;
+}
 
 }  // namespace
 
@@ -116,8 +142,10 @@ void Draw() {
 	const DWORD now = GetTickCount();
 	const long playerX = player->pPath->xPos;
 	const long playerY = player->pPath->yPos;
-	const long screenW = *p_D2CLIENT_ScreenSizeX;
 	const long screenH = *p_D2CLIENT_ScreenSizeY;
+	// Items are still observed while the world is hidden (a drop under a panel must not flash later).
+	const ScreenSpan span = WorldHiddenByUI() ? ScreenSpan{ 0, 0 } :
+		VisibleSpan(*p_D2CLIENT_ScreenCovered, (long)*p_D2CLIENT_ScreenSizeX);
 
 	candidates.clear();
 	for (Room1* room1 = player->pAct->pRoom1; room1; room1 = room1->pRoomNext) {
@@ -151,7 +179,8 @@ void Draw() {
 			D2COMMON_MapToAbsScreen(&x, &y);
 			x -= *p_D2CLIENT_MouseOffsetX;
 			y -= *p_D2CLIENT_MouseOffsetY;
-			if (x < -16 || x > screenW + 16 || y < 0 || y - kBeamHeight > screenH)
+			// Off screen or behind a panel: not a candidate, so the cap keeps the visible beams.
+			if (span.x0 >= span.x1 || x < span.x0 - 16 || x >= span.x1 + 16 || y < 0 || y - kBeamHeight > screenH)
 				continue;
 			candidates.push_back(Candidate{ dx * dx + dy * dy, x, y, color, intensity });
 		}
@@ -163,8 +192,10 @@ void Draw() {
 	for (const Candidate& c : candidates) {
 		const int n = BeamRects(c.intensity, pulse, rects, kMaxBeamRects);
 		for (int i = 0; i < n; i++) {
-			D2GFX_DrawRectangle(c.screenX + rects[i].x0, c.screenY + rects[i].y0, c.screenX + rects[i].x1,
-				c.screenY + rects[i].y1, c.color, rects[i].mode);
+			long x0 = c.screenX + rects[i].x0;
+			long x1 = c.screenX + rects[i].x1;
+			if (ClipToSpan(span, &x0, &x1))
+				D2GFX_DrawRectangle(x0, c.screenY + rects[i].y0, x1, c.screenY + rects[i].y1, c.color, rects[i].mode);
 		}
 	}
 
