@@ -104,6 +104,10 @@ ScreenSpan VisibleSpan(DWORD covered, long screenWidth) {
 	}
 }
 
+ScreenPoint GroundToScreen(long absX, long absY, long mouseOffsetX, long mouseOffsetY, long viewShiftX) {
+	return ScreenPoint{ absX - mouseOffsetX + viewShiftX, absY - mouseOffsetY };
+}
+
 bool ClipToSpan(const ScreenSpan& span, long* x0, long* x1) {
 	if (*x0 < span.x0)
 		*x0 = span.x0;
@@ -177,8 +181,10 @@ void Draw() {
 			const long dx = x - playerX;
 			const long dy = y - playerY;
 			D2COMMON_MapToAbsScreen(&x, &y);
-			x -= *p_D2CLIENT_MouseOffsetX;
-			y -= *p_D2CLIENT_MouseOffsetY;
+			const ScreenPoint p = GroundToScreen(x, y, *p_D2CLIENT_MouseOffsetX, *p_D2CLIENT_MouseOffsetY,
+				*p_D2CLIENT_ViewShiftX);
+			x = p.x;
+			y = p.y;
 			// Off screen or behind a panel: not a candidate, so the cap keeps the visible beams.
 			if (span.x0 >= span.x1 || x < span.x0 - 16 || x >= span.x1 + 16 || y < 0 || y - kBeamHeight > screenH)
 				continue;

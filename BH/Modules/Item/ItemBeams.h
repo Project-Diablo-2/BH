@@ -85,6 +85,17 @@ struct ScreenSpan {
 };
 ScreenSpan VisibleSpan(DWORD covered, long screenWidth);
 
+// Screen position of a ground point whose absolute screen coordinates (D2COMMON_MapToAbsScreen) are
+// (absX, absY), placed the way D2Client places ground labels (0x5912D): minus the view's mouse offset
+// (D2Client MouseOffsetX/Y), plus the horizontal shift of the world view while one side panel is open
+// (D2Client ViewShiftX, set with ScreenCovered at 0x3FF90: -width/4 with a right panel, +width/4 with
+// a left one, 0 with none or both).
+struct ScreenPoint {
+	long x;
+	long y;
+};
+ScreenPoint GroundToScreen(long absX, long absY, long mouseOffsetX, long mouseOffsetY, long viewShiftX);
+
 // Clips the horizontal extent x0 <= x < x1 of a rectangle to the span; false when nothing is left.
 bool ClipToSpan(const ScreenSpan& span, long* x0, long* x1);
 
