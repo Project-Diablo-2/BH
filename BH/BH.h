@@ -45,6 +45,7 @@ namespace BH
 };
 
 typedef BOOL(__stdcall* pd2PlaySoundImpl_t)(UnitAny* pUnit, int nSound, int nVolume, int nPriority, BOOL bDropSound);
+typedef DWORD(__stdcall* pd2GetItemDiscoveryStateImpl_t)(DWORD dwFileIndex, DWORD dwQuality, DWORD dwBaseId);
 
 struct BHApp
 {
@@ -187,6 +188,7 @@ struct BHApp
 	struct
 	{
 		pd2PlaySoundImpl_t pd2PlaySoundImpl = NULL;
+		pd2GetItemDiscoveryStateImpl_t pd2GetItemDiscoveryStateImpl = NULL;
 	} pd2;
 
 	std::vector<Toggle*> hotkeyToggles;
