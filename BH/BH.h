@@ -187,9 +187,30 @@ struct BHApp
 
 	struct
 	{
+		SettingsBool enabled = { true, true }; // chat item links (Modules/ItemLinks)
+	} itemLinks;
+
+	struct
+	{
 		pd2PlaySoundImpl_t pd2PlaySoundImpl = NULL;
 		pd2GetItemDiscoveryStateImpl_t pd2GetItemDiscoveryStateImpl = NULL;
 	} pd2;
+
+	struct
+	{
+		SettingsBool enabled = { true, true };              // false: vanilla chat, nothing hooked
+		SettingsBool timestamps = { false, false };         // "[hh:mm]" before every line
+		SettingsBool mentionHighlight = { true, true };
+		SettingsInt mentionSound = { 0, 0, 0, 4000 };       // Sounds.txt row, 0 = silent
+		SettingsArray mentionKeywords = { {}, {} };         // besides your character name
+		SettingsInt historyLines = { 500, 500, 50, 2000 };  // lines kept (all tabs share them)
+		SettingsInt visibleRows = { 14, 14, 4, 40 };        // rows shown while the panel is open
+		SettingsInt width = { 440, 440, 200, 1000 };        // panel width in px
+		SettingsInt fadeSeconds = { 10, 10, 0, 300 };       // closed panel: recent lines stay this long
+		SettingsInt fadeRows = { 8, 8, 0, 40 };             // closed panel: at most this many rows
+		SettingsBool alwaysOpen = { false, false };         // keep the full panel up while not typing
+		SettingsKey replyHotkey = { 0x52, 0x52 };           // Ctrl + this key: "/w <last whisperer> "
+	} chat;
 
 	std::vector<Toggle*> hotkeyToggles;
 };
