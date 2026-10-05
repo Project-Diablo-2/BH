@@ -59,6 +59,7 @@ namespace Drawing
 		static StatsDisplay* display;
 		std::string                   name;
 		unsigned int                  x, y, xSize, ySize;
+		unsigned int                  sideX = 0, sideY = 0, sideXSize = 0, sideYSize = 0; // the player tab's side panel (0 size: not drawn)
 		bool                          active, minimized;
 		CRITICAL_SECTION              crit;
 		std::vector<DisplayedStat*>   customStats;
@@ -131,6 +132,8 @@ namespace Drawing
 			char* bpCharString);
 
 		void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit, char* bpCharString, int x, int* y);
+		static bool GetBlockBreakpoints(UnitAny* pUnit, std::vector<int>& thresholds, int& currentFrames);
+		void DrawSidePanel(UnitAny* pUnit, int blockFrames);
 		static std::vector<int> StatsDisplay::GetRollbackSkillFrames(std::vector<int> nAnimFrames,
 			int nActionFrame,
 			int nTotalFrames,
