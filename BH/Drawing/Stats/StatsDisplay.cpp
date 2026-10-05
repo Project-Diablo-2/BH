@@ -256,7 +256,6 @@ void StatsDisplay::LoadConfig()
 	int xPos = App.general.statsOnRight.value ? *p_D2CLIENT_ScreenSizeX - 10 - GetXSize() : 10;
 	SetX(xPos);
 	SetYSize(height);
-	characterYSize = mercYSize = GetYSize();
 }
 
 void StatsDisplay::SetX(unsigned int newX)
@@ -303,8 +302,10 @@ bool StatsDisplay::InRange(unsigned int x,
 	unsigned int y)
 {
 	return IsActive() &&
-		x >= GetX() && y >= GetY() &&
-		x <= GetX() + GetXSize() && y <= GetY() + GetYSize();
+		((x >= GetX() && y >= GetY() &&
+		x <= GetX() + GetXSize() && y <= GetY() + GetYSize()) ||
+		(sideXSize > 0 && x >= sideX && y >= sideY &&
+		x <= sideX + sideXSize && y <= sideY + sideYSize));
 }
 
 static bool IsLivingMerc(UnitAny* pMerc)
@@ -354,6 +355,7 @@ void StatsDisplay::OnDraw()
 	{
 		int xPos = App.general.statsOnRight.value ? *p_D2CLIENT_ScreenSizeX - 10 - GetXSize() : 10;
 		SetX(xPos);
+		sideXSize = 0; // set again by DrawMercSkills (merc tab only)
 
 		// The Mercenary tab shows the merc's stats. Opening the merc inventory selects it (a tab
 		// clicked meanwhile counts until the inventory closes), then the user's tab is back.
@@ -368,7 +370,6 @@ void StatsDisplay::OnDraw()
 			unit = pMerc;
 			isMerc = true;
 		}
-		SetYSize(isMerc ? mercYSize : characterYSize);
 		for (std::list<Hook*>::iterator it = Hooks.begin(); it != Hooks.end(); ++it)
 			(*it)->OnDraw();
 
@@ -983,8 +984,8 @@ void StatsDisplay::OnDraw()
 		}
 		else
 		{
-			// A merc's magic/gold find has no effect on drops; its skills take that space.
-			DrawMercSkills(unit, column1, column2, &y);
+			// A merc's magic/gold find has no effect on drops; its skills go in a box of their own.
+			DrawMercSkills(unit);
 		}
 
 		//int cowKingKilled = D2COMMON_GetQuestFlag(D2CLIENT_GetQuestInfo(), 4, 10);
@@ -1023,14 +1024,6 @@ void StatsDisplay::OnDraw()
 				}
 			}
 		}
-
-		if (isMerc)
-		{
-			// The merc page's length depends on its skills: size the box to the last row drawn
-			// (used from the next frame on), within the screen.
-			unsigned int maxYSize = Hook::GetScreenHeight() - GetY();
-			mercYSize = min(static_cast<unsigned int>(y + 16 - GetY()), maxYSize);
-		}
 	}
 }
 
@@ -1051,7 +1044,9 @@ void StatsDisplay::DrawTabs(int x, int y, bool showMerc, bool hasMerc)
 	Texthook::Draw(mercX, y, None, 6, !hasMerc ? Grey : (showMerc ? White : Gold), "%s", mercLabel);
 }
 
-void StatsDisplay::DrawMercSkills(UnitAny* pMerc, int column1, int column2, int* pY)
+// The merc tab's skills box, next to the main panel (the main panel has no room left on a 600 px
+// high screen): every named skill with its level, auras first, and the attack skill's damage.
+void StatsDisplay::DrawMercSkills(UnitAny* pMerc)
 {
 	struct MercSkill
 	{
@@ -1124,25 +1119,47 @@ void StatsDisplay::DrawMercSkills(UnitAny* pMerc, int column1, int column2, int*
 		damageOfAttackSkill = isAttackSkill;
 	}
 
-	*pY += 8;
-	Texthook::Draw(column1, (*pY += 16), None, 6, Gold, "Skills (ÿc;auraÿc4):");
-	if (!damage.empty())
-		Texthook::Draw(column2, *pY, None, 6, Gold, "%s", damage.c_str());
+	unsigned int width = GetXSize();
+	int left = App.general.statsOnRight.value ? static_cast<int>(GetX()) - 10 - static_cast<int>(width) : GetX() + width + 10;
+	if (left < 0)
+		return;
+	int column1 = left + 5;
+	int column2 = column1 + width / 2;
 
-	// Two skills per row; one that is wider than half the panel gets a row of its own.
+	// Two skills per row; one that is wider than half the box gets a row of its own.
+	struct Line { int y; bool column2; std::string text; };
+	std::vector<Line> lines;
+	int dy = 8;
+	lines.push_back({ dy, false, "Skills (ÿc;auraÿc4):" });
+	if (!damage.empty())
+		lines.push_back({ dy, true, damage });
 	int half = column2 - column1 - 4;
 	bool rowOpen = false;
 	for (auto& cell : cells)
 	{
 		if (rowOpen && cell.width <= half)
 		{
-			Texthook::Draw(column2, *pY, None, 6, Gold, "%s", cell.text.c_str());
+			lines.push_back({ dy, true, cell.text });
 			rowOpen = false;
 			continue;
 		}
-		Texthook::Draw(column1, (*pY += 16), None, 6, Gold, "%s", cell.text.c_str());
+		lines.push_back({ dy += 16, false, cell.text });
 		rowOpen = cell.width <= half;
 	}
+
+	sideX = left;
+	sideY = GetY();
+	sideXSize = width;
+	sideYSize = dy + 20;
+	RECT rect;
+	rect.left = sideX;
+	rect.top = sideY;
+	rect.right = sideX + sideXSize;
+	rect.bottom = sideY + sideYSize;
+	Boxhook::Draw(sideX, sideY, sideXSize, sideYSize, White, Drawing::BTBlack);
+	Framehook::DrawRectStub(&rect);
+	for (const Line& line : lines)
+		Texthook::Draw(line.column2 ? column2 : column1, sideY + line.y, None, 6, Gold, "%s", line.text.c_str());
 }
 
 bool StatsDisplay::KeyClick(bool   bUp,
