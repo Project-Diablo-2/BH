@@ -59,9 +59,15 @@ namespace Drawing
 		static StatsDisplay* display;
 		std::string                   name;
 		unsigned int                  x, y, xSize, ySize;
+		unsigned int                  characterYSize, mercYSize;
 		bool                          active, minimized;
+		bool                          mercTabSelected, mercUiOpen, mercUiPage;
+		RECT                          characterTab, mercTab;
 		CRITICAL_SECTION              crit;
 		std::vector<DisplayedStat*>   customStats;
+
+		void DrawTabs(int x, int y, bool showMerc, bool hasMerc);
+		void DrawMercSkills(UnitAny* pMerc, int column1, int column2, int* pY);
 	public:
 		StatsDisplay(std::string name);
 		~StatsDisplay();
