@@ -428,7 +428,7 @@ void StatsDisplay::OnDraw()
 			L"Poison Resist:ÿc2 %d ÿc0/ %d  ÿc4Length:ÿc: %d%%",
 			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_POISONRESIST, 0)) + penalty,
 			pMax,
-			(100 - penalty - pLengthReduce)
+			100 - max(min(pLengthReduce + penalty, 75), -100)
 		);
 		Texthook::Draw(column1,
 			(y += 16),
