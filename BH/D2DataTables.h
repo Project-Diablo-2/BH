@@ -621,6 +621,9 @@ struct ItemStatCostTxt  //size 0x144
 	DWORD	nSaveBitsS12;		//0x144
 	DWORD	nSaveAddS12;		//0x148
 	DWORD	nSaveParamBitsS12;	//0x14C
+	DWORD	nSaveBitsS13;		//0x150
+	DWORD	nSaveAddS13;		//0x154
+	DWORD	nSaveParamBitsS13;	//0x158
 };
 
 struct MissilesTxt
