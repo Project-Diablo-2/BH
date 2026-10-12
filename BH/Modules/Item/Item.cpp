@@ -1938,7 +1938,7 @@ __declspec(dllexport)void __stdcall BHOnProperties(wchar_t* wTxt)
 			// Item SpellDesc
 			if (itemTxt->bspelldesc > 0)
 			{
-				wchar_t spellDesc[256];
+				wchar_t spellDesc[1024] = {};
 				D2CLIENT_GetItemDescription_STUB(itemTxt, spellDesc, pItem);
 				maxTextLimit -= wcslen(spellDesc) + 3; // color code added later
 			}
