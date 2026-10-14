@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  BH.Tests: unit tests for BH's game-independent logic (loot filter rules and formulas, config
+  files, stash export templates, game list filter, stats panel tables, automap info, party and
+  chat handling, UI controls). Builds a console exe that compiles the BH sources under test
+  directly, plus small fakes for the game functions they call (tests/fakes).
+
+  Not part of BH.sln on purpose, so building BH is unchanged. To run the tests:
+    msbuild tests\BH.Tests.vcxproj /p:Configuration=Release /p:Platform=Win32
+    tests\bin\Release\BH.Tests.exe
+  or open this project in Visual Studio and run it (Ctrl+F5).
+-->
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7D3F1C2A-5B8E-4C61-9A0D-2E4B6F8A1C35}</ProjectGuid>
+    <RootNamespace>BHTests</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '15.0'">v141</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '17.0'">v143</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '18.0'">v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
+    <TargetName>BH.Tests</TargetName>
+    <LocalDebuggerWorkingDirectory>$(ProjectDir)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <!-- Same include layout and source charset as BH.vcxproj. -->
+      <AdditionalIncludeDirectories>..\BH;..\ThirdParty;..\ThirdParty\cpp-lru-cache\include;fakes;support;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <!-- BH sources under test, compiled unmodified. -->
+  <ItemGroup>
+    <ClCompile Include="..\BH\AsyncDrawBuffer.cpp" />
+    <ClCompile Include="..\BH\Common.cpp" />
+    <ClCompile Include="..\BH\Config.cpp" />
+    <ClCompile Include="..\BH\D2Helpers.cpp" />
+    <ClCompile Include="..\BH\Drawing\Advanced\Checkhook\Checkhook.cpp" />
+    <ClCompile Include="..\BH\Drawing\Advanced\Combohook\Combohook.cpp" />
+    <ClCompile Include="..\BH\Drawing\Advanced\Keyhook\Keyhook.cpp" />
+    <ClCompile Include="..\BH\Drawing\Stats\StatsDisplay.cpp" />
+    <ClCompile Include="..\BH\JSONObject.cpp" />
+    <ClCompile Include="..\BH\Modules\Bnet\Bnet.cpp" />
+    <ClCompile Include="..\BH\Modules\ChatColor\ChatColor.cpp" />
+    <ClCompile Include="..\BH\Modules\Gamefilter\Gamefilter.cpp" />
+    <ClCompile Include="..\BH\Modules\Gamefilter\ParsedFilterString.cpp" />
+    <ClCompile Include="..\BH\Modules\Item\ItemDisplay.cpp" />
+    <ClCompile Include="..\BH\Modules\MapNotify\MapNotify.cpp" />
+    <ClCompile Include="..\BH\Modules\Party\Party.cpp" />
+    <ClCompile Include="..\BH\Modules\ScreenInfo\ScreenInfo.cpp" />
+    <ClCompile Include="..\BH\Mustache.cpp" />
+  </ItemGroup>
+  <!-- BH sources the code under test links against (drawing hooks, task queue). -->
+  <ItemGroup>
+    <ClCompile Include="..\BH\Drawing\Advanced\Colorhook\Colorhook.cpp" />
+    <ClCompile Include="..\BH\Drawing\Basic\Boxhook\Boxhook.cpp" />
+    <ClCompile Include="..\BH\Drawing\Basic\Crosshook\Crosshook.cpp" />
+    <ClCompile Include="..\BH\Drawing\Basic\Framehook\Framehook.cpp" />
+    <ClCompile Include="..\BH\Drawing\Basic\Texthook\Texthook.cpp" />
+    <ClCompile Include="..\BH\Drawing\Hook.cpp" />
+    <ClCompile Include="..\BH\Task.cpp" />
+  </ItemGroup>
+  <!-- Stand-ins for the game and for BH globals defined in files that are not compiled here. -->
+  <ItemGroup>
+    <ClCompile Include="fakes\BHGlobals.cpp" />
+    <ClCompile Include="fakes\EnginePtrs.cpp" />
+    <ClCompile Include="fakes\FakeEngine.cpp" />
+  </ItemGroup>
+  <!-- Shared test helpers. -->
+  <ItemGroup>
+    <ClCompile Include="support\LootFilter.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="AsyncDrawBufferTests.cpp" />
+    <ClCompile Include="BnetTests.cpp" />
+    <ClCompile Include="ChatColorTests.cpp" />
+    <ClCompile Include="CheckhookTests.cpp" />
+    <ClCompile Include="CombohookTests.cpp" />
+    <ClCompile Include="CommonTests.cpp" />
+    <ClCompile Include="ConfigTests.cpp" />
+    <ClCompile Include="D2HelpersTests.cpp" />
+    <ClCompile Include="FormulaTests.cpp" />
+    <ClCompile Include="GameFilterTests.cpp" />
+    <ClCompile Include="ItemConditionTests.cpp" />
+    <ClCompile Include="ItemStatConditionTests.cpp" />
+    <ClCompile Include="JSONObjectTests.cpp" />
+    <ClCompile Include="KeyhookTests.cpp" />
+    <ClCompile Include="LootFilterActionTests.cpp" />
+    <ClCompile Include="LootFilterRulesTests.cpp" />
+    <ClCompile Include="MapNotifyTests.cpp" />
+    <ClCompile Include="MustacheTests.cpp" />
+    <ClCompile Include="PartyTests.cpp" />
+    <ClCompile Include="ScreenInfoTests.cpp" />
+    <ClCompile Include="StatsDisplayTests.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

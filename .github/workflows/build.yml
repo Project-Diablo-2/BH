@@ -2,7 +2,8 @@ name: Build
 
 # Builds BH.dll (Release|Win32) with MSVC on every pull request and push to main,
 # so a change that breaks the build is caught before it is merged. The built DLL is
-# attached to each run as a downloadable artifact for testing.
+# attached to each run as a downloadable artifact for testing. A second job builds
+# and runs the unit tests (tests/BH.Tests.vcxproj); any failing test fails the run.
 
 on:
   pull_request:
@@ -43,3 +44,35 @@ jobs:
             **/Release/BH.dll
             **/Release/BH.pdb
           if-no-files-found: error
+
+  tests:
+    name: Unit tests (MSVC Release|Win32)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Build tests
+        run: msbuild tests/BH.Tests.vcxproj /m /p:Configuration=Release /p:Platform=Win32
+
+      - name: Run tests
+        working-directory: tests
+        run: bin\Release\BH.Tests.exe --duration=false
+
+      - name: Write JUnit report
+        if: always()
+        working-directory: tests
+        # Same tests again, written as JUnit XML for the artifact. Pass/fail is decided by
+        # the previous step, so this one never fails on its own.
+        run: |
+          bin\Release\BH.Tests.exe --reporters=junit --out=junit.xml
+          exit 0
+
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.sha }}
+          path: tests/junit.xml
+          if-no-files-found: ignore

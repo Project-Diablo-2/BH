@@ -18,3 +18,14 @@ You can change the command line arguments as you see fit.
 ```
 
 Any debug or changed version will only work in *Single Player*. Do not enter multiplayer with a modified BH
+
+## Unit tests
+
+`tests/BH.Tests.vcxproj` builds a console program that runs BH's game-independent logic (loot filter rules, formulas, config, stash export templates and more) against small fakes of the game functions it calls. It is not part of `BH.sln`, so building BH is unchanged. CI builds and runs it on every pull request.
+
+```
+msbuild tests\BH.Tests.vcxproj /p:Configuration=Release /p:Platform=Win32
+tests\bin\Release\BH.Tests.exe
+```
+
+Or open `tests\BH.Tests.vcxproj` in Visual Studio and run it. Run `BH.Tests.exe --help` for filtering options (for example `-ts=LootFilterRules` runs one suite). Tests marked `should_fail` document known bugs: they fail today, and the run turns red once the bug is fixed so the marker can be removed.
