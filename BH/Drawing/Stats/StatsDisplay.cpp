@@ -1351,7 +1351,8 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 						}
 
 						int nMinAccrIAS = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
-						int nBaseIAS = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0);
+						// Keep the skill's attack rate modifier (Double Swing bonus, Dragon Tail penalty), as the single-weapon paths do
+						int nBaseIAS = D2COMMON_GetUnitStat(pUnit, STAT_ATTACKRATE, 0) + nAttackRateBonus;
 
 						nAnimAcceleration = nBaseIAS + nMinAccrIAS;
 						nMinAnimAcceleration = nBaseIAS;
