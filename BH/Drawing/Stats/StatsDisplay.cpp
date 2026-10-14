@@ -428,14 +428,14 @@ void StatsDisplay::OnDraw()
 			L"Poison Resist:ÿc2 %d ÿc0/ %d  ÿc4Length:ÿc: %d%%",
 			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_POISONRESIST, 0)) + penalty,
 			pMax,
-			(100 - penalty - pLengthReduce)
+			100 - max(min(pLengthReduce + penalty, 75), -100)
 		);
 		Texthook::Draw(column1,
 			(y += 16),
 			None,
 			6,
 			Gold,
-			L"Curse Resist:ÿc8 %d /ÿc0 75 ÿc4Length:ÿc0 %d%%",
+			L"Curse Resist:ÿc8 %d ÿc0/ 75 ÿc4Length:ÿc0 %d%%",
 			static_cast<int>(min(D2COMMON_GetUnitStat(unit, STAT_CURSE_EFFECTIVENESS, 0), 75)),
 			static_cast<int>(max(100 - D2COMMON_GetUnitStat(unit, STAT_CURSERESISTANCE, 0), 25)));
 		y += 8;
@@ -729,7 +729,7 @@ void StatsDisplay::OnDraw()
 		int nCrushingBlowEfficiency = 100 + D2COMMON_GetUnitStat(unit, STAT_CRUSHINGBLOW_EFFICIENCY, 0) + GetMasteryStat(unit, STAT_CRUSHINGBLOW_EFFICIENCY, SKILL_TWOHANDMASTERY);
 		int nCriticalStrike = D2COMMON_GetUnitStat(unit, STAT_CRITICALSTRIKE, 0) + D2COMMON_GetUnitStat(unit, STAT_ITEM_CRITICALSTRIKE_CHANCE, 0) + GetMasteryStat(unit, STAT_CRITICALSTRIKE, SKILL_ONEHANDMASTERY) + GetMasteryStat(unit, STAT_CRITICALSTRIKE, SKILL_THROWINGMASTERY) + GetMasteryStat(unit, STAT_CRITICALSTRIKE, SKILL_CLAWANDDAGGERMASTERY);
 		int nCriticalStrikeMultiplier = 200 + D2COMMON_GetUnitStat(unit, STAT_CRITICALSTRIKE_MULTIPLIER, 0) + GetMasteryStat(unit, STAT_CRITICALSTRIKE_MULTIPLIER, SKILL_JAVELINANDSPEARMASTERY);
-		int nPierce = D2COMMON_GetUnitStat(unit, STAT_PIERCINGATTACK, 0) + D2COMMON_GetUnitStat(unit, STAT_PIERCE, 0); //+ GetMasteryStat(unit, STAT_PIERCE, SKILL_THROWINGMASTERY);
+		int nPierce = D2COMMON_GetUnitStat(unit, STAT_PIERCINGATTACK, 0) + D2COMMON_GetUnitStat(unit, STAT_PIERCE, 0) + GetMasteryStat(unit, STAT_PIERCE, SKILL_THROWINGMASTERY);
 
 		Texthook::Draw(column1,
 			(y += 16),

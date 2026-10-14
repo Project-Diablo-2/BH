@@ -463,8 +463,10 @@ int __stdcall GetMasteryStat(UnitAny* pUnit, int nStatId, int nSkill)
 					break;
 				case STAT_CRITICALSTRIKE:
 				{
-					if (((nSkill == SKILL_ONEHANDMASTERY && D2COMMON_11034_ITEMS_CheckItemTypes(nRightSkillItemType, ITEM_TYPE_WEAPON) && !D2COMMON_11034_ITEMS_CheckItemTypes(nRightSkillItemType, ITEM_TYPE_MISSILE_WEAPON) && !D2COMMON_11034_ITEMS_CheckItemTypes(nRightSkillItemType, ITEM_TYPE_THROWN_WEAPON)) || nRightSkillItemType <= 0) ||
-						(nSkill == SKILL_CLAWANDDAGGERMASTERY && D2COMMON_11034_ITEMS_CheckItemTypes(nRightSkillItemType, ITEM_TYPE_HAND_TO_HAND)) ||
+					// Claw and Dagger Mastery: PD2's claw skills (Tiger Strike, Fists of Fire, ...) use the "asm" item type, plain melee skills (Attack) use "weap"
+					bool bMeleeWeaponSkill = D2COMMON_11034_ITEMS_CheckItemTypes(nRightSkillItemType, ITEM_TYPE_WEAPON) && !D2COMMON_11034_ITEMS_CheckItemTypes(nRightSkillItemType, ITEM_TYPE_MISSILE_WEAPON) && !D2COMMON_11034_ITEMS_CheckItemTypes(nRightSkillItemType, ITEM_TYPE_THROWN_WEAPON);
+					if (((nSkill == SKILL_ONEHANDMASTERY && bMeleeWeaponSkill) || nRightSkillItemType <= 0) ||
+						(nSkill == SKILL_CLAWANDDAGGERMASTERY && (bMeleeWeaponSkill || D2COMMON_11034_ITEMS_CheckItemTypes(nRightSkillItemType, ITEM_TYPE_ASSASSIN_MASTERY))) ||
 						(nSkill == SKILL_THROWINGMASTERY && D2COMMON_11034_ITEMS_CheckItemTypes(nRightSkillItemType, ITEM_TYPE_THROWN_WEAPON)))
 					{
 						nStatValue = D2COMMON_10786_SKILLS_EvaluateSkillFormula(pUnit, pSkillsTxt->dwPassiveCalc3, nSkill, nSkillLevel);
@@ -535,7 +537,8 @@ int __stdcall GetMasteryStat(UnitAny* pUnit, int nStatId, int nSkill)
 				}
 				else
 				{
-					if (nStatId == STAT_PIERCE)
+					// The client's stat list carries these passive stats whatever the weapon; the critical strike chance is only added above on a match
+					if (nStatId == STAT_CRUSHINGBLOW || nStatId == STAT_CRUSHINGBLOW_EFFICIENCY || nStatId == STAT_CRITICALSTRIKE_MULTIPLIER || nStatId == STAT_PIERCE)
 					{
 						return -nStatValue;
 					}
