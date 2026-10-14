@@ -12,6 +12,8 @@
 
 #define MAX_ITEM_NAME_LINE_SIZE 56 // Visible characters on one line of an item name (color codes not counted)
 #define MAX_ITEM_NAME_TOTAL_SIZE 72 // Visible characters in a whole item name, line breaks included
+#define MAX_ITEM_NAME_BUFFER_SIZE 128 // wchar_t ItemNamePatch copies an item name into, color codes and terminator included
+#define MAX_QUEST_ITEM_NAME_BUFFER_SIZE 124 // The same for quest items, which have an extra color code
 #define MAX_ITEM_TEXT_SIZE 512 // Half of the maximum in-game limit
 #define BOOK_NAME_SIZE_LIMIT 127 // TP & ID Tomes have a smaller limit for some reason
 #define ITEM_TEXT_SIZE_LIMIT 1023

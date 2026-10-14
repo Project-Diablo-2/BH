@@ -908,10 +908,10 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
 		if (!itemTxt || (itemTxt && itemTxt->bquest > 0))
 		{
 			// Quest items have an extra color code (eg: ÿc0ÿc4Horadric Cube)
-			nameSize = 124;
+			nameSize = MAX_QUEST_ITEM_NAME_BUFFER_SIZE;
 			break;
 		}
-		nameSize = 128;
+		nameSize = MAX_ITEM_NAME_BUFFER_SIZE;
 		break;
 	}
 

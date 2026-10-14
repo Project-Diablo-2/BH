@@ -3023,12 +3023,13 @@ bool IsWhitespaceEquivalent(wchar_t ch)
 	return iswspace(ch) || ch == L'\b';
 }
 
-// A color code at position i: \xFF, 'c', then one of 0-9 ; : or \x01-\x1F (3 wchar_t)
+// A color code at position i: \xFF, 'c', then one of 0-9 ; : \x01-\x1F or \x40-\x43 (HD text transparency) (3 wchar_t)
 bool IsColorCode(const wstring& text, size_t i)
 {
 	if (i + 2 >= text.size() || text[i] != L'\xFF' || text[i + 1] != L'c') { return false; }
 	const wchar_t c = text[i + 2];
-	return (c >= L'0' && c <= L'9') || c == L';' || c == L':' || (c >= L'\x01' && c <= L'\x1F');
+	return (c >= L'0' && c <= L'9') || c == L';' || c == L':' || (c >= L'\x01' && c <= L'\x1F') ||
+		(c >= L'\x40' && c <= L'\x43');
 }
 
 void TrimItemText(UnitItemInfo* uInfo,
@@ -3085,12 +3086,18 @@ void TrimItemText(UnitItemInfo* uInfo,
 		// lines may hold up to MAX_ITEM_NAME_TOTAL_SIZE in all. Shop items keep their larger limit.
 		const int lineLimit = inShop ? MAX_ITEM_TEXT_SIZE : MAX_ITEM_NAME_LINE_SIZE;
 		const int totalLimit = inShop ? MAX_ITEM_TEXT_SIZE : MAX_ITEM_NAME_TOTAL_SIZE;
+		// ItemNamePatch then copies the name, color codes (3 wchar_t each) included, into a buffer of
+		// MAX_ITEM_NAME_BUFFER_SIZE: stop before it is full, so the name is cut here, at a whole
+		// character, and not by that copy
+		ItemsTxt* itemTxt = D2COMMON_GetItemText(uInfo->item->dwTxtFileNo);
+		const size_t sizeLimit = inShop ? MAX_ITEM_TEXT_SIZE - 1 :
+			(!itemTxt || itemTxt->bquest > 0 ? MAX_QUEST_ITEM_NAME_BUFFER_SIZE : MAX_ITEM_NAME_BUFFER_SIZE) - 1;
 
 		wstring trimmed;
 		trimmed.reserve(name.size());
 		int    lineChars = 0;
 		int    totalChars = 0;
-		size_t keepSize = 0; // trimmed size up to the last visible character kept
+		size_t keepSize = 0; // trimmed size up to the last visible character kept (not a line break)
 		bool   cut = false;
 		for (size_t i = 0; i < name.size(); ++i)
 		{
@@ -3101,18 +3108,18 @@ void TrimItemText(UnitItemInfo* uInfo,
 				i += 2;
 				continue;
 			}
-			if (totalChars >= totalLimit) { cut = true; break; }
+			if (totalChars >= totalLimit || trimmed.size() >= sizeLimit) { cut = true; break; }
 			const wchar_t ch = name[i];
 			if (ch == L'\n') { lineChars = 0; }
 			else if (lineChars >= lineLimit) { cut = true; continue; } // rest of this line: drop up to the next line break
 			else { ++lineChars; }
 			trimmed += ch;
 			++totalChars;
-			keepSize = trimmed.size();
+			if (ch != L'\n') { keepSize = trimmed.size(); }
 		}
-		if (cut)
+		if (cut || trimmed.size() > sizeLimit)
 		{
-			trimmed.resize(keepSize); // drop color codes left after the last visible character
+			trimmed.resize(keepSize); // drop color codes and a line break left after the last visible character
 			name = trimmed;
 		}
 	}
