@@ -8,6 +8,8 @@
 #include "../Item/ItemDisplay.h"
 #include "../../AsyncDrawBuffer.h"
 #include "../Item/Item.h"
+#include "../Item/ItemBeams.h"
+#include "MarkerShapes.h"
 #include "../../Modules/GameSettings/GameSettings.h"
 
 #pragma optimize( "", off)
@@ -51,6 +53,9 @@ void MapNotify::OnLoop() {
 Act* lastAct = NULL;
 
 void MapNotify::OnDraw() {
+	ItemBeams::Draw();
+	ItemBeams::EndFrame();
+
 	UnitAny* player = D2CLIENT_GetPlayerUnit();
 
 	if (!player || !player->pAct || player->pPath->pRoom1->pRoom2->pLevel->dwLevelNo == 0)
@@ -146,18 +151,27 @@ void MapNotify::OnAutomapDraw() {
 					if (ItemAttributeMap.find(uInfo.itemCode) != ItemAttributeMap.end()) {
 						uInfo.attrs = ItemAttributeMap[uInfo.itemCode];
 						const vector<Action> actions = map_action_cache.Get(&uInfo);
+						// %ICON-<shape>%: the marker rule's own shape, else the item's resolved one
+						// (a later %CONTINUE% rule may set the shape without a marker).
+						GroundStyle groundStyle;
+						const int itemShape = GetGroundStyle(unit, &groundStyle) ? groundStyle.iconShape : ICON_SQUARE;
 						for (auto& action : actions) {
 							auto color = action.colorOnMap;
 							auto borderColor = action.borderColor;
 							auto dotColor = action.dotColor;
 							auto pxColor = action.pxColor;
 							auto lineColor = action.lineColor;
+							const int shape = action.iconShapeSet ? action.iconShape : itemShape;
 							xPos = unit->pItemPath->dwPosX;
 							yPos = unit->pItemPath->dwPosY;
 							automapBuffer.push_top_layer(
-								[color, unit, xPos, yPos, MyPos, borderColor, dotColor, pxColor, lineColor]()->void {
+								[color, unit, xPos, yPos, MyPos, borderColor, dotColor, pxColor, lineColor, shape]()->void {
 									POINT automapLoc;
 									Drawing::Hook::ScreenToAutomap(&automapLoc, xPos, yPos);
+									if (shape != ICON_SQUARE) {
+										MarkerShapes::DrawMarker(automapLoc.x, automapLoc.y, shape, borderColor, color, dotColor, pxColor);
+										return;
+									}
 									if (borderColor != UNDEFINED_COLOR)
 										Drawing::Boxhook::Draw(automapLoc.x - 4, automapLoc.y - 4, 8, 8, borderColor, Drawing::BTHighlight);
 									if (color != UNDEFINED_COLOR)
@@ -180,6 +194,7 @@ void MapNotify::OnAutomapDraw() {
 }
 
 void MapNotify::OnGameJoin() {
+	ItemBeams::Reset();
 }
 
 void Squelch(DWORD Id, BYTE button) {

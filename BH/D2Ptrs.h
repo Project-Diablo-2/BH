@@ -259,6 +259,7 @@ VARPTR(D2CLIENT, WeaponSpeedModTable, int*, 0xE10E0)
 VARPTR(D2CLIENT, MapId, DWORD, 0x11C310)
 VARPTR(D2CLIENT, Music_CurrentLevelId, DWORD, 0x11C34C)
 VARPTR(D2CLIENT, ScreenCovered, DWORD, 0x11C414) // 1 = Right Side Covered 2 = Left Side Covered 3 = Both Sides Covered
+VARPTR(D2CLIENT, ViewShiftX, int, 0x11C418) // world view shift while one side panel is open: -ScreenSizeX/4 right, +ScreenSizeX/4 left, else 0
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -50,6 +50,8 @@
 #include "../../BH.h"
 #include "../../D2Stubs.h"
 #include "ItemDisplay.h"
+#include "GroundLabels.h"
+#include "ItemBeams.h"
 #include "../../lrucache.hpp"
 #include "../GameSettings/GameSettings.h"
 
@@ -61,6 +63,7 @@ RunesTxt* GetRunewordTxtById(int rwId);
 void FixDecimalString(wchar_t* s, int n);
 
 bool initialized = false;
+const char* groundLabelsOff = nullptr; // why the loot filter label styles are off, if they are
 unsigned int STAT_MAX;
 unsigned int SKILL_MAX;
 unsigned int PREFIX_OFFSET;
@@ -156,6 +159,11 @@ void Item::OnLoad() {
 	//itemPropertyStringPatch->Install();
 
 	itemNamePatch->Install();
+	const char* why = "";
+	groundLabelsOff = GroundLabels::Install(&why) ? nullptr : why;
+	// Beams go under the labels: draw them just before the first ground label of each frame (MapNotify's
+	// OnDraw still draws them on frames without labels; ItemBeams::Draw runs once per frame).
+	GroundLabels::SetPreLabelCallback(&ItemBeams::Draw);
 
 	DrawSettings();
 }
@@ -164,6 +172,7 @@ void ResetCaches() {
 	item_desc_cache.ResetCache();
 	item_name_cache.ResetCache();
 	map_action_cache.ResetCache();
+	ground_style_cache.ResetCache();
 }
 
 bool IsInitialized() {
@@ -632,6 +641,12 @@ void Item::OnGameJoin() {
 		GetAffixOffsets();
 		initialized = true;
 	}
+
+	static bool groundLabelsNoted = false;
+	if (groundLabelsOff && !groundLabelsNoted) {
+		groundLabelsNoted = true;
+		PrintText(TextColor::Orange, "BH: loot filter label styles are off (%s)", groundLabelsOff);
+	}
 }
 
 void Item::LoadConfig() {
@@ -799,6 +814,7 @@ void Item::OnUnload() {
 	oldGroundIntercept->Remove();
 	dropToGroundIntercept->Remove();
 	putInContainerIntercept->Remove();
+	GroundLabels::Uninstall();
 	ItemDisplay::UninitializeItemRules();
 }
 
@@ -869,24 +885,6 @@ void Item::OnLeftClick(bool up, int x, int y, bool* block) {
 		return;
 	if (D2CLIENT_GetUIState(0x01) && viewingUnit != NULL && x >= 400)
 		*block = true;
-}
-
-int CreateUnitItemInfo(UnitItemInfo* uInfo, UnitAny* item) {
-	char* code = D2COMMON_GetItemText(item->dwTxtFileNo)->szCode;
-	// If the item code is less than 4 characters, it will have space characters instead of null character
-	uInfo->itemCode[0] = code[0];
-	uInfo->itemCode[1] = code[1] != ' ' ? code[1] : 0;
-	uInfo->itemCode[2] = code[2] != ' ' ? code[2] : 0;
-	uInfo->itemCode[3] = code[3] != ' ' ? code[3] : 0;
-	uInfo->itemCode[4] = 0;
-	uInfo->item = item;
-	if (ItemAttributeMap.find(std::string(uInfo->itemCode)) != ItemAttributeMap.end()) {
-		uInfo->attrs = ItemAttributeMap[std::string(uInfo->itemCode)];
-		return 0;
-	}
-	else {
-		return -1;
-	}
 }
 
 void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
