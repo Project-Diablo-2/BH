@@ -20,6 +20,8 @@ const int kBearTxtFileNoAlias = 140;
 const int kDruidOneHandFHRAlias = 141;
 const int kPaladinSpearStaveFHRAlias = 142;
 const int kSorceressLightningFCRAlias = 143;
+const int kHolyShieldState = 101;      // states.txt holyshield: block animation runs at base 100 instead of 50
+const int kMaxRateStat = 600;          // the FCR/FHR tables stop at 600 too
 
 std::map<DWORD, std::vector<int>> faster_hit_recovery_frames = {
 	{ CLASS_AMA, { 6, 13, 20, 32, 52, 86, 174, 600 } },
@@ -224,7 +226,7 @@ StatsDisplay::~StatsDisplay()
 
 void StatsDisplay::LoadConfig()
 {
-	int height = 342 + 8 * 7 + 16 * 10;
+	int height = 342 + 8 * 7 + 16 * 12;
 	customStats.clear();
 
 	for (map<string, string>::iterator it = App.screen.additionalStats.values.begin(); it != App.screen.additionalStats.values.end(); it++)
@@ -300,8 +302,10 @@ bool StatsDisplay::InRange(unsigned int x,
 	unsigned int y)
 {
 	return IsActive() &&
-		x >= GetX() && y >= GetY() &&
-		x <= GetX() + GetXSize() && y <= GetY() + GetYSize();
+		((x >= GetX() && y >= GetY() &&
+		x <= GetX() + GetXSize() && y <= GetY() + GetYSize()) ||
+		(sideXSize > 0 && x >= sideX && y >= sideY &&
+		x <= sideX + sideXSize && y <= sideY + sideYSize));
 }
 
 void StatsDisplay::Draw()
@@ -324,6 +328,7 @@ void StatsDisplay::OnDraw()
 	{
 		int xPos = App.general.statsOnRight.value ? *p_D2CLIENT_ScreenSizeX - 10 - GetXSize() : 10;
 		SetX(xPos);
+		sideXSize = 0; // set again by DrawSidePanel (player tab only)
 
 		if (D2CLIENT_GetUIState(UI_MERC))
 		{
@@ -526,6 +531,13 @@ void StatsDisplay::OnDraw()
 			lPierce,
 			pPierce,
 			mPierce);
+		Texthook::Draw(column1,
+			(y += 16),
+			None,
+			6,
+			Gold,
+			L"Physical Pierce:ÿc0 %d%%",
+			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_PASSIVEPHYSRESREDUC, 0)));
 		int  classNum = pData->nCharClass;
 		auto classArMod = CharList[classNum]->toHitFactor - 35;
 		int  dexAR = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_DEXTERITY, 0)) * 5 + classArMod;
@@ -709,6 +721,24 @@ void StatsDisplay::OnDraw()
 			Gold,
 			"FHR:ÿc0 %s",
 			bp_string);
+
+		int blockFrames = -1;
+		if (!isMerc)
+		{
+			std::vector<int> fbr_breakpoints;
+			char bp_fbr_string[255] = "N/A";
+			if (GetBlockBreakpoints(unit, fbr_breakpoints, blockFrames) && !fbr_breakpoints.empty())
+			{
+				GetBreakpointString(unit, STAT_FASTERBLOCK, fbr_breakpoints, (char*)&bp_fbr_string);
+			}
+			Texthook::Draw(column1,
+				(y += 16),
+				None,
+				6,
+				Gold,
+				"FBR:ÿc0 %s",
+				bp_fbr_string);
+		}
 
 
 		char ias_bp_string[255] = "IAS (Frames):ÿc0 ";
@@ -936,6 +966,11 @@ void StatsDisplay::OnDraw()
 				}
 			}
 		}
+
+		if (!isMerc)
+		{
+			DrawSidePanel(unit, blockFrames);
+		}
 	}
 }
 
@@ -1024,6 +1059,237 @@ void StatsDisplay::GetBreakpointString(UnitAny* unit,
 	bpString += std::to_string(bps[bps.size() - 1]);
 
 	sprintf(bpCharString, "%.255s", bpString.c_str());
+}
+
+// Block animation frames for every Faster Block Rate, from the block (BL) AnimData record the game
+// plays for the unit's current form and weapon class (same lookup as the IAS line):
+//   frames = ceil(256 * Frames / floor(AnimSpeed * (50 + EFBR) / 100)) - 1,  EFBR = 120 * FBR / (120 + FBR)
+// Holy Shield raises the base from 50 to 100. thresholds = the FBR values (1..600) where the frame
+// count drops; currentFrames = frames at the unit's FBR. False when the unit has no block animation.
+bool StatsDisplay::GetBlockBreakpoints(UnitAny* pUnit, std::vector<int>& thresholds, int& currentFrames)
+{
+	int nAnimType = pUnit->dwType;
+	int nUnitID = pUnit->dwTxtFileNo;
+	int nMode = PLAYER_MODE_BLOCK;
+	D2COMMON_10350_ConvertMode(pUnit, &nAnimType, &nUnitID, &nMode, (char*)"StatsDisplay.cpp", __LINE__);
+	AnimDataRecord* pAnimData = D2COMMON_GetAnimDataRecord(pUnit, nUnitID, nMode, nAnimType, pUnit->pInventory);
+	if (!pAnimData || pAnimData->dwFrames == 0 || pAnimData->dwAnimSpeed == 0)
+	{
+		return false;
+	}
+
+	int nBase = D2COMMON_GetUnitState(pUnit, kHolyShieldState) ? 100 : 50;
+	auto framesAt = [&](int nFBR) {
+		int nEffective = 120 * nFBR / (120 + nFBR);
+		int nAnimRate = max(1, static_cast<int>(pAnimData->dwAnimSpeed) * (nBase + nEffective) / 100);
+		return (256 * static_cast<int>(pAnimData->dwFrames) + nAnimRate - 1) / nAnimRate - 1;
+	};
+
+	int nPrevious = framesAt(0);
+	for (int nFBR = 1; nFBR <= kMaxRateStat; nFBR++)
+	{
+		int nFrames = framesAt(nFBR);
+		if (nFrames != nPrevious)
+		{
+			thresholds.push_back(nFBR);
+			nPrevious = nFrames;
+		}
+	}
+	currentFrames = framesAt(max(0, static_cast<int>(D2COMMON_GetUnitStat(pUnit, STAT_FASTERBLOCK, 0))));
+	return true;
+}
+
+namespace
+{
+	std::string WideToUtf8(const wchar_t* text)
+	{
+		if (!text)
+		{
+			return "";
+		}
+		char* buffer = UnicodeToAnsi(text);
+		std::string result = buffer;
+		delete[] buffer;
+		return result;
+	}
+
+	std::string FormatLine(const char* format, ...)
+	{
+		char buffer[512];
+		va_list args;
+		va_start(args, format);
+		vsnprintf(buffer, sizeof(buffer), format, args);
+		va_end(args);
+		return buffer;
+	}
+
+	std::string SkillName(int nSkillId)
+	{
+		SkillsTxt* pSkillsTxt = GetSkillRecord(nSkillId);
+		sgptDataTable* pTables = *p_D2COMMON_sgptDataTable;
+		if (pSkillsTxt && pTables && pTables->pSkillDescTxt)
+		{
+			std::string name = WideToUtf8(GetTblEntryByIndex(pTables->pSkillDescTxt[pSkillsTxt->wSkillDesc].wStrName, TBLOFFSET_STRING));
+			if (!name.empty())
+			{
+				return name;
+			}
+		}
+		return "Skill " + std::to_string(nSkillId);
+	}
+
+	// The game's own item text for a skill tab bonus ("+%d to Javelin and Spear Skills", CharStats.txt
+	// StrSkillTab1-3 = tab 0-2 of item_addskill_tab's param (class << 3 | tab)).
+	std::string SkillTabLine(int nClass, int nTab, int nValue)
+	{
+		sgptDataTable* pTables = *p_D2COMMON_sgptDataTable;
+		std::wstring text;
+		if (pTables && pTables->pCharStatsTxt && nClass >= 0 && static_cast<DWORD>(nClass) < pTables->dwCharsStatsRecs)
+		{
+			CharStatsTxt* pCharStats = &pTables->pCharStatsTxt[nClass];
+			WORD wStr[3] = { pCharStats->wStrSkillTab1, pCharStats->wStrSkillTab2, pCharStats->wStrSkillTab3 };
+			wchar_t* tblText = D2LANG_GetLocaleText(wStr[nTab]);
+			if (tblText)
+			{
+				text = tblText;
+			}
+		}
+		if (text.empty())
+		{
+			text = L"+%d to Skill Tab " + std::to_wstring(nTab + 1);
+		}
+		size_t pos = text.find(L"+%d");
+		size_t len = 3;
+		if (pos == std::wstring::npos)
+		{
+			pos = text.find(L"%d");
+			len = 2;
+		}
+		wchar_t number[16];
+		swprintf(number, 16, len == 3 ? L"%+d" : L"%d", nValue);
+		if (pos != std::wstring::npos)
+		{
+			text.replace(pos, len, number);
+		}
+		return WideToUtf8(text.c_str());
+	}
+}
+
+// The player tab's side panel, next to the main one: rows the main panel has no room for (the screen
+// is 600 px high). Attributes without/with gear, +skills, auras and oskills, avoidance, block frames
+// and off-weapon/demon/undead enhanced damage.
+void StatsDisplay::DrawSidePanel(UnitAny* pUnit, int blockFrames)
+{
+	struct Line { int y; bool column2; std::string text; };
+	std::vector<Line> lines;
+	int dy = -8;
+	auto row = [&](const std::string& text) { lines.push_back({ dy += 16, false, text }); };
+	auto cell2 = [&](const std::string& text) { lines.push_back({ dy, true, text }); };
+	auto stat = [&](int nStat, int nParam = 0) { return static_cast<int>(D2COMMON_GetUnitStat(pUnit, nStat, nParam)); };
+	auto base = [&](int nStat) { return D2COMMON_GetBaseStatSigned(pUnit, nStat, 0); };
+
+	row("Attributes (base / total):");
+	row(FormatLine("Strength:ÿc0 %d / %d", base(STAT_STRENGTH), stat(STAT_STRENGTH)));
+	cell2(FormatLine("Dexterity:ÿc0 %d / %d", base(STAT_DEXTERITY), stat(STAT_DEXTERITY)));
+	row(FormatLine("Vitality:ÿc0 %d / %d", base(STAT_VITALITY), stat(STAT_VITALITY)));
+	cell2(FormatLine("Energy:ÿc0 %d / %d", base(STAT_ENERGY), stat(STAT_ENERGY)));
+	dy += 8;
+
+	int nClass = static_cast<int>(pUnit->dwTxtFileNo);
+	row(FormatLine("All Skills:ÿc0 %+d", stat(STAT_ALLSKILLS)));
+	cell2(FormatLine("Class Skills:ÿc0 %+d", stat(STAT_CLASSSKILLS, nClass)));
+	for (int nTab = 0; nTab < 3; nTab++)
+	{
+		int nValue = stat(STAT_SKILLTAB, (nClass << 3) | nTab);
+		if (nValue != 0)
+		{
+			row("ÿc0" + SkillTabLine(nClass, nTab, nValue));
+		}
+	}
+	dy += 8;
+
+	// Auras: the right skill when it is an aura the player is running, and auras from items
+	// (item_aura, param = skill, value = level). Oskills (item_nonclassskill): total level, i.e.
+	// with +all skills, when the skill is in the player's skill list.
+	int nAuraLines = 0;
+	Skill* pRightSkill = D2COMMON_10507_UNITS_GetRightSkill(pUnit);
+	if (pRightSkill && pRightSkill->pSkillInfo && pRightSkill->pSkillInfo->dwFlags.bAura &&
+		pRightSkill->pSkillInfo->wAuraState && D2COMMON_GetUnitState(pUnit, pRightSkill->pSkillInfo->wAuraState))
+	{
+		row(FormatLine("Aura:ÿc0 %s (Level %d)", SkillName(pRightSkill->pSkillInfo->wSkillId).c_str(),
+			D2COMMON_GetSkillLevel(pUnit, pRightSkill, TRUE)));
+		nAuraLines++;
+	}
+	StatList* pStats = pUnit->pStats;
+	for (int pass = 0; pass < 2 && pStats && pStats->pSetStat; pass++)
+	{
+		for (int i = 0; i < pStats->wSetStatCount; i++)
+		{
+			Stat* pStat = &pStats->pSetStat[i];
+			int nValue = static_cast<int>(pStat->dwStatValue);
+			if (pass == 0 && pStat->wStatIndex == STAT_AURA && nValue > 0)
+			{
+				row(FormatLine("Aura:ÿc0 %s (Level %d)", SkillName(pStat->wSubIndex).c_str(), nValue));
+				nAuraLines++;
+			}
+			else if (pass == 1 && pStat->wStatIndex == STAT_NONCLASSSKILL && nValue > 0)
+			{
+				int nLevel = nValue;
+				for (Skill* pSkill = pUnit->pInfo ? pUnit->pInfo->pFirstSkill : NULL; pSkill; pSkill = pSkill->pNextSkill)
+				{
+					if (pSkill->pSkillInfo && pSkill->pSkillInfo->wSkillId == pStat->wSubIndex && pSkill->itemGUID == -1)
+					{
+						nLevel = D2COMMON_GetSkillLevel(pUnit, pSkill, TRUE);
+						break;
+					}
+				}
+				row(FormatLine("Oskill:ÿc0 %s (Level %d)", SkillName(pStat->wSubIndex).c_str(), nLevel));
+				nAuraLines++;
+			}
+		}
+	}
+	if (nAuraLines == 0)
+	{
+		row("Auras / Oskills:ÿc0 none");
+	}
+	dy += 8;
+
+	row(FormatLine("Dodge / Avoid / Evade:ÿc0 %d%% / %d%% / %d%%", stat(STAT_DODGE), stat(STAT_AVOID), stat(STAT_EVADE)));
+	row(blockFrames >= 0 ? FormatLine("Block Frames:ÿc0 %d", blockFrames) : std::string("Block Frames:ÿc0 N/A"));
+	dy += 8;
+
+	// item_maxdamage_percent on the player is the off-weapon ED: a weapon's own ED (op 13) goes into
+	// the weapon's damage and is not part of the player's total.
+	row(FormatLine("Off-Weapon ED:ÿc0 %d%%", stat(STAT_ENHANCEDMAXIMUMDAMAGE)));
+	row(FormatLine("ED vs Demons:ÿc0 %d%%", stat(STAT_DAMAGETODEMONS)));
+	cell2(FormatLine("ED vs Undead:ÿc0 %d%%", stat(STAT_DAMAGETOUNDEAD)));
+
+	unsigned int width = GetXSize();
+	unsigned int height = dy + 20;
+	int left = App.general.statsOnRight.value ? static_cast<int>(GetX()) - 10 - static_cast<int>(width) : GetX() + width + 10;
+	if (left < 0)
+	{
+		return;
+	}
+	sideX = left;
+	sideY = GetY();
+	sideXSize = width;
+	sideYSize = height;
+
+	RECT rect;
+	rect.left = sideX;
+	rect.top = sideY;
+	rect.right = sideX + width;
+	rect.bottom = sideY + height;
+	Boxhook::Draw(sideX, sideY, width, height, White, Drawing::BTBlack);
+	Framehook::DrawRectStub(&rect);
+
+	int column1 = sideX + 5;
+	int column2 = column1 + width / 2;
+	for (const Line& line : lines)
+	{
+		Texthook::Draw(line.column2 ? column2 : column1, sideY + line.y, None, 6, Gold, "%s", line.text.c_str());
+	}
 }
 
 void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
