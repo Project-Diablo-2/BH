@@ -1242,20 +1242,29 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 					"IAS (Frames): N/A");
 				return;
 			}
-			// Hide Werewolf & Werebear until we have their frames worked out
-			if (nUnitID == 430 || nUnitID == 431)
-			{
-				Texthook::Draw(x,
-					*pY,
-					None,
-					6,
-					Gold,
-					"IAS (Frames): N/A (Work in Progress)");
-				return;
-			}
-
 			nFrames = pAnimData->dwFrames;
 			nAnimSpeed = pAnimData->dwAnimSpeed;
+			// Werewolf & Werebear (monstats wolf/bear, the gfx of states 139/140) don't attack at their
+			// animation's own speed. D2Common (D2Common_11043) replaces it with a speed derived from the
+			// human-form attack with the equipped weapon, applied to the form's neutral animation:
+			//   Delay     = D2COMMON_10592_GetWeaponAttackSpeed(unit, weapon)  (19 when unarmed)
+			//             = 256*HumanA1Frames / (HumanA1Speed*(100 + WeaponIAS - WSM)/100)
+			//   AnimSpeed = 256*NeutralFrames / Delay
+			// so the weapon's IAS/WSM count twice (here and in the attack rate below).
+			if (nUnitID == 430 || nUnitID == 431)
+			{
+				int nDelay = 19;
+				UnitAny* pWeapon = D2COMMON_GetLeftHandWeapon(pUnit->pInventory);
+				if (pWeapon)
+				{
+					nDelay = D2COMMON_10592_GetWeaponAttackSpeed(pUnit, pWeapon);
+				}
+				AnimDataRecord* pNeutral = D2COMMON_GetAnimDataRecord(pUnit, nUnitID, NPC_MODE_STAND, nAnimType, pUnit->pInventory);
+				if (nDelay > 0 && pNeutral)
+				{
+					nAnimSpeed = (pNeutral->dwFrames * 256) / nDelay;
+				}
+			}
 			// This calculates EIAS from IAS
 			nFrameMinAccr = D2COMMON_GetFrameMinAccr_STUB(FRAMES_IAS, pUnit);
 			// This is 100 + WSM + SIAS
