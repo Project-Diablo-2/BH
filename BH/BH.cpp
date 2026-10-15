@@ -273,6 +273,9 @@ void BH::CheckForPD2()
 
 		proc = GetProcAddress(pd2Handle, "_D2Client_GetItemDiscoveryState@12");
 		App.pd2.pd2GetItemDiscoveryStateImpl = proc ? (pd2GetItemDiscoveryStateImpl_t)proc : NULL;
+
+		proc = GetProcAddress(pd2Handle, "_D2Client_GetItemStorageType@4");
+		App.pd2.pd2GetItemStorageTypeImpl = proc ? (pd2GetItemStorageTypeImpl_t)proc : NULL;
 	}
 }
 
