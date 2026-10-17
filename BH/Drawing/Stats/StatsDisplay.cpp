@@ -504,6 +504,7 @@ void StatsDisplay::OnDraw()
 		int lPierce = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_PSENEMYLIGHTNRESREDUC, 0));
 		int pPierce = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_PSENEMYPSNRESREDUC, 0));
 		int mPierce = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_PASSIVEMAGICRESREDUC, 0));
+		int physPierce = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_PASSIVEPHYSRESREDUC, 0));
 		Texthook::Draw(column1,
 			(y += 16),
 			None,
@@ -526,6 +527,13 @@ void StatsDisplay::OnDraw()
 			lPierce,
 			pPierce,
 			mPierce);
+		Texthook::Draw(column1,
+			(y += 16),
+			None,
+			6,
+			Gold,
+			L"Physical Pierce:ÿc7 %d%%",
+			physPierce);
 		int  classNum = pData->nCharClass;
 		auto classArMod = CharList[classNum]->toHitFactor - 35;
 		int  dexAR = static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_DEXTERITY, 0)) * 5 + classArMod;
