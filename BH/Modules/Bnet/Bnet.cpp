@@ -3,6 +3,7 @@
 #include "../../BH.h"
 
 unsigned int Bnet::failToJoin;
+bool Bnet::inGuildGame = false;
 std::regex Bnet::reg = std::regex("^(.*?)(\\d+)$");
 
 Patch* nextGame1 = new Patch(Call, D2MULTI, { 0x14D29, 0xADAB }, (int)Bnet::NextGamePatch, 5);
@@ -62,6 +63,13 @@ void Bnet::OnUnload() {
 }
 
 void Bnet::OnGameJoin() {
+	inGuildGame = (*p_D2CLIENT_ArenaFlags & ARENA_GUILD) != 0;
+	if (inGuildGame)
+	{
+		RemovePatches();
+		return;
+	}
+
 	if (strlen((*p_D2LAUNCH_BnData)->szGameName) > 0)
 	{
 		App.bnet.saveLastGame.value = (*p_D2LAUNCH_BnData)->szGameName;
@@ -89,7 +97,7 @@ void Bnet::OnGameJoin() {
 }
 
 void Bnet::OnGameExit() {
-	if (App.bnet.autofillNextGame.value) {
+	if (App.bnet.autofillNextGame.value && !inGuildGame) {
 		std::smatch match;
 		if (std::regex_search(App.bnet.saveLastGame.value, match, Bnet::reg) && match.size() == 3) {
 			std::string name = match.format("$1");
@@ -120,6 +128,7 @@ void Bnet::OnGameExit() {
 		}
 	}
 
+	inGuildGame = false;
 	InstallPatches();
 }
 

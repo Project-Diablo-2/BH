@@ -4,10 +4,13 @@
 
 struct Control;
 
+#define ARENA_GUILD 0x00010000
+
 class Bnet : public Module {
 	private:
 		static unsigned int failToJoin;
 		static std::regex reg;
+		static bool inGuildGame;
 
 	public:
 
