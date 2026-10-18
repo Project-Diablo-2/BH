@@ -20,6 +20,22 @@ const int kBearTxtFileNoAlias = 140;
 const int kDruidOneHandFHRAlias = 141;
 const int kPaladinSpearStaveFHRAlias = 142;
 const int kSorceressLightningFCRAlias = 143;
+const int kBladeFurySkillId = 266;
+const int kInfernoState = 12;
+
+static int GetActiveBladeFuryPierce(UnitAny* pUnit)
+{
+	if (!pUnit || !D2COMMON_GetUnitState(pUnit, kInfernoState))
+		return 0;
+
+	Skill* pSkill = D2COMMON_10511_UNITS_GetUsedSkill(pUnit);
+	if (!pSkill || !pSkill->pSkillInfo || pSkill->pSkillInfo->wSkillId != kBladeFurySkillId)
+		return 0;
+
+	int nSkillLevel = D2COMMON_GetSkillLevel(pUnit, pSkill, TRUE);
+	return D2COMMON_10786_SKILLS_EvaluateSkillFormula(pUnit, pSkill->pSkillInfo->dwCalc4,
+		kBladeFurySkillId, nSkillLevel);
+}
 
 std::map<DWORD, std::vector<int>> faster_hit_recovery_frames = {
 	{ CLASS_AMA, { 6, 13, 20, 32, 52, 86, 174, 600 } },
@@ -729,7 +745,9 @@ void StatsDisplay::OnDraw()
 		int nCrushingBlowEfficiency = 100 + D2COMMON_GetUnitStat(unit, STAT_CRUSHINGBLOW_EFFICIENCY, 0) + GetMasteryStat(unit, STAT_CRUSHINGBLOW_EFFICIENCY, SKILL_TWOHANDMASTERY);
 		int nCriticalStrike = D2COMMON_GetUnitStat(unit, STAT_CRITICALSTRIKE, 0) + D2COMMON_GetUnitStat(unit, STAT_ITEM_CRITICALSTRIKE_CHANCE, 0) + GetMasteryStat(unit, STAT_CRITICALSTRIKE, SKILL_ONEHANDMASTERY) + GetMasteryStat(unit, STAT_CRITICALSTRIKE, SKILL_THROWINGMASTERY) + GetMasteryStat(unit, STAT_CRITICALSTRIKE, SKILL_CLAWANDDAGGERMASTERY);
 		int nCriticalStrikeMultiplier = 200 + D2COMMON_GetUnitStat(unit, STAT_CRITICALSTRIKE_MULTIPLIER, 0) + GetMasteryStat(unit, STAT_CRITICALSTRIKE_MULTIPLIER, SKILL_JAVELINANDSPEARMASTERY);
-		int nPierce = D2COMMON_GetUnitStat(unit, STAT_PIERCINGATTACK, 0) + D2COMMON_GetUnitStat(unit, STAT_PIERCE, 0); //+ GetMasteryStat(unit, STAT_PIERCE, SKILL_THROWINGMASTERY);
+		int nPierce = D2COMMON_GetUnitStat(unit, STAT_PIERCINGATTACK, 0) + D2COMMON_GetUnitStat(unit, STAT_PIERCE, 0);
+		if (!isMerc)
+			nPierce += GetActiveBladeFuryPierce(unit);
 
 		Texthook::Draw(column1,
 			(y += 16),
