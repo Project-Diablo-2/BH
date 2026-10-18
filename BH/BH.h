@@ -116,6 +116,10 @@ struct BHApp
 		SettingsAssoc classSkillsList = {}; // TODO??
 		SettingsAssoc tabSkillsList = {};  // TODO??
 		SettingsBool dropSounds = { true, true };
+		SettingsBool hideHealingPotions = { false, false };    // true = force-hide healing potions even where the filter shows them
+		SettingsBool hideManaPotions = { false, false };       // true = force-hide mana potions even where the filter shows them
+		SettingsBool alwaysShowUndiscovered = { true, true };  // true = always show uniques/sets not fully discovered
+		SettingsBool alwaysShowUnowned = { false, false };     // true = always show uniques/sets not fully owned
 	} lootfilter;
 
 	struct
@@ -227,6 +231,10 @@ typedef enum BHConfigId
 	BH_CONFIG_DROPSOUNDS,
 	BH_CONFIG_ADVANCEDSTATS_OPEN,
 	BH_CONFIG_HIDE_GAME_PASSWORD,
+	BH_CONFIG_HEALINGPOTIONS,
+	BH_CONFIG_MANAPOTIONS,
+	BH_CONFIG_ALWAYSSHOWUNDISCOVERED,
+	BH_CONFIG_ALWAYSSHOWUNOWNED,
 } BHConfigId;
 
 typedef enum D2GLConfigId

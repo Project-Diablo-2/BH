@@ -315,6 +315,14 @@ extern "C" {
 			return !BH::statsDisplay->IsMinimized();
 		case BH_CONFIG_HIDE_GAME_PASSWORD:
 			return App.screen.hideGamePassword.value;
+		case BH_CONFIG_HEALINGPOTIONS:
+			return App.lootfilter.hideHealingPotions.value;
+		case BH_CONFIG_MANAPOTIONS:
+			return App.lootfilter.hideManaPotions.value;
+		case BH_CONFIG_ALWAYSSHOWUNDISCOVERED:
+			return App.lootfilter.alwaysShowUndiscovered.value;
+		case BH_CONFIG_ALWAYSSHOWUNOWNED:
+			return App.lootfilter.alwaysShowUnowned.value;
 		}
 
 		return 0;
@@ -378,6 +386,23 @@ extern "C" {
 		case BH_CONFIG_HIDE_GAME_PASSWORD:
 			App.screen.hideGamePassword.value = configVal;
 			bSave = TRUE;
+			break;
+		case BH_CONFIG_HEALINGPOTIONS:
+			App.lootfilter.hideHealingPotions.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_MANAPOTIONS:
+			App.lootfilter.hideManaPotions.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_ALWAYSSHOWUNDISCOVERED:
+			App.lootfilter.alwaysShowUndiscovered.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_ALWAYSSHOWUNOWNED:
+			App.lootfilter.alwaysShowUnowned.value = configVal;
+			bSave = TRUE;
+			break;
 		}
 
 		if (bSave)

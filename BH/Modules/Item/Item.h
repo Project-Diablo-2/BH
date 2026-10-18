@@ -118,6 +118,11 @@ void PermShowItemsPatch2_ASM();
 void PermShowItemsPatch3_ASM();
 void PermShowItemsPatch4_ASM();
 
+// Loot filter overrides
+bool IsHealingPotion(UnitAny* pItem);
+bool IsManaPotion(UnitAny* pItem);
+bool LootFilterOverridesForceShow(UnitAny* pItem);
+
 int CreateUnitItemInfo(UnitItemInfo* uInfo, UnitAny* item);
 void __stdcall GetItemFromPacket_NewGround(px9c* packet);
 void __stdcall GetItemFromPacket_DropToGround(px9c* packet);

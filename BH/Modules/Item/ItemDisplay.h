@@ -193,11 +193,13 @@ private:
 
 enum DiscoveryStateFlag
 {
-	DISCOVERYSTATE_ANYDISCOVERED = 0x1,	// any candidate variant group discovered (grail bit set)
+	DISCOVERYSTATE_ANYDISCOVERED = 0x1,	// any candidate variant group discovered
 	DISCOVERYSTATE_ALLDISCOVERED = 0x2,	// every candidate variant group discovered
-	DISCOVERYSTATE_ANYOWNED = 0x4,		// any candidate variant group owned (stored in compendium)
+	DISCOVERYSTATE_ANYOWNED = 0x4,		// any candidate variant group owned
 	DISCOVERYSTATE_ALLOWNED = 0x8,		// every candidate variant group owned
-};class DiscoveryStateCondition : public Condition
+};
+
+class DiscoveryStateCondition : public Condition
 {
 public:
 	DiscoveryStateCondition(unsigned int flag) : discoveryFlag(flag) { conditionType = CT_Operand; };

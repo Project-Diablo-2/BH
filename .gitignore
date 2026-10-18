@@ -39,3 +39,7 @@ Release/*
 /BH.VC.db
 /.vs
 out/
+
+# Linux docker build output (build-bh.sh)
+BH/build-bh-docker/
+BH/build-bh-docker-deploy/

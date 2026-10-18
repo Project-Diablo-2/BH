@@ -889,6 +889,46 @@ int CreateUnitItemInfo(UnitItemInfo* uInfo, UnitAny* item) {
 	}
 }
 
+// True only for the hp* potion bases; rejuvenation and utility potions are not matched.
+bool IsHealingPotion(UnitAny* pItem)
+{
+	if (!pItem || pItem->dwType != UNIT_ITEM) { return false; }
+	ItemsTxt* pItemTxt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
+	if (!pItemTxt || !pItemTxt->szCode) { return false; }
+	char* szCode = pItemTxt->szCode;
+	return szCode[0] == 'h' && szCode[1] == 'p';
+}
+
+// True only for the mp* potion bases; rejuvenation and utility potions are not matched.
+bool IsManaPotion(UnitAny* pItem)
+{
+	if (!pItem || pItem->dwType != UNIT_ITEM) { return false; }
+	ItemsTxt* pItemTxt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
+	if (!pItemTxt || !pItemTxt->szCode) { return false; }
+	char* szCode = pItemTxt->szCode;
+	return szCode[0] == 'm' && szCode[1] == 'p';
+}
+
+// True when the undiscovered/unowned override force-shows a unique/set item;
+// untracked items and items the dll cannot query keep normal filter behaviour.
+// Mirrors DiscoveryStateCondition::EvaluateInternal.
+bool LootFilterOverridesForceShow(UnitAny* pItem)
+{
+	if (!App.lootfilter.alwaysShowUndiscovered.value
+		&& !App.lootfilter.alwaysShowUnowned.value) { return false; }
+	if (!pItem || !pItem->pItemData) { return false; }
+	if (!App.pd2.pd2GetItemDiscoveryStateImpl) { return false; }
+	DWORD dwQuality = pItem->pItemData->dwQuality;
+	if (dwQuality != ITEM_QUALITY_UNIQUE && dwQuality != ITEM_QUALITY_SET) { return false; }
+	// Unidentified uniques/sets have no file index; the sentinel means "all variants".
+	DWORD dwFileIndex = (pItem->pItemData->dwFlags & ITEM_IDENTIFIED)
+		? pItem->pItemData->dwFileIndex
+		: 0xFFFFFFFF;
+	DWORD dwState = App.pd2.pd2GetItemDiscoveryStateImpl(dwFileIndex, dwQuality, pItem->dwTxtFileNo);
+	return (App.lootfilter.alwaysShowUndiscovered.value && !(dwState & DISCOVERYSTATE_ALLDISCOVERED))
+		|| (App.lootfilter.alwaysShowUnowned.value && !(dwState & DISCOVERYSTATE_ALLOWNED));
+}
+
 void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
 {
 	ItemsTxt* itemTxt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
@@ -918,7 +958,10 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
 	std::wstring itemName(name);
 	char* code = D2COMMON_GetItemText(pItem->dwTxtFileNo)->szCode;
 
-	if (App.lootfilter.enableFilter.value) {
+	if (App.lootfilter.enableFilter.value
+		&& !LootFilterOverridesForceShow(pItem)
+		&& !((App.lootfilter.hideHealingPotions.value && IsHealingPotion(pItem))
+			|| (App.lootfilter.hideManaPotions.value && IsManaPotion(pItem)))) {
 		UnitItemInfo uInfo;
 		if (!CreateUnitItemInfo(&uInfo, pItem)) {
 			GetItemName(&uInfo, itemName);
@@ -927,7 +970,15 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
 			HandleUnknownItemCode(uInfo.itemCode, "name");
 		}
 	}
-	else {
+	else if (App.lootfilter.hideHealingPotions.value && IsHealingPotion(pItem)) {
+		// An empty name keeps the item out of the alt list
+		itemName.clear();
+	}
+	else if (App.lootfilter.hideManaPotions.value && IsManaPotion(pItem)) {
+		// An empty name keeps the item out of the alt list
+		itemName.clear();
+	}
+	else if (!App.lootfilter.enableFilter.value) {
 		OrigGetItemName(pItem, itemName, code);
 	}
 
@@ -1050,6 +1101,16 @@ void __stdcall GetItemFromPacket_PutInContainer(px9c* pPacket)
 
 void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 {
+	// Potions are hidden regardless of the filter entirely
+	if ((App.lootfilter.hideHealingPotions.value && IsHealingPotion(uInfo->item))
+		|| (App.lootfilter.hideManaPotions.value && IsManaPotion(uInfo->item))) {
+		uInfo->item->dwFlags2 |= UNITFLAGEX_INVISIBLE;
+		return;
+	}
+
+	// The overrides force-show, so no-display rules must not mark it invisible
+	bool bForceShow = LootFilterOverridesForceShow(uInfo->item);
+
 	if (App.lootfilter.enableFilter.value) {
 		bool showOnMap = false;
 		auto color = UNDEFINED_COLOR;
@@ -1097,7 +1158,7 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 			}
 			*/
 		}
-		else if (!showOnMap) {
+		else if (!showOnMap && !bForceShow) {
 			for (vector<Rule*>::iterator it = RuleList.begin(); it != RuleList.end(); it++) {
 				if ((*it)->Evaluate(uInfo)) {
 					if ((*it)->action.name.length() == 0 && Item::GetFilterLevel() > 0)
