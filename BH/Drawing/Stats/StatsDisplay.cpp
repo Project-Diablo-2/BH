@@ -201,6 +201,8 @@ StatsDisplay::StatsDisplay(std::string name)
 	int width = 300;
 
 	InitializeCriticalSection(&crit);
+	mercTabSelected = mercUiOpen = mercUiPage = false;
+	characterTab = mercTab = RECT{ 0, 0, 0, 0 };
 	SetY(yPos);
 	SetXSize(width);
 
@@ -300,8 +302,37 @@ bool StatsDisplay::InRange(unsigned int x,
 	unsigned int y)
 {
 	return IsActive() &&
-		x >= GetX() && y >= GetY() &&
-		x <= GetX() + GetXSize() && y <= GetY() + GetYSize();
+		((x >= GetX() && y >= GetY() &&
+		x <= GetX() + GetXSize() && y <= GetY() + GetYSize()) ||
+		(sideXSize > 0 && x >= sideX && y >= sideY &&
+		x <= sideX + sideXSize && y <= sideY + sideYSize));
+}
+
+static bool IsLivingMerc(UnitAny* pMerc)
+{
+	return pMerc && pMerc->dwMode != NPC_MODE_DEATH && pMerc->dwMode != NPC_MODE_DEAD;
+}
+
+static bool InTab(const RECT& tab, unsigned int x, unsigned int y)
+{
+	return static_cast<int>(x) >= tab.left && static_cast<int>(x) < tab.right &&
+		static_cast<int>(y) >= tab.top && static_cast<int>(y) < tab.bottom;
+}
+
+// Monster skills without a skilldesc.txt row (hidden passives, the merc's own missile/pierce
+// helpers) have no name: their index is 0 or past the table.
+static bool HasSkillName(SkillsTxt* pSkillsTxt)
+{
+	return pSkillsTxt && pSkillsTxt->wSkillDesc && pSkillsTxt->wSkillDesc < (*p_D2COMMON_sgptDataTable)->dwSkillDescRecs;
+}
+
+static std::string GetSkillName(SkillsTxt* pSkillsTxt)
+{
+	SkillDescTxt* pSkillDescTxt = &(*p_D2COMMON_sgptDataTable)->pSkillDescTxt[pSkillsTxt->wSkillDesc];
+	char* szName = UnicodeToAnsi(GetTblEntryByIndex(pSkillDescTxt->wStrName, TBLOFFSET_STRING));
+	std::string name = szName;
+	delete[] szName;
+	return name;
 }
 
 void StatsDisplay::Draw()
@@ -324,10 +355,19 @@ void StatsDisplay::OnDraw()
 	{
 		int xPos = App.general.statsOnRight.value ? *p_D2CLIENT_ScreenSizeX - 10 - GetXSize() : 10;
 		SetX(xPos);
+		sideXSize = 0; // set again by DrawMercSkills (merc tab only)
 
-		if (D2CLIENT_GetUIState(UI_MERC))
+		// The Mercenary tab shows the merc's stats. Opening the merc inventory selects it (a tab
+		// clicked meanwhile counts until the inventory closes), then the user's tab is back.
+		UnitAny* pMerc = D2CLIENT_GetMercUnit();
+		bool hasMerc = IsLivingMerc(pMerc);
+		bool mercUi = D2CLIENT_GetUIState(UI_MERC) != 0;
+		if (mercUi && !mercUiOpen)
+			mercUiPage = true;
+		mercUiOpen = mercUi;
+		if (hasMerc && (mercUi ? mercUiPage : mercTabSelected))
 		{
-			unit = D2CLIENT_GetMercUnit();
+			unit = pMerc;
 			isMerc = true;
 		}
 		for (std::list<Hook*>::iterator it = Hooks.begin(); it != Hooks.end(); ++it)
@@ -343,14 +383,57 @@ void StatsDisplay::OnDraw()
 
 		Framehook::DrawRectStub(&pRect);
 
+		DrawTabs(column1, y + 8, isMerc, hasMerc);
+		y += 12;
 
-		Texthook::Draw(column1,
-			(y += 8),
-			None,
-			6,
-			Gold,
-			"Name:ÿc0 %s",
-			isMerc ? "ÿc;Mercenary" : unit->pPlayerData->szName);
+		if (isMerc)
+		{
+			int act = 0;
+			switch (unit->dwTxtFileNo)
+			{
+			case MERC_A1: act = 1; break;
+			case MERC_A2: act = 2; break;
+			case MERC_A3: act = 3; break;
+			case MERC_A4: act = 4; break;
+			case MERC_A5:
+			case MERC_A5B: act = 5; break;
+			}
+			// The variant is named after the merc's aura (e.g. Act 2 Defiance), if it has one.
+			std::string variant = "";
+			for (Skill* pSkill = unit->pInfo ? unit->pInfo->pFirstSkill : NULL; pSkill; pSkill = pSkill->pNextSkill)
+			{
+				if (pSkill->pSkillInfo && pSkill->pSkillInfo->dwFlags.bAura && HasSkillName(pSkill->pSkillInfo))
+					variant = " " + GetSkillName(pSkill->pSkillInfo);
+			}
+			Texthook::Draw(column1,
+				(y += 8),
+				None,
+				6,
+				Gold,
+				"Mercenary:ÿc; Act %d%s",
+				act,
+				variant.c_str());
+
+			// Max life only: the client's current merc life (stat 6) is a 0-128 fraction once the
+			// server's monster updates arrive, but absolute right after the merc spawns.
+			Texthook::Draw(column1,
+				y + 12,
+				None,
+				6,
+				Gold,
+				L"Life:ÿc0 %d",
+				static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAXHP, 0)) >> 8);
+		}
+		else
+		{
+			Texthook::Draw(column1,
+				(y += 8),
+				None,
+				6,
+				Gold,
+				"Name:ÿc0 %s",
+				unit->pPlayerData->szName);
+		}
 
 		auto player_level = D2COMMON_GetUnitStat(unit, STAT_LEVEL, 0);
 		Texthook::Draw(pRect.right - 5,
@@ -873,22 +956,6 @@ void StatsDisplay::OnDraw()
 			static_cast<int>(maxPoison / 256.0 * poisonLength),
 			poisonLength / 25.0);
 
-		Texthook::Draw(column1,
-			(y += 16),
-			None,
-			6,
-			Gold,
-			L"Magic Find:ÿc3 %d",
-			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAGICFIND, 0))
-		);
-		Texthook::Draw(column2,
-			y,
-			None,
-			6,
-			Gold,
-			L"Gold Find:ÿc9 %d",
-			static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_GOLDFIND, 0)));
-
 		if (!isMerc)
 		{
 			Texthook::Draw(column1,
@@ -896,8 +963,29 @@ void StatsDisplay::OnDraw()
 				None,
 				6,
 				Gold,
+				L"Magic Find:ÿc3 %d",
+				static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_MAGICFIND, 0))
+			);
+			Texthook::Draw(column2,
+				y,
+				None,
+				6,
+				Gold,
+				L"Gold Find:ÿc9 %d",
+				static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_GOLDFIND, 0)));
+
+			Texthook::Draw(column1,
+				(y += 16),
+				None,
+				6,
+				Gold,
 				L"Stash Gold:ÿc9 %d",
 				static_cast<int>(D2COMMON_GetUnitStat(unit, STAT_GOLDBANK, 0)));
+		}
+		else
+		{
+			// A merc's magic/gold find has no effect on drops; its skills go in a box of their own.
+			DrawMercSkills(unit);
 		}
 
 		//int cowKingKilled = D2COMMON_GetQuestFlag(D2CLIENT_GetQuestInfo(), 4, 10);
@@ -937,6 +1025,141 @@ void StatsDisplay::OnDraw()
 			}
 		}
 	}
+}
+
+void StatsDisplay::DrawTabs(int x, int y, bool showMerc, bool hasMerc)
+{
+	const char* mercLabel = hasMerc ? "Mercenary" : "No mercenary";
+	int characterWidth = Texthook::GetTextSize("Character", 6).x;
+	int separatorWidth = Texthook::GetTextSize(" | ", 6).x;
+	int mercWidth = Texthook::GetTextSize(mercLabel, 6).x;
+	int mercX = x + characterWidth + separatorWidth;
+	characterTab = RECT{ x - 2, y - 2, x + characterWidth + 2, y + 10 };
+	mercTab = RECT{ mercX - 2, y - 2, mercX + mercWidth + 2, y + 10 };
+
+	RECT& activeTab = showMerc ? mercTab : characterTab;
+	Boxhook::Draw(activeTab.left, activeTab.top, activeTab.right - activeTab.left, activeTab.bottom - activeTab.top, 0x1F, Drawing::BTOneHalf);
+	Texthook::Draw(x, y, None, 6, showMerc ? Gold : White, "Character");
+	Texthook::Draw(x + characterWidth, y, None, 6, Grey, " | ");
+	Texthook::Draw(mercX, y, None, 6, !hasMerc ? Grey : (showMerc ? White : Gold), "%s", mercLabel);
+}
+
+// The merc tab's skills box, next to the main panel (the main panel has no room left on a 600 px
+// high screen): every named skill with its level, auras first, and the attack skill's damage.
+void StatsDisplay::DrawMercSkills(UnitAny* pMerc)
+{
+	struct MercSkill
+	{
+		std::string text;
+		int         width;
+	};
+	std::vector<MercSkill> cells;
+	size_t                 auras = 0;
+	std::string            damage = "";
+	bool                   damageOfAttackSkill = false;
+	std::set<int>          attackSkills;
+	if (merc_attack_skills.count(pMerc->dwTxtFileNo))
+		attackSkills = merc_attack_skills.at(pMerc->dwTxtFileNo);
+	for (Skill* pSkill = pMerc->pInfo ? pMerc->pInfo->pFirstSkill : NULL; pSkill; pSkill = pSkill->pNextSkill)
+	{
+		SkillsTxt* pTxt = pSkill->pSkillInfo;
+		if (!HasSkillName(pTxt))
+			continue;
+		std::string name = GetSkillName(pTxt);
+		int total = D2COMMON_GetSkillLevel(pMerc, pSkill, TRUE);
+		int base = static_cast<int>(pSkill->skillLevel);
+		char text[128];
+		if (total != base)
+			sprintf_s(text, sizeof(text), "%s%s:ÿc0 %d (%d+%d)", pTxt->dwFlags.bAura ? "ÿc;" : "", name.c_str(), total, base, total - base);
+		else
+			sprintf_s(text, sizeof(text), "%s%s:ÿc0 %d", pTxt->dwFlags.bAura ? "ÿc;" : "", name.c_str(), total);
+		// Auras first, the other skills after them, each in the merc's own skill order.
+		MercSkill cell = { text, static_cast<int>(Texthook::GetTextSize(text, 6).x) };
+		if (pTxt->dwFlags.bAura)
+			cells.insert(cells.begin() + auras++, cell);
+		else
+			cells.push_back(cell);
+
+		if (pTxt->dwFlags.bAura)
+			continue;
+		// The attack skill's damage: the skill's own physical damage (weapon damage left out) and
+		// its elemental damage with synergies and the merc's mastery, at the current level, as the
+		// engine computes them. The merc's attack skill (merc_attack_skills) wins, else the first
+		// skill that deals damage.
+		bool isAttackSkill = attackSkills.count(pTxt->wSkillId) > 0;
+		if (damageOfAttackSkill || (!damage.empty() && !isAttackSkill))
+			continue;
+		int minPhys = D2COMMON_10567_GetMinPhysDamage(pMerc, pTxt->wSkillId, total, FALSE) >> 8;
+		int maxPhys = D2COMMON_10297_GetMaxPhysDamage(pMerc, pTxt->wSkillId, total, FALSE) >> 8;
+		int minElem = 0;
+		int maxElem = 0;
+		const char* elemColor = NULL;
+		switch (pTxt->bEType)
+		{
+		case 1: elemColor = "ÿc1"; break; // fire
+		case 2: elemColor = "ÿc9"; break; // lightning
+		case 3: elemColor = "ÿc8"; break; // magic
+		case 4: elemColor = "ÿc3"; break; // cold
+		}
+		if (elemColor)
+		{
+			minElem = D2COMMON_10121_GetMinElemDamage(pMerc, pTxt->wSkillId, total, TRUE) >> 8;
+			maxElem = D2COMMON_11091_GetMaxElemDamage(pMerc, pTxt->wSkillId, total, TRUE) >> 8;
+		}
+		if (maxPhys <= 0 && maxElem <= 0)
+			continue;
+		char text2[128] = "";
+		if (maxPhys > 0 && maxElem > 0)
+			sprintf_s(text2, sizeof(text2), "%s:ÿc0 %d-%d %s%d-%d", name.c_str(), minPhys, maxPhys, elemColor, minElem, maxElem);
+		else if (maxPhys > 0)
+			sprintf_s(text2, sizeof(text2), "%s:ÿc0 %d-%d", name.c_str(), minPhys, maxPhys);
+		else
+			sprintf_s(text2, sizeof(text2), "%s:%s %d-%d", name.c_str(), elemColor, minElem, maxElem);
+		damage = text2;
+		damageOfAttackSkill = isAttackSkill;
+	}
+
+	unsigned int width = GetXSize();
+	int left = App.general.statsOnRight.value ? static_cast<int>(GetX()) - 10 - static_cast<int>(width) : GetX() + width + 10;
+	if (left < 0)
+		return;
+	int column1 = left + 5;
+	int column2 = column1 + width / 2;
+
+	// Two skills per row; one that is wider than half the box gets a row of its own.
+	struct Line { int y; bool column2; std::string text; };
+	std::vector<Line> lines;
+	int dy = 8;
+	lines.push_back({ dy, false, "Skills (ÿc;auraÿc4):" });
+	if (!damage.empty())
+		lines.push_back({ dy, true, damage });
+	int half = column2 - column1 - 4;
+	bool rowOpen = false;
+	for (auto& cell : cells)
+	{
+		if (rowOpen && cell.width <= half)
+		{
+			lines.push_back({ dy, true, cell.text });
+			rowOpen = false;
+			continue;
+		}
+		lines.push_back({ dy += 16, false, cell.text });
+		rowOpen = cell.width <= half;
+	}
+
+	sideX = left;
+	sideY = GetY();
+	sideXSize = width;
+	sideYSize = dy + 20;
+	RECT rect;
+	rect.left = sideX;
+	rect.top = sideY;
+	rect.right = sideX + sideXSize;
+	rect.bottom = sideY + sideYSize;
+	Boxhook::Draw(sideX, sideY, sideXSize, sideYSize, White, Drawing::BTBlack);
+	Framehook::DrawRectStub(&rect);
+	for (const Line& line : lines)
+		Texthook::Draw(line.column2 ? column2 : column1, sideY + line.y, None, 6, Gold, "%s", line.text.c_str());
 }
 
 bool StatsDisplay::KeyClick(bool   bUp,
@@ -997,6 +1220,18 @@ bool StatsDisplay::OnClick(bool         up,
 
 	if (!IsMinimized() && InRange(x, y))
 	{
+		bool onCharacterTab = InTab(characterTab, x, y);
+		bool onMercTab = InTab(mercTab, x, y);
+		if (onCharacterTab || onMercTab)
+		{
+			// A click on a tab switches the page instead of closing the panel; the greyed
+			// "No mercenary" tab does nothing. While the merc inventory is open the choice
+			// only lasts until it closes.
+			UnitAny* pMerc = D2CLIENT_GetMercUnit();
+			if (!up && (onCharacterTab || IsLivingMerc(pMerc)))
+				(mercUiOpen ? mercUiPage : mercTabSelected) = onMercTab;
+			return true;
+		}
 		SetMinimized(true);
 		return true;
 	}
