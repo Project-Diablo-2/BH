@@ -889,24 +889,25 @@ int CreateUnitItemInfo(UnitItemInfo* uInfo, UnitAny* item) {
 	}
 }
 
-// True only for the hp* potion bases; rejuvenation and utility potions are not matched.
+// True only for the hp1-hp5 potion bases; other hp-prefixed codes and rejuvenation/utility potions are not matched.
 bool IsHealingPotion(UnitAny* pItem)
 {
 	if (!pItem || pItem->dwType != UNIT_ITEM) { return false; }
 	ItemsTxt* pItemTxt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
 	if (!pItemTxt || !pItemTxt->szCode) { return false; }
 	char* szCode = pItemTxt->szCode;
-	return szCode[0] == 'h' && szCode[1] == 'p';
+	return szCode[0] == 'h' && szCode[1] == 'p' && szCode[2] >= '1' && szCode[2] <= '5';
 }
 
-// True only for the mp* potion bases; rejuvenation and utility potions are not matched.
+// True only for the mp1-mp5 potion bases; other mp-prefixed codes (e.g. Military Pick "mpi")
+// and rejuvenation/utility potions are not matched.
 bool IsManaPotion(UnitAny* pItem)
 {
 	if (!pItem || pItem->dwType != UNIT_ITEM) { return false; }
 	ItemsTxt* pItemTxt = D2COMMON_GetItemText(pItem->dwTxtFileNo);
 	if (!pItemTxt || !pItemTxt->szCode) { return false; }
 	char* szCode = pItemTxt->szCode;
-	return szCode[0] == 'm' && szCode[1] == 'p';
+	return szCode[0] == 'm' && szCode[1] == 'p' && szCode[2] >= '1' && szCode[2] <= '5';
 }
 
 // True when the undiscovered/unowned override force-shows a unique/set item;
