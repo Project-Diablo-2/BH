@@ -62,6 +62,11 @@ void MapNotify::OnDraw() {
 	for (Room1* room1 = player->pAct->pRoom1; room1; room1 = room1->pRoomNext) {
 		for (UnitAny* unit = room1->pUnitFirst; unit; unit = unit->pListNext) {
 			if (unit->dwType == UNIT_ITEM && (unit->dwFlags & UNITFLAG_NO_EXPERIENCE) == 0x0) {
+				if (unit->dwFlags2 & UNITFLAGEX_INVISIBLE) {
+					// filter-hidden items get no notification or automap dot
+					unit->dwFlags |= UNITFLAG_NO_EXPERIENCE;
+					continue;
+				}
 				DWORD dwFlags = unit->pItemData->dwFlags;
 				char* code = D2COMMON_GetItemText(unit->dwTxtFileNo)->szCode;
 				UnitItemInfo uInfo;
