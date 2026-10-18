@@ -959,12 +959,14 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
 	char* code = D2COMMON_GetItemText(pItem->dwTxtFileNo)->szCode;
 
 	if (App.lootfilter.enableFilter.value
-		&& !LootFilterOverridesForceShow(pItem)
 		&& !((App.lootfilter.hideHealingPotions.value && IsHealingPotion(pItem))
 			|| (App.lootfilter.hideManaPotions.value && IsManaPotion(pItem)))) {
 		UnitItemInfo uInfo;
 		if (!CreateUnitItemInfo(&uInfo, pItem)) {
 			GetItemName(&uInfo, itemName);
+			if (itemName.empty() && LootFilterOverridesForceShow(pItem)) {
+				OrigGetItemName(pItem, itemName, code);
+			}
 		}
 		else {
 			HandleUnknownItemCode(uInfo.itemCode, "name");
@@ -1108,9 +1110,6 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 		return;
 	}
 
-	// The overrides force-show, so no-display rules must not mark it invisible
-	bool bForceShow = LootFilterOverridesForceShow(uInfo->item);
-
 	if (App.lootfilter.enableFilter.value) {
 		bool showOnMap = false;
 		auto color = UNDEFINED_COLOR;
@@ -1158,10 +1157,11 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 			}
 			*/
 		}
-		else if (!showOnMap && !bForceShow) {
+		else if (!showOnMap) {
 			for (vector<Rule*>::iterator it = RuleList.begin(); it != RuleList.end(); it++) {
 				if ((*it)->Evaluate(uInfo)) {
-					if ((*it)->action.name.length() == 0 && Item::GetFilterLevel() > 0)
+					if ((*it)->action.name.length() == 0 && Item::GetFilterLevel() > 0
+						&& !LootFilterOverridesForceShow(uInfo->item))
 					{
 						uInfo->item->dwFlags2 |= UNITFLAGEX_INVISIBLE;
 					}
