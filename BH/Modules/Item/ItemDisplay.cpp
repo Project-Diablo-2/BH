@@ -3090,6 +3090,15 @@ bool IsWhitespaceEquivalent(wchar_t ch)
 	return iswspace(ch) || ch == L'\b';
 }
 
+// A color code at position i: \xFF, 'c', then one of 0-9 ; : \x01-\x1F or \x40-\x43 (HD text transparency) (3 wchar_t)
+bool IsColorCode(const wstring& text, size_t i)
+{
+	if (i + 2 >= text.size() || text[i] != L'\xFF' || text[i + 1] != L'c') { return false; }
+	const wchar_t c = text[i + 2];
+	return (c >= L'0' && c <= L'9') || c == L';' || c == L':' || (c >= L'\x01' && c <= L'\x1F') ||
+		(c >= L'\x40' && c <= L'\x43');
+}
+
 void TrimItemText(UnitItemInfo* uInfo,
 	wstring& name,
 	BOOL bLimit)
@@ -3132,39 +3141,53 @@ void TrimItemText(UnitItemInfo* uInfo,
 	}
 	name.resize(offset);
 
-	int nColorCodesSize = 0;
 	int lengthLimit = 0;
 	if (bLimit)
 	{
-		// Calc the extra size from colors
-		// In wide strings: color code is \xFF followed by 'c' followed by digit = 3 wchar_t
-		std::wregex color_reg(L"\\xFFc[0-9;:\\x01-\\x1F]", std::regex_constants::ECMAScript);
-		auto       color_matches = std::wsregex_iterator(name.begin(), name.end(), color_reg);
-		auto       color_end = std::wsregex_iterator();
-		auto       match_count = std::distance(color_matches, color_end);
-		nColorCodesSize += 3 * match_count;
-
 		bool inShop = (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
 			uInfo->item->pItemData->pOwnerInventory->pOwner != 0 &&
 			find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs));
 
-		// Increase limit for shop items
-		lengthLimit = inShop ? MAX_ITEM_TEXT_SIZE : MAX_ITEM_NAME_SIZE;
+		// Count visible characters only (color codes take no room). One line may hold up to
+		// MAX_ITEM_NAME_LINE_SIZE, so a label is never wider than before; a name with several
+		// lines may hold up to MAX_ITEM_NAME_TOTAL_SIZE in all. Shop items keep their larger limit.
+		const int lineLimit = inShop ? MAX_ITEM_TEXT_SIZE : MAX_ITEM_NAME_LINE_SIZE;
+		const int totalLimit = inShop ? MAX_ITEM_TEXT_SIZE : MAX_ITEM_NAME_TOTAL_SIZE;
+		// ItemNamePatch then copies the name, color codes (3 wchar_t each) included, into a buffer of
+		// MAX_ITEM_NAME_BUFFER_SIZE: stop before it is full, so the name is cut here, at a whole
+		// character, and not by that copy
+		ItemsTxt* itemTxt = D2COMMON_GetItemText(uInfo->item->dwTxtFileNo);
+		const size_t sizeLimit = inShop ? MAX_ITEM_TEXT_SIZE - 1 :
+			(!itemTxt || itemTxt->bquest > 0 ? MAX_QUEST_ITEM_NAME_BUFFER_SIZE : MAX_ITEM_NAME_BUFFER_SIZE) - 1;
 
-		int nColorsToKeep = 0;
-		for (std::wsregex_iterator k = color_matches; k != color_end; ++k)
+		wstring trimmed;
+		trimmed.reserve(name.size());
+		int    lineChars = 0;
+		int    totalChars = 0;
+		size_t keepSize = 0; // trimmed size up to the last visible character kept (not a line break)
+		bool   cut = false;
+		for (size_t i = 0; i < name.size(); ++i)
 		{
-			std::wsmatch match = *k;
-			auto        pos = match.position();
-			if (pos - (nColorsToKeep) > lengthLimit) { break; }
-			nColorsToKeep += 3;
+			if (IsColorCode(name, i))
+			{
+				// Keep color codes, even inside a cut part of a line: they color the lines after it
+				trimmed.append(name, i, 3);
+				i += 2;
+				continue;
+			}
+			if (totalChars >= totalLimit || trimmed.size() >= sizeLimit) { cut = true; break; }
+			const wchar_t ch = name[i];
+			if (ch == L'\n') { lineChars = 0; }
+			else if (lineChars >= lineLimit) { cut = true; continue; } // rest of this line: drop up to the next line break
+			else { ++lineChars; }
+			trimmed += ch;
+			++totalChars;
+			if (ch != L'\n') { keepSize = trimmed.size(); }
 		}
-
-		// Truncate if too long
-		if (name.size() - nColorCodesSize > lengthLimit)
+		if (cut || trimmed.size() > sizeLimit)
 		{
-			int max_size = lengthLimit + nColorsToKeep;
-			name.resize(max_size);
+			trimmed.resize(keepSize); // drop color codes and a line break left after the last visible character
+			name = trimmed;
 		}
 	}
 
