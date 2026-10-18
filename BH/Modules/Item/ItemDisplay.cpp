@@ -567,6 +567,7 @@ enum FilterCondition
 	COND_BASEBLOCK,
 	COND_ALLATTRIB,
 	COND_MAXRES,
+	COND_PLUSDEF,
 	COND_UPSTAT,
 	COND_MAXSOCKETS,
 	COND_FORMULA,
@@ -760,6 +761,7 @@ std::map<std::wstring, FilterCondition> condition_map =
 	{L"BASEBLOCK", COND_BASEBLOCK},
 	{L"ALLATTRIB", COND_ALLATTRIB},
 	{L"MAXRES", COND_MAXRES},
+	{L"PLUSDEF", COND_PLUSDEF},
 	{L"UPSTR", COND_UPSTAT},
 	{L"UPDEX", COND_UPSTAT},
 	{L"UPLVL", COND_UPSTAT},
@@ -1047,6 +1049,8 @@ struct ReplacementSpec {
 	static wstring ReplaceAllAttributes(ReplaceContext& ctx, const ReplacementValue& val);
 	// %MAXRES%
 	static wstring ReplaceMaxRes(ReplaceContext& ctx, const ReplacementValue& val);
+	// %PLUSDEF%
+	static wstring ReplacePlusDef(ReplaceContext& ctx, const ReplacementValue& val);
 	// %UPDEX%
 	static wstring ReplaceUpDex(ReplaceContext& ctx, const ReplacementValue& val);
 	// %UPSTR%
@@ -1132,6 +1136,7 @@ unordered_map<wstring, ReplacementSpec> ReplacementMap = {
 	{ L"BASEBLOCK", { 0, ReplacementSpec::ReplaceBaseBlock } },
 	{ L"ALLATTRIB", { 0, ReplacementSpec::ReplaceAllAttributes } },
 	{ L"MAXRES", { 0, ReplacementSpec::ReplaceMaxRes } },
+	{ L"PLUSDEF", { 0, ReplacementSpec::ReplacePlusDef } },
 	{ L"UPSTR", { 0, ReplacementSpec::ReplaceUpStr } },
 	{ L"UPDEX", { 0, ReplacementSpec::ReplaceUpDex } },
 	{ L"UPLVL", { 0, ReplacementSpec::ReplaceUpLvl } },
@@ -1528,6 +1533,13 @@ wstring ReplacementSpec::ReplaceMaxRes(ReplaceContext& ctx, const ReplacementVal
 {
 	wchar_t buffer[16];
 	swprintf(buffer, 16, L"%d", MaxResCondition::GetValue(ctx.info));
+	return buffer;
+}
+
+wstring ReplacementSpec::ReplacePlusDef(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	wchar_t buffer[16];
+	swprintf(buffer, 16, L"%d", PlusDefCondition::GetValue(ctx.info));
 	return buffer;
 }
 
@@ -2756,6 +2768,10 @@ std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVa
 	} },
 	{ L"maxres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
 			return MaxResCondition::GetValue(uInfo);
+		}
+	} },
+	{ L"plusdef", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return PlusDefCondition::GetValue(uInfo);
 		}
 	} },
 	{ L"allattrib", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
@@ -4513,6 +4529,9 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_MAXRES:
 		Condition::AddOperand(conditions, new MaxResCondition(operation, value, value2));
 		break;
+	case COND_PLUSDEF:
+		Condition::AddOperand(conditions, new PlusDefCondition(operation, value, value2));
+		break;
 	case COND_UPSTAT:
 	{
 		auto type = UpStatCondition::UpStatType::STRENGTH;
@@ -5482,6 +5501,19 @@ int MaxResCondition::GetValue(UnitItemInfo* uInfo)
 }
 
 bool MaxResCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	return IntegerCompare(GetValue(uInfo), operation, targetStat, targetStat2);
+}
+
+// Defense added by the item's affixes, runeword or sockets, without its base defense (DEF includes both)
+int PlusDefCondition::GetValue(UnitItemInfo* uInfo)
+{
+	return GetStatFromList(uInfo, STAT_DEFENSE);
+}
+
+bool PlusDefCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
