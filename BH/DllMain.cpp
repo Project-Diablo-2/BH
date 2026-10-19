@@ -5,9 +5,9 @@ BOOL WINAPI DllMain(HMODULE instance, DWORD reason, VOID* reserved) {
 	switch(reason) {
 		case DLL_PROCESS_ATTACH:
 			return BH::Startup(instance, reserved);
-		break;
 		case DLL_PROCESS_DETACH:
 			return BH::Shutdown();
-		break;
 	}
+	// Thread attach/detach: nothing to do, but we must return (falling off the end is undefined behavior).
+	return TRUE;
 }

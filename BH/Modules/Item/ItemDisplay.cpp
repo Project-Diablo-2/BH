@@ -389,7 +389,11 @@ enum LocationFlagTypes
 	LOCATIONFLAG_INVENTORY,
 	LOCATIONFLAG_CUBE,
 	LOCATIONFLAG_STASH,
-	LOCATIONFLAG_GROUND
+	LOCATIONFLAG_GROUND,
+	LOCATIONFLAG_COMPENDIUM,
+	LOCATIONFLAG_PREVIEW,
+	LOCATIONFLAG_GUILDVAULT,
+	LOCATIONFLAG_TROPHYCASE
 };
 
 enum Operation
@@ -507,6 +511,10 @@ enum FilterCondition
 	COND_CUBE,
 	COND_STASH,
 	COND_GROUND,
+	COND_COMPENDIUM,
+	COND_PREVIEW,
+	COND_GUILDVAULT,
+	COND_TROPHYCASE,
 	COND_1H,
 	COND_2H,
 	COND_AXE,
@@ -559,9 +567,14 @@ enum FilterCondition
 	COND_BASEBLOCK,
 	COND_ALLATTRIB,
 	COND_MAXRES,
+	COND_PLUSDEF,
 	COND_UPSTAT,
 	COND_MAXSOCKETS,
 	COND_FORMULA,
+	COND_ANYDISCOVERED,
+	COND_ALLDISCOVERED,
+	COND_ANYOWNED,
+	COND_ALLOWNED,
 
 	COND_NULL
 };
@@ -678,6 +691,10 @@ std::map<std::wstring, FilterCondition> condition_map =
 	{L"INVENTORY", COND_INVENTORY},
 	{L"STASH", COND_STASH},
 	{L"GROUND", COND_GROUND},
+	{L"COMPENDIUM", COND_COMPENDIUM},
+	{L"PREVIEW", COND_PREVIEW},
+	{L"GUILDVAULT", COND_GUILDVAULT},
+	{L"TROPHYCASE", COND_TROPHYCASE},
 	{L"1H", COND_1H},
 	{L"2H", COND_2H},
 	{L"AXE", COND_AXE},
@@ -744,6 +761,7 @@ std::map<std::wstring, FilterCondition> condition_map =
 	{L"BASEBLOCK", COND_BASEBLOCK},
 	{L"ALLATTRIB", COND_ALLATTRIB},
 	{L"MAXRES", COND_MAXRES},
+	{L"PLUSDEF", COND_PLUSDEF},
 	{L"UPSTR", COND_UPSTAT},
 	{L"UPDEX", COND_UPSTAT},
 	{L"UPLVL", COND_UPSTAT},
@@ -751,6 +769,10 @@ std::map<std::wstring, FilterCondition> condition_map =
 	{L"WIDTH", COND_WIDTH},
 	{L"HEIGHT", COND_HEIGHT},
 	{L"AREA", COND_AREA},
+	{L"ANYDISCOVERED", COND_ANYDISCOVERED},
+	{L"ALLDISCOVERED", COND_ALLDISCOVERED},
+	{L"ANYOWNED", COND_ANYOWNED},
+	{L"ALLOWNED", COND_ALLOWNED},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
 	//{"OS", COND_OS},
@@ -1027,6 +1049,8 @@ struct ReplacementSpec {
 	static wstring ReplaceAllAttributes(ReplaceContext& ctx, const ReplacementValue& val);
 	// %MAXRES%
 	static wstring ReplaceMaxRes(ReplaceContext& ctx, const ReplacementValue& val);
+	// %PLUSDEF%
+	static wstring ReplacePlusDef(ReplaceContext& ctx, const ReplacementValue& val);
 	// %UPDEX%
 	static wstring ReplaceUpDex(ReplaceContext& ctx, const ReplacementValue& val);
 	// %UPSTR%
@@ -1112,6 +1136,7 @@ unordered_map<wstring, ReplacementSpec> ReplacementMap = {
 	{ L"BASEBLOCK", { 0, ReplacementSpec::ReplaceBaseBlock } },
 	{ L"ALLATTRIB", { 0, ReplacementSpec::ReplaceAllAttributes } },
 	{ L"MAXRES", { 0, ReplacementSpec::ReplaceMaxRes } },
+	{ L"PLUSDEF", { 0, ReplacementSpec::ReplacePlusDef } },
 	{ L"UPSTR", { 0, ReplacementSpec::ReplaceUpStr } },
 	{ L"UPDEX", { 0, ReplacementSpec::ReplaceUpDex } },
 	{ L"UPLVL", { 0, ReplacementSpec::ReplaceUpLvl } },
@@ -1511,6 +1536,13 @@ wstring ReplacementSpec::ReplaceMaxRes(ReplaceContext& ctx, const ReplacementVal
 	return buffer;
 }
 
+wstring ReplacementSpec::ReplacePlusDef(ReplaceContext& ctx, const ReplacementValue& val)
+{
+	wchar_t buffer[16];
+	swprintf(buffer, 16, L"%d", PlusDefCondition::GetValue(ctx.info));
+	return buffer;
+}
+
 wstring ReplacementSpec::ReplaceUpStr(ReplaceContext& ctx, const ReplacementValue& val)
 {
 	auto req = UpStatCondition::GetValue(UpStatCondition::UpStatType::STRENGTH, ctx.info);
@@ -1720,6 +1752,7 @@ ReplaceContext::ReplaceContext(UnitItemInfo* info, wstring name, bool limit) :
 	blockedNL(false) {
 	text = D2COMMON_GetItemText(info->item->dwTxtFileNo);
 	inShop = (info->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
+		info->item->pItemData->pOwnerInventory->pOwner != 0 &&
 		find(begin(ShopNPCs), end(ShopNPCs), info->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs));
 	nlAllowed = ((info->item->pItemData->dwFlags & ITEM_IDENTIFIED) > 0 &&
 		(info->item->pItemData->dwQuality >= ITEM_QUALITY_MAGIC || (info->item->pItemData->dwFlags & ITEM_RUNEWORD) > 0)) ||
@@ -1775,6 +1808,77 @@ bool IsRune(ItemAttributes* attrs)
 }
 
 BYTE RuneNumberFromItemCode(char* code) { return (BYTE)(((code[1] - '0') * 10) + code[2] - '0'); }
+
+enum PD2ItemStorageType
+{
+	PD2STORAGE_NORMAL = 0,
+	PD2STORAGE_COMPENDIUM_PREVIEW = 1,
+	PD2STORAGE_COMPENDIUM = 2,
+	PD2STORAGE_GUILDVAULT = 3,
+	PD2STORAGE_TROPHYCASE = 4,
+};
+
+static DWORD GetPD2ItemStorageType(UnitAny* pItem)
+{
+	return App.pd2.pd2GetItemStorageTypeImpl ? App.pd2.pd2GetItemStorageTypeImpl(pItem) : PD2STORAGE_NORMAL;
+}
+
+static bool ItemHasLocation(UnitItemInfo* uInfo, unsigned int location)
+{
+	if (!uInfo->item || !uInfo->item->pItemData)
+	{
+		return false;
+	}
+
+	UnitAny* pItem = uInfo->item;
+	ItemData* pItemData = pItem->pItemData;
+	DWORD nStorage = GetPD2ItemStorageType(pItem);
+	UnitAny* pMerc = NULL;
+	switch (location)
+	{
+	case LOCATIONFLAG_EQUIPPED:
+		return nStorage == PD2STORAGE_NORMAL &&
+			pItemData->ItemLocation == STORAGE_NULL &&
+			pItemData->BodyLocation > 0 &&
+			pItemData->pOwnerInventory &&
+			pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+	case LOCATIONFLAG_MERCEQUIPPED:
+		pMerc = GetClientMercUnit();
+		return nStorage == PD2STORAGE_NORMAL &&
+			pMerc &&
+			pItemData->ItemLocation == STORAGE_NULL &&
+			pItemData->BodyLocation > 0 &&
+			pItemData->pOwnerInventory &&
+			pItemData->pOwnerInventory->pOwner == pMerc;
+	case LOCATIONFLAG_INVENTORY:
+		return nStorage == PD2STORAGE_NORMAL &&
+			pItemData->ItemLocation == STORAGE_INVENTORY &&
+			pItem->dwMode == ITEM_MODE_INV_STASH_CUBE_STORE &&
+			pItemData->pOwnerInventory &&
+			pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+	case LOCATIONFLAG_CUBE:
+		return nStorage == PD2STORAGE_NORMAL &&
+			pItemData->ItemLocation == STORAGE_CUBE &&
+			pItemData->pOwnerInventory &&
+			pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+	case LOCATIONFLAG_STASH:
+		return nStorage == PD2STORAGE_NORMAL &&
+			pItemData->ItemLocation == STORAGE_STASH &&
+			pItemData->pOwnerInventory &&
+			pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+	case LOCATIONFLAG_GROUND:
+		return pItem->dwMode == ITEM_MODE_ON_GROUND || pItem->dwMode == ITEM_MODE_BEING_DROPPED;
+	case LOCATIONFLAG_COMPENDIUM:
+		return nStorage == PD2STORAGE_COMPENDIUM;
+	case LOCATIONFLAG_PREVIEW:
+		return nStorage == PD2STORAGE_COMPENDIUM_PREVIEW;
+	case LOCATIONFLAG_GUILDVAULT:
+		return nStorage == PD2STORAGE_GUILDVAULT;
+	case LOCATIONFLAG_TROPHYCASE:
+		return nStorage == PD2STORAGE_TROPHYCASE;
+	}
+	return false;
+}
 
 // must be lowercase
 std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVarDefs = {
@@ -2018,18 +2122,16 @@ std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVa
 			return craft_alvl;
 		}
 	} },
+	{ L"compendium", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ItemHasLocation(uInfo, LOCATIONFLAG_COMPENDIUM);
+		}
+	} },
 	{ L"cres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
 			return GetAdjustedUnitStat(uInfo, STAT_COLDRESIST, 0);
 		}
 	} },
 	{ L"cube", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
-			if (!uInfo->item || !uInfo->item->pItemData) {
-				return 0;
-			}
-			const auto pItemData = uInfo->item->pItemData;
-			return pItemData->ItemLocation == STORAGE_CUBE
-				&& pItemData->pOwnerInventory
-				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+			return ItemHasLocation(uInfo, LOCATIONFLAG_CUBE);
 		}
 	} },
 	{ L"dagger", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
@@ -2131,14 +2233,7 @@ std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVa
 		}
 	} },
 	{ L"equipped", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
-			if (!uInfo->item || !uInfo->item->pItemData) {
-				return 0;
-			}
-			const auto pItemData = uInfo->item->pItemData;
-			return pItemData->ItemLocation == STORAGE_NULL
-				&& pItemData->BodyLocation > 0
-				&& pItemData->pOwnerInventory
-				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+			return ItemHasLocation(uInfo, LOCATIONFLAG_EQUIPPED);
 		}
 	} },
 	{ L"eth", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
@@ -2227,6 +2322,10 @@ std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVa
 			return (uInfo->attrs->armorFlags & ITEM_GROUP_GLOVES) != 0;
 		}
 	} },
+	{ L"guildvault", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ItemHasLocation(uInfo, LOCATIONFLAG_GUILDVAULT);
+		}
+	} },
 	{ L"gold", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
 			if (uInfo->itemCode[0] == 'g' && uInfo->itemCode[1] == 'l' && uInfo->itemCode[2] == 'd') {
 				return D2COMMON_GetUnitStat(uInfo->item, STAT_GOLD, 0);
@@ -2235,7 +2334,7 @@ std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVa
 		}
 	} },
 	{ L"ground", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
-			return uInfo->item->dwMode == ITEM_MODE_ON_GROUND || uInfo->item->dwMode == ITEM_MODE_BEING_DROPPED;
+			return ItemHasLocation(uInfo, LOCATIONFLAG_GROUND);
 		}
 	} },
 	{ L"hammer", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
@@ -2263,14 +2362,7 @@ std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVa
 		}
 	} },
 	{ L"inventory", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
-			if (!uInfo->item || !uInfo->item->pItemData) {
-				return 0;
-			}
-			const auto pItemData = uInfo->item->pItemData;
-			return pItemData->ItemLocation == STORAGE_INVENTORY
-				&& uInfo->item->dwMode == ITEM_MODE_INV_STASH_CUBE_STORE
-				&& pItemData->pOwnerInventory
-				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+			return ItemHasLocation(uInfo, LOCATIONFLAG_INVENTORY);
 		}
 	} },
 	{ L"jav", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
@@ -2341,13 +2433,7 @@ std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVa
 		}
 	} },
 	{ L"merc", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
-			auto pMerc = GetClientMercUnit();
-			auto pItemData = uInfo->item->pItemData;
-			return pMerc
-				&& pItemData->ItemLocation == STORAGE_NULL
-				&& pItemData->BodyLocation > 0
-				&& pItemData->pOwnerInventory
-				&& pItemData->pOwnerInventory->pOwner == pMerc;
+			return ItemHasLocation(uInfo, LOCATIONFLAG_MERCEQUIPPED);
 		}
 	} },
 	{ L"mfind", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
@@ -2395,6 +2481,10 @@ std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVa
 	} },
 	{ L"polearm", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
 			return (uInfo->attrs->weaponFlags & ITEM_GROUP_POLEARM) != 0;
+		}
+	} },
+	{ L"preview", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ItemHasLocation(uInfo, LOCATIONFLAG_PREVIEW);
 		}
 	} },
 	{ L"pres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
@@ -2525,13 +2615,7 @@ std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVa
 		}
 	} },
 	{ L"stash", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
-			if (!uInfo->item || !uInfo->item->pItemData) {
-				return 0;
-			}
-			const auto pItemData = uInfo->item->pItemData;
-			return pItemData->ItemLocation == STORAGE_STASH
-				&& pItemData->pOwnerInventory
-				&& pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit();
+			return ItemHasLocation(uInfo, LOCATIONFLAG_STASH);
 		}
 	} },
 	{ L"str", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
@@ -2561,6 +2645,10 @@ std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVa
 	} },
 	{ L"tmace", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
 			return (uInfo->attrs->weaponFlags & ITEM_GROUP_TIPPED_MACE) != 0;
+		}
+	} },
+	{ L"trophycase", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return ItemHasLocation(uInfo, LOCATIONFLAG_TROPHYCASE);
 		}
 	} },
 	{ L"true", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
@@ -2680,6 +2768,10 @@ std::unordered_map<std::wstring, FormulaVarDefinition<FormulaContext>> formulaVa
 	} },
 	{ L"maxres", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
 			return MaxResCondition::GetValue(uInfo);
+		}
+	} },
+	{ L"plusdef", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
+			return PlusDefCondition::GetValue(uInfo);
 		}
 	} },
 	{ L"allattrib", { 0, [](FormulaStatus& err, UnitItemInfo* uInfo, const std::vector<int>& ids) -> float {
@@ -3069,6 +3161,7 @@ void TrimItemText(UnitItemInfo* uInfo,
 		nColorCodesSize += 3 * match_count;
 
 		bool inShop = (uInfo->item->pItemData->pOwnerInventory != 0 && // Skip on ground items
+			uInfo->item->pItemData->pOwnerInventory->pOwner != 0 &&
 			find(begin(ShopNPCs), end(ShopNPCs), uInfo->item->pItemData->pOwnerInventory->pOwner->dwTxtFileNo) != end(ShopNPCs));
 
 		// Increase limit for shop items
@@ -3995,6 +4088,18 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_ID:
 		Condition::AddOperand(conditions, new FlagsCondition(ITEM_IDENTIFIED));
 		break;
+	case COND_ANYDISCOVERED:
+		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ANYDISCOVERED));
+		break;
+	case COND_ALLDISCOVERED:
+		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ALLDISCOVERED));
+		break;
+	case COND_ANYOWNED:
+		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ANYOWNED));
+		break;
+	case COND_ALLOWNED:
+		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ALLOWNED));
+		break;
 	case COND_ILVL:
 		Condition::AddOperand(conditions, new ItemLevelCondition(operation, value, value2));
 		break;
@@ -4211,6 +4316,18 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_GROUND:
 		Condition::AddOperand(conditions, new LocationCondition(LOCATIONFLAG_GROUND));
 		break;
+	case COND_COMPENDIUM:
+		Condition::AddOperand(conditions, new LocationCondition(LOCATIONFLAG_COMPENDIUM));
+		break;
+	case COND_PREVIEW:
+		Condition::AddOperand(conditions, new LocationCondition(LOCATIONFLAG_PREVIEW));
+		break;
+	case COND_GUILDVAULT:
+		Condition::AddOperand(conditions, new LocationCondition(LOCATIONFLAG_GUILDVAULT));
+		break;
+	case COND_TROPHYCASE:
+		Condition::AddOperand(conditions, new LocationCondition(LOCATIONFLAG_TROPHYCASE));
+		break;
 	case COND_1H:
 		Condition::AddOperand(conditions, new OneHandedCondition());
 		break;
@@ -4412,6 +4529,9 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 	case COND_MAXRES:
 		Condition::AddOperand(conditions, new MaxResCondition(operation, value, value2));
 		break;
+	case COND_PLUSDEF:
+		Condition::AddOperand(conditions, new PlusDefCondition(operation, value, value2));
+		break;
 	case COND_UPSTAT:
 	{
 		auto type = UpStatCondition::UpStatType::STRENGTH;
@@ -4531,6 +4651,26 @@ bool QualityCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2) {
 	return (uInfo->item->pItemData->dwQuality == quality);
+}
+
+bool DiscoveryStateCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2) {
+	if (!uInfo->item || !uInfo->item->pItemData)
+	{
+		return false;
+	}
+	// Backed by the ProjectDiablo.dll discovery export (resolved in
+	// BH::CheckForPD2); the conditions evaluate to false when
+	// ProjectDiablo.dll is absent.
+	if (!App.pd2.pd2GetItemDiscoveryStateImpl) { return false; }
+	ItemData* pItemData = uInfo->item->pItemData;
+	// Unidentified unique/set drops have no file index client-side; pass the
+	// unset sentinel so the dll covers "all the variants it could be" via
+	// the base item's code.
+	DWORD dwFileIndex = (pItemData->dwFlags & ITEM_IDENTIFIED) ? pItemData->dwFileIndex : 0xFFFFFFFF;
+	DWORD dwState = App.pd2.pd2GetItemDiscoveryStateImpl(dwFileIndex, pItemData->dwQuality, uInfo->item->dwTxtFileNo);
+	return (dwState & discoveryFlag) > 0;
 }
 
 bool NonMagicalCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -4891,63 +5031,7 @@ bool LocationCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {
-	bool has_location = false;
-	UnitAny* pMerc = NULL;
-	if (uInfo->item && uInfo->item->pItemData)
-	{
-		ItemData* pItemData = uInfo->item->pItemData;
-		switch (location)
-		{
-		case LOCATIONFLAG_EQUIPPED:
-			if (pItemData->ItemLocation == STORAGE_NULL &&
-				pItemData->BodyLocation > 0 &&
-				pItemData->pOwnerInventory && pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit())
-			{
-				has_location = true;
-			}
-			break;
-		case LOCATIONFLAG_MERCEQUIPPED:
-			pMerc = GetClientMercUnit();
-			if (pMerc &&
-				pItemData->ItemLocation == STORAGE_NULL &&
-				pItemData->BodyLocation > 0 &&
-				pItemData->pOwnerInventory && pItemData->pOwnerInventory->pOwner == pMerc)
-			{
-				has_location = true;
-			}
-			break;
-		case LOCATIONFLAG_INVENTORY:
-			if (pItemData->ItemLocation == STORAGE_INVENTORY &&
-				uInfo->item->dwMode == ITEM_MODE_INV_STASH_CUBE_STORE &&
-				pItemData->pOwnerInventory && pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit())
-			{
-				has_location = true;
-			}
-			break;
-		case LOCATIONFLAG_CUBE:
-			if (pItemData->ItemLocation == STORAGE_CUBE &&
-				pItemData->pOwnerInventory && pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit())
-			{
-				has_location = true;
-			}
-			break;
-		case LOCATIONFLAG_STASH:
-			if (pItemData->ItemLocation == STORAGE_STASH &&
-				pItemData->pOwnerInventory && pItemData->pOwnerInventory->pOwner == D2CLIENT_GetPlayerUnit())
-			{
-				has_location = true;
-			}
-			break;
-		case LOCATIONFLAG_GROUND:
-			if (uInfo->item->dwMode == ITEM_MODE_ON_GROUND || uInfo->item->dwMode == ITEM_MODE_BEING_DROPPED)
-			{
-				has_location = true;
-			}
-			break;
-		}
-	}
-
-	return IntegerCompare(has_location, (BYTE)EQUAL, 1);
+	return IntegerCompare(ItemHasLocation(uInfo, location), (BYTE)EQUAL, 1);
 }
 
 bool ShopCondition::EvaluateInternal(UnitItemInfo* uInfo,
@@ -5417,6 +5501,19 @@ int MaxResCondition::GetValue(UnitItemInfo* uInfo)
 }
 
 bool MaxResCondition::EvaluateInternal(UnitItemInfo* uInfo,
+	Condition* arg1,
+	Condition* arg2)
+{
+	return IntegerCompare(GetValue(uInfo), operation, targetStat, targetStat2);
+}
+
+// Defense added by the item's affixes, runeword or sockets, without its base defense (DEF includes both)
+int PlusDefCondition::GetValue(UnitItemInfo* uInfo)
+{
+	return GetStatFromList(uInfo, STAT_DEFENSE);
+}
+
+bool PlusDefCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg1,
 	Condition* arg2)
 {

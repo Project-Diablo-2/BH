@@ -20,6 +20,8 @@ Drawing::StatsDisplay* BH::statsDisplay;
 bool BH::initialized;
 bool BH::cGuardLoaded;
 WNDPROC BH::OldWNDPROC;
+
+MonstersRemainingState g_monstersRemaining;
 BHApp App;
 
 Patch* patches[] = {
@@ -268,6 +270,12 @@ void BH::CheckForPD2()
 	{
 		FARPROC proc = GetProcAddress(pd2Handle, "_D2Client_PlaySoundWithCustomVolumeOrPriority@20");
 		App.pd2.pd2PlaySoundImpl = proc ? (pd2PlaySoundImpl_t)proc : NULL;
+
+		proc = GetProcAddress(pd2Handle, "_D2Client_GetItemDiscoveryState@12");
+		App.pd2.pd2GetItemDiscoveryStateImpl = proc ? (pd2GetItemDiscoveryStateImpl_t)proc : NULL;
+
+		proc = GetProcAddress(pd2Handle, "_D2Client_GetItemStorageType@4");
+		App.pd2.pd2GetItemStorageTypeImpl = proc ? (pd2GetItemStorageTypeImpl_t)proc : NULL;
 	}
 }
 
@@ -307,6 +315,14 @@ extern "C" {
 			return !BH::statsDisplay->IsMinimized();
 		case BH_CONFIG_HIDE_GAME_PASSWORD:
 			return App.screen.hideGamePassword.value;
+		case BH_CONFIG_HEALINGPOTIONS:
+			return App.lootfilter.hideHealingPotions.value;
+		case BH_CONFIG_MANAPOTIONS:
+			return App.lootfilter.hideManaPotions.value;
+		case BH_CONFIG_ALWAYSSHOWUNDISCOVERED:
+			return App.lootfilter.alwaysShowUndiscovered.value;
+		case BH_CONFIG_ALWAYSSHOWUNOWNED:
+			return App.lootfilter.alwaysShowUnowned.value;
 		}
 
 		return 0;
@@ -370,6 +386,23 @@ extern "C" {
 		case BH_CONFIG_HIDE_GAME_PASSWORD:
 			App.screen.hideGamePassword.value = configVal;
 			bSave = TRUE;
+			break;
+		case BH_CONFIG_HEALINGPOTIONS:
+			App.lootfilter.hideHealingPotions.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_MANAPOTIONS:
+			App.lootfilter.hideManaPotions.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_ALWAYSSHOWUNDISCOVERED:
+			App.lootfilter.alwaysShowUndiscovered.value = configVal;
+			bSave = TRUE;
+			break;
+		case BH_CONFIG_ALWAYSSHOWUNOWNED:
+			App.lootfilter.alwaysShowUnowned.value = configVal;
+			bSave = TRUE;
+			break;
 		}
 
 		if (bSave)
@@ -452,6 +485,12 @@ extern "C" {
 			return selectedUnit;
 		}
 		return NULL;
+	}
+
+	__declspec(dllexport) void __stdcall BHSetMonstersRemaining(int nActive, int nCount)
+	{
+		g_monstersRemaining.active = nActive;
+		g_monstersRemaining.count = nCount;
 	}
 
 #ifdef __cplusplus

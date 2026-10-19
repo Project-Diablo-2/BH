@@ -938,7 +938,8 @@ enum Type {
 	EXIT_MULTI
 };
 
-#define ITEMFLAG_ALLOCED 0x10000000;
+#define ITEMFLAG_ALLOCED 0x10000000
+#define ITEMFLAG_FAKE_COMPENDIUM_TAB 0x40000000
 
 ///////////////////////////////////////////////////
 // Spell Stats

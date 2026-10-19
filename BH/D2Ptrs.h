@@ -257,6 +257,7 @@ VARPTR(D2CLIENT, WeaponSpeedTable, int*, 0xE0F78)
 VARPTR(D2CLIENT, WeaponSpeedModTable, int*, 0xE10E0)
 
 VARPTR(D2CLIENT, MapId, DWORD, 0x11C310)
+VARPTR(D2CLIENT, ArenaFlags, DWORD, 0xE264C)
 VARPTR(D2CLIENT, Music_CurrentLevelId, DWORD, 0x11C34C)
 VARPTR(D2CLIENT, ScreenCovered, DWORD, 0x11C414) // 1 = Right Side Covered 2 = Left Side Covered 3 = Both Sides Covered
 

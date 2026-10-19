@@ -191,6 +191,25 @@ private:
 		Condition* arg2);
 };
 
+enum DiscoveryStateFlag
+{
+	DISCOVERYSTATE_ANYDISCOVERED = 0x1,	// any candidate variant group discovered
+	DISCOVERYSTATE_ALLDISCOVERED = 0x2,	// every candidate variant group discovered
+	DISCOVERYSTATE_ANYOWNED = 0x4,		// any candidate variant group owned
+	DISCOVERYSTATE_ALLOWNED = 0x8,		// every candidate variant group owned
+};
+
+class DiscoveryStateCondition : public Condition
+{
+public:
+	DiscoveryStateCondition(unsigned int flag) : discoveryFlag(flag) { conditionType = CT_Operand; };
+private:
+	unsigned int discoveryFlag;
+	bool         EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
 class NonMagicalCondition : public Condition
 {
 public:
@@ -959,6 +978,28 @@ class MaxResCondition : public Condition
 {
 public:
 	MaxResCondition(BYTE op,
+		unsigned int target,
+		unsigned int target2) : operation(op),
+		targetStat(target),
+		targetStat2(target2)
+	{
+		conditionType = CT_Operand;
+	}
+
+	static int GetValue(UnitItemInfo* uInfo);
+private:
+	BYTE           operation;
+	unsigned int   targetStat;
+	unsigned int   targetStat2;
+	bool           EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
+class PlusDefCondition : public Condition
+{
+public:
+	PlusDefCondition(BYTE op,
 		unsigned int target,
 		unsigned int target2) : operation(op),
 		targetStat(target),

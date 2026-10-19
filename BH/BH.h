@@ -45,6 +45,8 @@ namespace BH
 };
 
 typedef BOOL(__stdcall* pd2PlaySoundImpl_t)(UnitAny* pUnit, int nSound, int nVolume, int nPriority, BOOL bDropSound);
+typedef DWORD(__stdcall* pd2GetItemDiscoveryStateImpl_t)(DWORD dwFileIndex, DWORD dwQuality, DWORD dwBaseId);
+typedef DWORD(__stdcall* pd2GetItemStorageTypeImpl_t)(UnitAny* pItem);
 
 struct BHApp
 {
@@ -114,6 +116,10 @@ struct BHApp
 		SettingsAssoc classSkillsList = {}; // TODO??
 		SettingsAssoc tabSkillsList = {};  // TODO??
 		SettingsBool dropSounds = { true, true };
+		SettingsBool hideHealingPotions = { false, false };    // true = force-hide healing potions even where the filter shows them
+		SettingsBool hideManaPotions = { false, false };       // true = force-hide mana potions even where the filter shows them
+		SettingsBool alwaysShowUndiscovered = { true, true };  // true = always show uniques/sets not fully discovered
+		SettingsBool alwaysShowUnowned = { false, false };     // true = always show uniques/sets not fully owned
 	} lootfilter;
 
 	struct
@@ -187,12 +193,22 @@ struct BHApp
 	struct
 	{
 		pd2PlaySoundImpl_t pd2PlaySoundImpl = NULL;
+		pd2GetItemDiscoveryStateImpl_t pd2GetItemDiscoveryStateImpl = NULL;
+		pd2GetItemStorageTypeImpl_t pd2GetItemStorageTypeImpl = NULL;
 	} pd2;
 
 	std::vector<Toggle*> hotkeyToggles;
 };
 
 extern BHApp App;
+
+struct MonstersRemainingState
+{
+	int active = 0;		// 1 = display, 0 = hide
+	int count = 0;		// hostile alive monster count
+	DWORD tick = 1;		// GetTickCount() of last received active packet (staleness check)
+};
+extern MonstersRemainingState g_monstersRemaining;
 
 typedef enum BHConfigId
 {
@@ -215,6 +231,10 @@ typedef enum BHConfigId
 	BH_CONFIG_DROPSOUNDS,
 	BH_CONFIG_ADVANCEDSTATS_OPEN,
 	BH_CONFIG_HIDE_GAME_PASSWORD,
+	BH_CONFIG_HEALINGPOTIONS,
+	BH_CONFIG_MANAPOTIONS,
+	BH_CONFIG_ALWAYSSHOWUNDISCOVERED,
+	BH_CONFIG_ALWAYSSHOWUNOWNED,
 } BHConfigId;
 
 typedef enum D2GLConfigId

@@ -343,6 +343,26 @@ void ScreenInfo::OnAutomapDraw()
 		}
 	}
 
+	if (g_monstersRemaining.active)
+	{
+		char szMonsters[32];
+		int nCount = g_monstersRemaining.count;
+		if (nCount <= 0)
+		{
+			sprintf_s(szMonsters, sizeof(szMonsters), "0 Monsters Remaining");
+		}
+		else if (nCount > 100)
+		{
+			sprintf_s(szMonsters, sizeof(szMonsters), "100+ Monsters Remaining");
+		}
+		else
+		{
+			sprintf_s(szMonsters, sizeof(szMonsters), "%d Monsters Remaining", nCount);
+		}
+		Texthook::Draw(*p_D2CLIENT_ScreenSizeX - 10, y, Right, 0, Gold, "%s", szMonsters);
+		y += 16;
+	}
+
 	if (pUnit->pPlayerData && pUnit->pPlayerData->nItemAllocation != 0)
 	{
 		Texthook::Draw(*p_D2CLIENT_ScreenSizeX - 10, y, Right, 0, Gold, "%s", "Allocated Loot");
