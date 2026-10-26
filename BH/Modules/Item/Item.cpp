@@ -966,6 +966,8 @@ void __fastcall Item::ItemNamePatch(wchar_t* name, UnitAny* pItem, int nameSize)
 		if (!CreateUnitItemInfo(&uInfo, pItem)) {
 			GetItemName(&uInfo, itemName);
 			if (itemName.empty() && LootFilterOverridesForceShow(pItem)) {
+				// The filter emptied itemName: start again from the game's name
+				itemName = name;
 				OrigGetItemName(pItem, itemName, code);
 			}
 		}
