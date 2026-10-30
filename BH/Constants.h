@@ -1669,4 +1669,5 @@ const int CorruptionMods[][6] = {
 	{STAT_ADDEXPERIENCE, -1, -1, -1, -1, -1},
 	{STAT_VITALITY, STAT_ENERGY, -1, -1, -1, -1},
 	{STAT_MONSTERDEFDUCTPERHIT, -1, -1, -1, -1, -1},
+	{STAT_HALFFREEZEDURATION, -1, -1, -1, -1, -1},
 };
