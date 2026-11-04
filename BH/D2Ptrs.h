@@ -424,6 +424,8 @@ FUNCPTR(D2COMMON, 10326_GetItemTxtFileNo, int __stdcall, (UnitAny* pItem), -1032
 FUNCPTR(D2COMMON, 10364_Is1Or2Handed, int __stdcall, (UnitAny* pUnit, UnitAny* pItem), -10364);
 FUNCPTR(D2COMMON, 10567_GetMinPhysDamage, int __stdcall, (UnitAny* pUnit, int nSkillId, int nSkillLevel, BOOL a4), -10567);
 FUNCPTR(D2COMMON, 10297_GetMaxPhysDamage, int __stdcall, (UnitAny* pUnit, int nSkillId, int nSkillLevel, BOOL a4), -10297);
+FUNCPTR(D2COMMON, 10121_GetMinElemDamage, int __stdcall, (UnitAny* pUnit, int nSkillId, int nSkillLevel, BOOL bSynergy), -10121);
+FUNCPTR(D2COMMON, 11091_GetMaxElemDamage, int __stdcall, (UnitAny* pUnit, int nSkillId, int nSkillLevel, BOOL bSynergy), -11091);
 FUNCPTR(D2COMMON, 10592_GetWeaponAttackSpeed, int __stdcall, (UnitAny* pUnit, UnitAny* pItem), -10592);
 FUNCPTR(D2COMMON, 10711_ItemCheckIfThrowable, int __stdcall, (UnitAny* pItem), -10711)
 FUNCPTR(D2COMMON, 10757_CheckIfSocketable, int __stdcall, (UnitAny* pItem), -10757)
