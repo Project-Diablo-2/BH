@@ -2203,6 +2203,10 @@ __declspec(dllexport) BOOL __stdcall BHOnDamagePropertyBuild(UnitAny* pItem, Dam
 		stat_max = pDmgStats->nMaxDmg;
 
 		if (stat_min >= stat_max) {
+			// No "Adds X-Y damage" line: each stat gets its own line. Clear the range as the game's own
+			// builder does, or STAT_SECONDARYMAXIMUMDAMAGE returns TRUE above and a 2-handed-only weapon
+			// (bow, crossbow) with +min >= +max loses its "+N to Maximum Damage" line.
+			pDmgStats->nDmgRange = FALSE;
 			return FALSE;
 		}
 		else {
