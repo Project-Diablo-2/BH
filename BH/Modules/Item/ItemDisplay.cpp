@@ -575,6 +575,7 @@ enum FilterCondition
 	COND_ALLDISCOVERED,
 	COND_ANYOWNED,
 	COND_ALLOWNED,
+	COND_ALLOCATED,
 
 	COND_NULL
 };
@@ -773,6 +774,7 @@ std::map<std::wstring, FilterCondition> condition_map =
 	{L"ALLDISCOVERED", COND_ALLDISCOVERED},
 	{L"ANYOWNED", COND_ANYOWNED},
 	{L"ALLOWNED", COND_ALLOWNED},
+	{L"ALLOCATED", COND_ALLOCATED},
 	// These have a number as part of the key, handled separately
 	//{"SK", COND_SK},
 	//{"OS", COND_OS},
@@ -4099,6 +4101,9 @@ void Condition::BuildConditions(vector<Condition*>& conditions,
 		break;
 	case COND_ALLOWNED:
 		Condition::AddOperand(conditions, new DiscoveryStateCondition(DISCOVERYSTATE_ALLOWNED));
+		break;
+	case COND_ALLOCATED:
+		Condition::AddOperand(conditions, new FlagsCondition(ITEMFLAG_ALLOCED));
 		break;
 	case COND_ILVL:
 		Condition::AddOperand(conditions, new ItemLevelCondition(operation, value, value2));
