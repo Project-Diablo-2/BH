@@ -447,6 +447,7 @@ FUNCPTR(D2COMMON, 10031_UNITS_GetFrameBonus, int __stdcall, (UnitAny* pUnit), -1
 FUNCPTR(D2COMMON, 10595_UNITS_InitUnitMode, BOOL __stdcall, (UnitAny* pUnit), -10595);
 
 FUNCPTR(D2COMMON, 10507_UNITS_GetRightSkill, Skill* __stdcall, (UnitAny* pUnit), -10507);
+FUNCPTR(D2COMMON, 10511_UNITS_GetUsedSkill, Skill* __stdcall, (UnitAny* pUnit), -10511);
 FUNCPTR(D2COMMON, 10030_SKILLS_GetSeqNumFromSkill, int __fastcall, (UnitAny* pUnit, Skill* pSkill), 0x4EC50);
 FUNCPTR(D2COMMON, 10786_SKILLS_EvaluateSkillFormula, int __stdcall, (UnitAny* pUnit, DWORD nCalc, int nSkillId, int nSkillLevel), -10786);
 FUNCPTR(D2COMMON, 10194_DATATBLS_GetMonSeqTableRecord, SequenceInfo* __stdcall, (int nSequence), -10194);
