@@ -1,5 +1,6 @@
 #define _DEFINE_PTRS
 #include "BH.h"
+#include "Constants.h"
 #include <Shlwapi.h>
 #include <psapi.h>
 #include <io.h>
@@ -279,6 +280,14 @@ void BH::CheckForPD2()
 	}
 }
 
+void PrintConfigValue(const string& configName, bool value) {
+	if (value) {
+		PrintText(TextColor::Gold, "%s: ÿc0yes", configName);
+	} else {
+		PrintText(TextColor::Gold, "%s: ÿc0no", configName);
+	}
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -388,18 +397,22 @@ extern "C" {
 			bSave = TRUE;
 			break;
 		case BH_CONFIG_HEALINGPOTIONS:
+			PrintConfigValue("Hide healing potions", configVal);
 			App.lootfilter.hideHealingPotions.value = configVal;
 			bSave = TRUE;
 			break;
 		case BH_CONFIG_MANAPOTIONS:
+			PrintConfigValue("Hide mana potions", configVal);
 			App.lootfilter.hideManaPotions.value = configVal;
 			bSave = TRUE;
 			break;
 		case BH_CONFIG_ALWAYSSHOWUNDISCOVERED:
+			PrintConfigValue("Force show undiscovered", configVal);
 			App.lootfilter.alwaysShowUndiscovered.value = configVal;
 			bSave = TRUE;
 			break;
 		case BH_CONFIG_ALWAYSSHOWUNOWNED:
+			PrintConfigValue("Force show unowned", configVal);
 			App.lootfilter.alwaysShowUnowned.value = configVal;
 			bSave = TRUE;
 			break;
