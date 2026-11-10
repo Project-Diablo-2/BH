@@ -403,7 +403,11 @@ void StashExport::GetItemInfo(UnitAny* pItem, JSONObject* pBuffer) {
 						hasStat = TRUE;
 						break;
 					}
-					else if (ent->get("name")->equals(entry->get("name")))
+					// Same-name stats with different ids are different stats ("Physical Damage Taken Reduced by"
+					// is flat normal_damage_reduction (34) and damageresist % (36)): export both.
+					else if (ent->get("name")->equals(entry->get("name")) &&
+						!(ent->get("stat_id")->hasValue() && entry->get("stat_id")->hasValue() &&
+							!ent->get("stat_id")->equals(entry->get("stat_id"))))
 					{
 						if (ent->find("skill")->toString() == "null" || ent->get("skill")->equals(entry->get("skill")))
 						{
